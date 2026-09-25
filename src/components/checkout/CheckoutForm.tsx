@@ -229,10 +229,10 @@ export default function CheckoutForm({
             selected={method === 'transferencia'}
             onSelect={() => setMethod('transferencia')}
             icon="🏦"
-            title="Transferencia o depósito bancario"
+            title="Transferencia o depósito Pichincha"
             badge={transferTotals.shipping === 0 ? 'Envío GRATIS' : undefined}
             lines={[
-              `Pagas ${formatPrice(transferTotals.total)} por transferencia o depósito`,
+              `Pagas ${formatPrice(transferTotals.total)} por transferencia o depósito en Banco Pichincha`,
               'Te damos los datos bancarios al confirmar · Despacho el mismo día',
             ]}
           />
@@ -244,7 +244,7 @@ export default function CheckoutForm({
               title="Pago contra entrega"
               badge={`Adelantas solo ${formatPrice(settings.payments.codAdvance)}`}
               lines={[
-                `Hoy adelantas ${formatPrice(codTotals.payNow)} del envío por transferencia/depósito`,
+                `Hoy adelantas ${formatPrice(codTotals.payNow)} del envío por transferencia o depósito en Banco Pichincha`,
                 `El resto (${formatPrice(codTotals.payOnDelivery)}) lo pagas en efectivo al recibir en tu dirección`,
               ]}
             />
@@ -415,7 +415,7 @@ export default function CheckoutForm({
             <div className="rounded-xl bg-ink p-3 text-white">
               <p className="text-[10px] font-bold uppercase tracking-wider text-primary-light">Pagas ahora</p>
               <p className="mt-0.5 text-xl font-black">{formatPrice(totals.payNow)}</p>
-              <p className="text-[10px] text-white/70">{method === 'contra_entrega' ? 'solo el envío' : 'transferencia / depósito'}</p>
+              <p className="text-[10px] text-white/70">{method === 'contra_entrega' ? 'solo el envío' : 'transferencia / depósito Pichincha'}</p>
             </div>
             <div className="rounded-xl bg-white p-3 ring-1 ring-border">
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Pagas al recibir</p>
@@ -434,7 +434,7 @@ export default function CheckoutForm({
         <p className="mt-2 text-center text-xs text-muted">
           {method === 'contra_entrega'
             ? `Se abre WhatsApp con tu pedido listo. Te pasamos la cuenta para adelantar los ${formatPrice(totals.payNow)} del envío.`
-            : 'Se abre WhatsApp con tu pedido listo. Te pasamos los datos bancarios para tu transferencia o depósito.'}
+            : 'Se abre WhatsApp con tu pedido listo. Te pasamos la cuenta de Banco Pichincha para tu transferencia o depósito.'}
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] font-semibold text-muted">
           <span>🔒 Datos protegidos</span>

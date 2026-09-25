@@ -84,7 +84,7 @@ export function buildCartWhatsAppMessage(
 }
 
 export function paymentMethodLabel(method: PaymentMethod): string {
-  return method === 'contra_entrega' ? '💵 Pago contra entrega' : '🏦 Transferencia / depósito bancario';
+  return method === 'contra_entrega' ? '💵 Pago contra entrega' : '🏦 Transferencia / depósito Banco Pichincha';
 }
 
 // Resumen completo del pedido para WhatsApp — tipo factura, claro y listo
@@ -112,8 +112,8 @@ export function buildOrderWhatsAppMessage(order: {
 
   const paymentBlock =
     order.paymentMethod === 'contra_entrega'
-      ? `💵 *Pago contra entrega*\n➡️ Adelanto del envío (transferencia/depósito): *${formatPrice(order.payNow)}*\n➡️ Pago al recibir en mi dirección: *${formatPrice(order.payOnDelivery)}*`
-      : `🏦 *Transferencia / depósito bancario*\n➡️ Total a transferir: *${formatPrice(order.payNow)}*`;
+      ? `💵 *Pago contra entrega*\n➡️ Adelanto del envío (transferencia/depósito Banco Pichincha): *${formatPrice(order.payNow)}*\n➡️ Pago al recibir en mi dirección: *${formatPrice(order.payOnDelivery)}*`
+      : `🏦 *Transferencia / depósito Banco Pichincha*\n➡️ Total a transferir: *${formatPrice(order.payNow)}*`;
 
   const c = order.customer;
   return `🛍️ *NUEVO PEDIDO — ${order.orderNumber}*

@@ -8,7 +8,7 @@ export default function PaymentBadges({ className, dark = false }: { className?:
   return (
     <div className={classNames('flex flex-wrap items-center gap-2', className)}>
       <span className={chip}>🏦 Transferencia</span>
-      <span className={chip}>🧾 Depósito</span>
+      <span className={chip}>🧾 Depósito Pichincha</span>
       <span className={chip}>💵 Contra entrega</span>
     </div>
   );

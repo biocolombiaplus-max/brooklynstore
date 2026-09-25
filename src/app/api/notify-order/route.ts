@@ -48,7 +48,7 @@ function esc(value: unknown): string {
 
 const PAYMENT_LABELS: Record<NotifyOrderBody['paymentMethod'], string> = {
   contra_entrega: '💵 Pago contra entrega',
-  transferencia: '🏦 Transferencia / depósito bancario',
+  transferencia: '🏦 Transferencia / depósito Banco Pichincha',
 };
 
 function buildEmailHtml(body: NotifyOrderBody): string {

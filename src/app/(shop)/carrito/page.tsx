@@ -80,7 +80,7 @@ export default function CarritoPage() {
           </div>
           <div className="mt-3 space-y-2 rounded-xl bg-white p-3 text-xs text-muted">
             <p>
-              🏦 <strong className="text-ink">Transferencia/depósito:</strong>{' '}
+              🏦 <strong className="text-ink">Transferencia o depósito Pichincha:</strong>{' '}
               {settings.shipping.defaultRate === 0 ? 'envío GRATIS' : `envío ${formatPrice(settings.shipping.defaultRate)}`}
             </p>
             {settings.payments.codEnabled && (

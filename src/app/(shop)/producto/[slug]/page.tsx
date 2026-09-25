@@ -171,7 +171,7 @@ export default function ProductPage() {
                     <li>• Enviamos a todo el Ecuador con courier (Servientrega, Tramaco, Laar y más).</li>
                     <li>• Tiempo de entrega: {shipping.deliveryTime}.</li>
                     <li>
-                      • <strong className="text-ink">Transferencia o depósito:</strong> pagas el total y{' '}
+                      • <strong className="text-ink">Transferencia o depósito en Banco Pichincha:</strong> pagas el total y{' '}
                       {shipping.defaultRate === 0 ? 'el envío es GRATIS' : `el envío cuesta ${formatPrice(shipping.defaultRate)}`}.
                     </li>
                     {payments.codEnabled && (

@@ -30,8 +30,9 @@ export default function PaymentMethods() {
             </span>
             <span className="text-4xl">🏦</span>
             <h3 className="mt-4 text-2xl font-black uppercase">Transferencia o depósito</h3>
+            <p className="mt-1 text-xs font-bold uppercase tracking-[0.2em] text-primary-light">Depósitos solo en Banco Pichincha</p>
             <p className="mt-3 text-sm leading-relaxed text-white/75">
-              Transfiere desde tu app del banco o deposita en ventanilla / Mi Vecino / Banco del Barrio. Nos mandas la foto
+              Transfiere desde la app de tu banco o deposita en Banco Pichincha (ventanilla o agente Pichincha Mi Vecino). Nos mandas la foto
               del comprobante por WhatsApp y despachamos ese mismo día.
             </p>
             <ul className="mt-5 space-y-2 text-sm">
@@ -58,7 +59,7 @@ export default function PaymentMethods() {
               <span className="text-4xl">💵</span>
               <h3 className="mt-4 text-2xl font-black uppercase">Pago contra entrega</h3>
               <p className="mt-3 text-sm font-medium leading-relaxed text-ink/80">
-                Solo adelantas <strong>{formatPrice(payments.codAdvance)}</strong> por transferencia o depósito, que es el valor del
+                Solo adelantas <strong>{formatPrice(payments.codAdvance)}</strong> por transferencia o depósito en Banco Pichincha, que es el valor del
                 envío. <strong>El resto lo pagas en efectivo cuando recibes tus zapatos</strong> en la dirección que nos indiques.
               </p>
               <div className="mt-6 grid grid-cols-2 gap-3 text-center">

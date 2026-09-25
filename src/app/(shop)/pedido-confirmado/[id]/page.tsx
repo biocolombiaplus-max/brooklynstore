@@ -127,7 +127,7 @@ export default function OrderConfirmationPage() {
         <div className="mt-4 rounded-3xl bg-white p-5 shadow-soft sm:p-7">
           <p className="flex items-center gap-2 text-sm font-black uppercase text-ink">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs text-white">2</span>
-            {isCod ? 'Adelanta el valor del envío' : 'Realiza tu transferencia o depósito'}
+            {isCod ? 'Adelanta el valor del envío' : 'Transfiere o deposita en Banco Pichincha'}
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3 text-center">

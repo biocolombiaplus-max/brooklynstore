@@ -299,7 +299,7 @@ export default function BuyBox({
               <strong className="text-ink">1.</strong> Confirmas tu pedido por WhatsApp.
             </li>
             <li>
-              <strong className="text-ink">2.</strong> Adelantas {formatPrice(payments.codAdvance)} del envío por transferencia o depósito.
+              <strong className="text-ink">2.</strong> Adelantas {formatPrice(payments.codAdvance)} del envío por transferencia o depósito en Banco Pichincha.
             </li>
             <li>
               <strong className="text-ink">3.</strong> Recibes tus zapatos en tu dirección y pagas el resto en efectivo. ¡Así de fácil!

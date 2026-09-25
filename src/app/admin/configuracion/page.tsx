@@ -530,22 +530,7 @@ export default function ConfiguracionPage() {
             )}
           />
           <datalist id="ec-banks">
-            {[
-              'Banco Pichincha',
-              'Banco Guayaquil',
-              'Produbanco',
-              'Banco del Pacífico',
-              'Banco Bolivariano',
-              'Banco Internacional',
-              'Banco del Austro',
-              'Banco de Loja',
-              'Cooperativa JEP',
-              'Deuna (Banco Pichincha)',
-            ]
-              .filter((b, i, arr) => arr.indexOf(b) === i)
-              .map((b) => (
-                <option key={b} value={b} />
-              ))}
+            <option value="Banco Pichincha" />
           </datalist>
         </div>
 

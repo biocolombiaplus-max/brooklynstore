@@ -49,7 +49,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     '☁️ Llegó On — la marca más vendida de Brooklyn Store',
     '🚚 Envíos a todito el Ecuador — llegamos a tu puerta',
     '💵 Pago contra entrega: solo adelantas $5 del envío y el resto al recibir',
-    '🏦 Paga por transferencia o depósito — Pichincha, Guayaquil, Produbanco y más',
+    '🏦 Paga por transferencia o depósito en Banco Pichincha',
     '🛡️ Compra segura · Garantía Brooklyn',
     '🔄 ¿No te quedó? Cambio de talla sin complicaciones',
     '⚡ Pilas: los más vendidos se agotan ya mismo',
@@ -156,12 +156,12 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       question: '¿Cómo funciona el pago contra entrega?',
       answer:
-        'Adelantas solo $5 por transferencia o depósito, que cubren el envío. El resto lo pagas en efectivo cuando el courier te entrega tus zapatos en la dirección que nos diste. Así los dos quedamos tranquilos.',
+        'Adelantas solo $5 por transferencia o depósito en Banco Pichincha, que cubren el envío. El resto lo pagas en efectivo cuando el courier te entrega tus zapatos en la dirección que nos diste. Así los dos quedamos tranquilos.',
     },
     {
       question: '¿Cómo pago por transferencia o depósito?',
       answer:
-        'Al confirmar tu pedido te mostramos nuestras cuentas bancarias. Haces la transferencia o el depósito en ventanilla / agente, nos mandas la foto del comprobante por WhatsApp y despachamos ese mismo día. ¡Y el envío te sale gratis!',
+        'Al confirmar tu pedido te mostramos nuestra cuenta de Banco Pichincha. Haces la transferencia desde tu banco o el depósito en Banco Pichincha (ventanilla o agente Pichincha Mi Vecino), nos mandas la foto del comprobante por WhatsApp y despachamos ese mismo día. ¡Y el envío te sale gratis!',
     },
     {
       question: '¿Qué garantía tengo?',
