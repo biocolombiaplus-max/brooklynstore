@@ -7,7 +7,6 @@ import { notFound, useParams } from 'next/navigation';
 import { getProductBySlug } from '@/lib/products';
 import { formatPrice, resolveColorImage } from '@/lib/utils';
 import { useSiteSettings } from '@/lib/settings-context';
-import { isKidSizes } from '@/lib/sizes';
 import { GENDERS, type PaymentMethod, type Product } from '@/lib/types';
 import ProductGallery from '@/components/product/ProductGallery';
 import BuyBox from '@/components/product/BuyBox';
@@ -164,7 +163,7 @@ export default function ProductPage() {
                   </AccordionItem>
                 )}
                 <AccordionItem title="📏 Guía de tallas">
-                  <SizeGuide fit={product.fit} kids={product.gender === 'ninos' || isKidSizes(product.sizes)} availableSizes={product.sizes} />
+                  <SizeGuide fit={product.fit} availableSizes={product.sizes} />
                 </AccordionItem>
                 <AccordionItem title="🚚 Envíos y formas de pago">
                   <ul className="space-y-2">

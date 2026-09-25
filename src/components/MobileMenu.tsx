@@ -18,7 +18,7 @@ const img = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=c
 const CATEGORIES = [
   { label: 'Hombre', href: '/catalogo?genero=hombre', image: img('photo-1491553895911-0055eca6402d') },
   { label: 'Mujer', href: '/catalogo?genero=mujer', image: img('photo-1543163521-1bf539c55dd2') },
-  { label: 'Niños', href: '/catalogo?genero=ninos', image: img('photo-1514989940723-e8e51635b782') },
+  { label: 'Running', href: '/catalogo?estilo=running', image: img('photo-1542291026-7eec264c27ff') },
   { label: 'Ofertas', href: '/catalogo?ofertas=1', image: img('photo-1556906781-9a412961c28c'), hot: true },
 ];
 

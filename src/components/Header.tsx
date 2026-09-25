@@ -17,7 +17,6 @@ import { CartIcon, ChevronIcon, CloseIcon, MenuIcon, SearchIcon } from './icons'
 const MAIN_LINKS = [
   { href: '/catalogo?genero=hombre', label: 'Hombre' },
   { href: '/catalogo?genero=mujer', label: 'Mujer' },
-  { href: '/catalogo?genero=ninos', label: 'Niños' },
 ];
 
 export default function Header() {

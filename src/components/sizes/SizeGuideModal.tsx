@@ -9,7 +9,6 @@ export default function SizeGuideModal({
   open,
   onClose,
   fit,
-  kids,
   availableSizes,
   onPickSize,
   productTitle,
@@ -17,7 +16,6 @@ export default function SizeGuideModal({
   open: boolean;
   onClose: () => void;
   fit?: Fit;
-  kids?: boolean;
   availableSizes?: string[];
   onPickSize?: (size: string) => void;
   productTitle?: string;
@@ -56,7 +54,6 @@ export default function SizeGuideModal({
         </div>
         <SizeGuide
           fit={fit}
-          kids={kids}
           availableSizes={availableSizes}
           onPickSize={
             onPickSize

@@ -27,7 +27,7 @@ function toProduct(id: string, data: any): Product {
     slug: data.slug,
     title: data.title,
     brand: data.brand ?? '',
-    gender: data.gender ?? 'unisex',
+    gender: ['hombre', 'mujer', 'unisex'].includes(data.gender) ? data.gender : 'unisex',
     description: data.description ?? '',
     price: data.price ?? 0,
     compareAtPrice: data.compareAtPrice ?? null,

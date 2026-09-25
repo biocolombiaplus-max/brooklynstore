@@ -6,7 +6,6 @@ import type { PaymentMethod, Product } from '@/lib/types';
 import { classNames, formatPrice, resolveColorImage, whatsappLinkTo } from '@/lib/utils';
 import { useCartStore } from '@/lib/cart-store';
 import { useSiteSettings } from '@/lib/settings-context';
-import { isKidSizes } from '@/lib/sizes';
 import SafeImage from '../SafeImage';
 import { CartIcon, RulerIcon, WhatsAppIcon } from '../icons';
 import { discountPercentOf } from '../ProductCard';
@@ -39,7 +38,6 @@ export default function BuyBox({
 
   const discountPercent = discountPercentOf(product);
   const soldOut = product.stock <= 0;
-  const kids = product.gender === 'ninos' || isKidSizes(product.sizes);
   const needsSize = product.sizes.length > 0;
 
   function handleColorChange(colorName: string) {
@@ -325,7 +323,6 @@ export default function BuyBox({
         open={guideOpen}
         onClose={() => setGuideOpen(false)}
         fit={product.fit}
-        kids={kids}
         availableSizes={product.sizes}
         productTitle={product.title}
         onPickSize={(s) => {

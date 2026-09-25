@@ -4,7 +4,7 @@ import SizeGuide from '@/components/sizes/SizeGuide';
 
 export const metadata: Metadata = {
   title: 'Guía de tallas',
-  description: 'Calcula tu talla exacta de zapatos en centímetros. Tabla de equivalencias EC, EU y US para hombre, mujer y niños.',
+  description: 'Calcula tu talla exacta de zapatos en centímetros. Tabla de equivalencias EC, EU y US para hombre y mujer.',
 };
 
 export default function GuiaDeTallasPage() {

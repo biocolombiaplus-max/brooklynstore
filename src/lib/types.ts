@@ -13,12 +13,11 @@ export interface ProductReview {
 }
 
 // Para quién es el modelo — se usa en los filtros del catálogo y para
-// mostrar la guía de tallas correcta (adulto o niño).
+// en el panel al crear productos.
 export const GENDERS = [
   { value: 'hombre', label: 'Hombre' },
   { value: 'mujer', label: 'Mujer' },
   { value: 'unisex', label: 'Unisex' },
-  { value: 'ninos', label: 'Niños' },
 ] as const;
 
 export type Gender = (typeof GENDERS)[number]['value'];

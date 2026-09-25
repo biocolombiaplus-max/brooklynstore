@@ -17,7 +17,7 @@ de Brooklyn Store.
   ofertas + buscador. Los filtros van en la URL (`/catalogo?marca=Nike`).
 - **Ficha de producto**: galería deslizable en celular y con zoom en PC,
   selector de talla obligatorio, **"¿Cuál es mi talla?"** (calculadora por
-  centímetros, cómo medir el pie y tabla EC / EU / US hombre, mujer y niños),
+  centímetros, cómo medir el pie y tabla EC / EU / US hombre y mujer),
   medidor de horma (pequeña / normal / grande), temporizador, stock, reseñas,
   productos relacionados y barra fija de compra en celular.
 - **Pagos (los dos terminan confirmando el pedido por WhatsApp):**

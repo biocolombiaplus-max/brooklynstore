@@ -21,7 +21,7 @@ export function catalogMessage(): string {
 }
 
 export function adviceMessage(): string {
-  return `${HELLO}\nQuiero asesoría para elegir mis zapatos 👟\n\n• Para: (hombre / mujer / niño)\n• Uso: (diario / correr / gym / formal)\n• Mi talla: \n• Presupuesto aprox.: `;
+  return `${HELLO}\nQuiero asesoría para elegir mis zapatos 👟\n\n• Para: (hombre / mujer)\n• Uso: (diario / correr / gym / formal)\n• Mi talla: \n• Presupuesto aprox.: `;
 }
 
 export function sizeHelpMessage(): string {

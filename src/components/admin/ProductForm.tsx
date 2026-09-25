@@ -11,12 +11,10 @@ import { uploadProductImage, deleteProductImage, type ImageCropMode } from '@/li
 import { resizeForUpload } from '@/lib/imageCrop';
 
 const COMMON_SIZES = ['34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
-const KID_SIZES = ['21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33'];
 const SIZE_PRESETS: { label: string; sizes: string[] }[] = [
   { label: 'Hombre (38-44)', sizes: ['38', '39', '40', '41', '42', '43', '44'] },
   { label: 'Mujer (35-40)', sizes: ['35', '36', '37', '38', '39', '40'] },
   { label: 'Unisex (36-43)', sizes: ['36', '37', '38', '39', '40', '41', '42', '43'] },
-  { label: 'Niños (24-33)', sizes: ['24', '25', '26', '27', '28', '29', '30', '31', '32', '33'] },
 ];
 const QUICK_COLORS: ProductColor[] = [
   { name: 'Negro', hex: '#111111' },
@@ -383,7 +381,7 @@ export default function ProductForm({ product }: { product?: Product }) {
             ))}
           </div>
           <div className="mb-3 flex flex-wrap gap-2">
-            {[...(gender === 'ninos' ? KID_SIZES : []), ...COMMON_SIZES].map((s) => (
+            {COMMON_SIZES.map((s) => (
               <button
                 key={s}
                 type="button"
@@ -396,7 +394,7 @@ export default function ProductForm({ product }: { product?: Product }) {
               </button>
             ))}
             {sizes
-              .filter((s) => !COMMON_SIZES.includes(s) && !(gender === 'ninos' && KID_SIZES.includes(s)))
+              .filter((s) => !COMMON_SIZES.includes(s))
               .map((s) => (
                 <button
                   key={s}

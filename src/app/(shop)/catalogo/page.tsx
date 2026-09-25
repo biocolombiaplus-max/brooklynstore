@@ -145,7 +145,7 @@ function CatalogoContent() {
   const filtered = useMemo(() => {
     if (!products) return [];
     let list = products;
-    if (gender) list = list.filter((p) => p.gender === gender || (gender !== 'ninos' && p.gender === 'unisex'));
+    if (gender) list = list.filter((p) => p.gender === gender || p.gender === 'unisex');
     if (brand) list = list.filter((p) => p.brand.toLowerCase() === brand.toLowerCase());
     if (style) list = list.filter((p) => p.collection === style);
     if (size) list = list.filter((p) => p.sizes.includes(size));
@@ -167,7 +167,7 @@ function CatalogoContent() {
     ? `Resultados para “${q}”`
     : onlyOffers
       ? 'Ofertas 🔥'
-      : brand || (genderLabel ? `Zapatos ${genderLabel.toLowerCase() === 'niños' ? 'para niños' : `de ${genderLabel.toLowerCase()}`}` : 'Todo el catálogo');
+      : brand || (genderLabel ? `Zapatos de ${genderLabel.toLowerCase()}` : 'Todo el catálogo');
 
   const filtersPanel = (
     <div className="space-y-7">
