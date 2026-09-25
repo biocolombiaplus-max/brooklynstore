@@ -17,7 +17,7 @@ const BASE = Date.UTC(2026, 8, 1);
 
 const REVIEWS = {
   sneaker: [
-    { name: 'Andrés M.', city: 'Quito', rating: 5, text: 'Originales y con su caja. Llegaron en 2 días, full recomendados.' },
+    { name: 'Andrés M.', city: 'Quito', rating: 5, text: 'Llegaron con su caja en 2 días, full recomendados.' },
     { name: 'Carla R.', city: 'Guayaquil', rating: 5, text: 'La talla exacta con la guía. Súper cómodos, de una vuelvo a comprar.' },
     { name: 'Jorge P.', city: 'Ambato', rating: 4, text: 'Chévere el modelo. Pagué contra entrega y todo salió bien.' },
   ],
@@ -35,7 +35,7 @@ export const DEMO_PRODUCTS: Product[] = [
     brand: 'On',
     gender: 'unisex',
     description:
-      'Ingeniería suiza para correr y caminar como sobre nubes. La suela CloudTec Phase® se comprime como un dominó en cada pisada para darte una transición suavecita y un impulso natural hacia adelante.\n\n• Amortiguación CloudTec Phase®\n• Capellada tejida ultraligera y transpirable\n• Diseño Swiss Engineering\n• Perfectos para correr, entrenar o el día a día\n• 100% originales, con su caja',
+      'Ingeniería suiza para correr y caminar como sobre nubes. La suela CloudTec Phase® se comprime como un dominó en cada pisada para darte una transición suavecita y un impulso natural hacia adelante.\n\n• Amortiguación CloudTec Phase®\n• Capellada tejida ultraligera y transpirable\n• Diseño Swiss Engineering\n• Perfectos para correr, entrenar o el día a día\n• Incluye su caja',
     price: 189.99,
     compareAtPrice: 219.99,
     images: ['/products/on-cloudtec-phase.jpg', '/products/on-cloudtec-phase-cutout.png'],
@@ -50,7 +50,7 @@ export const DEMO_PRODUCTS: Product[] = [
     soldCount: 634,
     reviewsCount: 187,
     reviews: [
-      { name: 'Sebastián R.', city: 'Quito', rating: 5, text: 'Lo más cómodo que he usado en mi vida, literal se siente como caminar en nubes. Originales y llegaron al día siguiente.' },
+      { name: 'Sebastián R.', city: 'Quito', rating: 5, text: 'Lo más cómodo que he usado en mi vida, literal se siente como caminar en nubes. Y llegaron al día siguiente.' },
       { name: 'Camila E.', city: 'Guayaquil', rating: 5, text: 'Full bonitos en persona, el color es elegantísimo. Los uso para el gym y para salir. De una los recomiendo.' },
       { name: 'Mateo V.', city: 'Cuenca', rating: 5, text: 'Pagué contra entrega, adelanté los $5 y todo perfecto. La talla exacta con la calculadora.' },
     ],
@@ -63,7 +63,7 @@ export const DEMO_PRODUCTS: Product[] = [
     brand: 'Nike',
     gender: 'unisex',
     description:
-      'El clásico que nunca pasa de moda. Cuero premium, suela Air para amortiguación todo el día y ese blanco total que combina con todo.\n\n• Capellada de cuero\n• Unidad Air encapsulada en el talón\n• Suela de goma con patrón de pivote\n• Incluye caja original',
+      'El clásico que nunca pasa de moda. Cuero premium, suela Air para amortiguación todo el día y ese blanco total que combina con todo.\n\n• Capellada de cuero\n• Unidad Air encapsulada en el talón\n• Suela de goma con patrón de pivote\n• Incluye su caja',
     price: 119.99,
     compareAtPrice: 149.99,
     images: [img('photo-1600269452121-4f2416e55c28'), img('photo-1549298916-b41d501d3772')],
@@ -87,7 +87,7 @@ export const DEMO_PRODUCTS: Product[] = [
     brand: 'Adidas',
     gender: 'unisex',
     description:
-      'El ícono de la cancha que se tomó la calle. Capellada de cuero suave, puntera de gamuza y la clásica suela de goma color caramelo.\n\n• Cuero y gamuza\n• Suela de goma natural\n• Horma baja clásica\n• Incluye caja original',
+      'El ícono de la cancha que se tomó la calle. Capellada de cuero suave, puntera de gamuza y la clásica suela de goma color caramelo.\n\n• Cuero y gamuza\n• Suela de goma natural\n• Horma baja clásica\n• Incluye su caja',
     price: 109.99,
     compareAtPrice: 129.99,
     images: [img('photo-1608231387042-66d1773070a5'), img('photo-1525966222134-fcfa99b8ae77')],
@@ -188,7 +188,7 @@ export const DEMO_PRODUCTS: Product[] = [
     brand: 'Converse',
     gender: 'unisex',
     description:
-      'El original. Lona resistente, puntera de goma y la estrella en el tobillo. Un básico que no puede faltar en tu clóset.\n\n• Lona de algodón\n• Plantilla acolchada OrthoLite\n• Suela vulcanizada',
+      'El clásico de siempre. Lona resistente, puntera de goma y la estrella en el tobillo. Un básico que no puede faltar en tu clóset.\n\n• Lona de algodón\n• Plantilla acolchada OrthoLite\n• Suela vulcanizada',
     price: 69.99,
     compareAtPrice: 84.99,
     images: [img('photo-1514989940723-e8e51635b782'), img('photo-1463100099107-aa0980c362e6')],

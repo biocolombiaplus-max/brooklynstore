@@ -69,11 +69,11 @@ d.line((cx-150*S,y,cx-16*S,y),fill=GOLD+(255,),width=1*S); d.line((cx+16*S,y,cx+
 d.polygon([(cx,y-7*S),(cx+7*S,y),(cx,y+7*S),(cx-7*S,y)],fill=GOLD_L)
 
 # titulares
-plain_text('ZAPATOS ORIGINALES MULTIMARCA',mont(800,30),cx,y+28*S,(255,255,255),track=5)
+plain_text('TIENDA DE ZAPATOS MULTIMARCA',mont(800,30),cx,y+28*S,(255,255,255),track=5)
 gold_text('Envío a todo Ecuador  ·  Paga al recibir',play(31),cx,y+80*S)
 
 # sellos inferiores
-labels=['100% ORIGINALES','CONTRA ENTREGA','ENVÍO 24–72 H']
+labels=['COMPRA SEGURA','CONTRA ENTREGA','ENVÍO 24–72 H']
 f=mont(700 if False else 600,15)
 ys=H-inset-82*S
 widths=[f.getlength(l)+2.2*S*len(l)+44*S for l in labels]; gap=16*S

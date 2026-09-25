@@ -25,7 +25,7 @@ export default function Footer() {
           {[
             { icon: '🚚', title: 'Envío a todo Ecuador', text: shipping.deliveryTime },
             { icon: '💵', title: 'Contra entrega', text: `Adelantas solo ${formatPrice(payments.codAdvance)}` },
-            { icon: '✅', title: '100% originales', text: 'Garantía Brooklyn' },
+            { icon: '🛡️', title: 'Compra segura', text: 'Garantía Brooklyn' },
           ].map((item) => (
             <div key={item.title} className="flex items-center justify-center gap-3 sm:justify-start">
               <span className="text-2xl">{item.icon}</span>

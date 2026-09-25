@@ -438,7 +438,7 @@ export default function CheckoutForm({
         </p>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] font-semibold text-muted">
           <span>🔒 Datos protegidos</span>
-          <span>✅ 100% originales</span>
+          <span>🛡️ Garantía Brooklyn</span>
           <span>🔄 Cambio de talla</span>
         </div>
       </fieldset>

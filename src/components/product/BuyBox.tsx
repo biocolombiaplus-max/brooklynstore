@@ -310,7 +310,7 @@ export default function BuyBox({
 
       <div className="grid grid-cols-3 gap-2 text-center">
         {[
-          { icon: '✅', title: '100% originales' },
+          { icon: '🛡️', title: 'Compra segura' },
           { icon: '🚚', title: `Llega en ${shipping.deliveryTime.replace(' hábiles', '')}` },
           { icon: '🔄', title: 'Cambio de talla' },
         ].map((item) => (

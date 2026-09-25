@@ -133,7 +133,7 @@ export default function MobileMenu({ open, onClose }: { open: boolean; onClose: 
           </Link>
 
           {/* Marcas */}
-          <p className="mt-7 text-[11px] font-extrabold uppercase tracking-[0.22em] text-muted">Marcas originales</p>
+          <p className="mt-7 text-[11px] font-extrabold uppercase tracking-[0.22em] text-muted">Marcas</p>
           <div className="mt-3 grid grid-cols-3 gap-2">
             {otherBrands.map((b) => (
               <Link
@@ -204,7 +204,7 @@ export default function MobileMenu({ open, onClose }: { open: boolean; onClose: 
           >
             <WhatsAppIcon /> Asesoría gratis por WhatsApp
           </a>
-          <p className="mt-2 text-center text-[11px] font-semibold text-muted">✅ 100% originales · 🚚 Envío a todo Ecuador</p>
+          <p className="mt-2 text-center text-[11px] font-semibold text-muted">🛡️ Compra segura · 🚚 Envío a todo Ecuador</p>
         </div>
       </div>
     </div>,

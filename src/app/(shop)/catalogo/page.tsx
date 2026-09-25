@@ -306,7 +306,7 @@ function CatalogoContent() {
             <Link href="/" className="hover:text-primary">Inicio</Link> / <span className="text-ink">Catálogo</span>
           </nav>
           <h1 className="section-title">{title}</h1>
-          <p className="mt-2 text-sm text-muted">Zapatos 100% originales · Envío a todo el Ecuador · Paga por transferencia o contra entrega</p>
+          <p className="mt-2 text-sm text-muted">Envío a todo el Ecuador · Paga por transferencia o contra entrega</p>
         </div>
       </div>
       )}

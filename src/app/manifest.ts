@@ -4,9 +4,9 @@ const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Brooklyn Store';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${STORE_NAME} — Zapatos originales en Ecuador`,
+    name: `${STORE_NAME} — Tienda de zapatos en Ecuador`,
     short_name: STORE_NAME,
-    description: 'Zapatos originales multimarca con envío a todo el Ecuador. Transferencia o pago contra entrega.',
+    description: 'Zapatos multimarca con envío a todo el Ecuador. Transferencia o pago contra entrega.',
     start_url: '/',
     display: 'standalone',
     background_color: '#FFFFFF',

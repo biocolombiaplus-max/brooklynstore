@@ -14,7 +14,7 @@ export default function BrandStrip() {
   return (
     <section className="overflow-hidden border-b border-border bg-white py-7">
       <p className="mb-4 text-center text-[11px] font-extrabold uppercase tracking-[0.25em] text-muted">
-        Las marcas que te gustan, 100% originales
+        Las marcas que más te gustan
       </p>
       <div className="group relative flex overflow-hidden">
         <div className="flex w-max animate-marquee-slow items-center gap-12 pr-12 group-hover:[animation-play-state:paused] sm:gap-16 sm:pr-16">

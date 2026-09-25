@@ -185,8 +185,8 @@ export default function ProductPage() {
                 </AccordionItem>
                 <AccordionItem title="🔄 Cambios y garantía">
                   <ul className="space-y-2">
-                    <li>• Producto 100% original, garantizado.</li>
-                    <li>• Tienes 7 días para cambiar la talla (zapato sin uso y en su caja original).</li>
+                    <li>• Calidad garantizada: revisamos cada par antes de despacharlo.</li>
+                    <li>• Tienes 7 días para cambiar la talla (zapato sin uso y en su caja).</li>
                     <li>• Si llega con algún defecto de fábrica, te lo cambiamos sin costo.</li>
                   </ul>
                 </AccordionItem>

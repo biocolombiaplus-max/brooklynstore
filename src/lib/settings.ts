@@ -28,7 +28,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     text: 'Ingeniería suiza con tecnología CloudTec® que amortigua cada paso y te impulsa hacia adelante. La marca que más piden nuestros clientes en todo el Ecuador — ahora con envío a tu puerta y pago contra entrega.',
     image: '/products/on-cloudtec-phase-cutout.png',
     badge: 'Más vendida',
-    bullets: ['Ingeniería suiza', 'Amortiguación CloudTec®', 'Ultraligeros y transpirables', '100% originales'],
+    bullets: ['Ingeniería suiza', 'Amortiguación CloudTec®', 'Ultraligeros y transpirables', 'Diseño premium'],
     buttonText: 'Comprar On',
   },
   brands: ['On', 'Nike', 'Adidas', 'New Balance', 'Puma', 'Converse', 'Vans', 'Reebok', 'Asics'],
@@ -47,11 +47,11 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     bodyFont: 'Montserrat',
   },
   announcementMessages: [
-    '☁️ Llegó On — la marca más vendida de Brooklyn, 100% original',
+    '☁️ Llegó On — la marca más vendida de Brooklyn Store',
     '🚚 Envíos a todito el Ecuador — llegamos a tu puerta',
     '💵 Pago contra entrega: solo adelantas $5 del envío y el resto al recibir',
     '🏦 Paga por transferencia o depósito — Pichincha, Guayaquil, Produbanco y más',
-    '✅ 100% originales · Garantía Brooklyn',
+    '🛡️ Compra segura · Garantía Brooklyn',
     '🔄 ¿No te quedó? Cambio de talla sin complicaciones',
     '⚡ Pilas: los más vendidos se agotan ya mismo',
   ],
@@ -67,7 +67,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     ],
     badge1: '🚚 Envío a todo Ecuador',
     badge2: '💵 Contra entrega',
-    badge3: '✅ 100% originales',
+    badge3: '🛡️ Compra segura',
     button1Text: 'Comprar ahora',
     button1Url: '/catalogo',
     button2Text: 'Ver ofertas',
@@ -100,15 +100,15 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     { icon: '🚚', title: 'Envío a todo Ecuador', sub: 'De Tulcán a Zamora' },
     { icon: '💵', title: 'Contra entrega', sub: 'Adelantas solo $5' },
     { icon: '🏦', title: 'Transferencia', sub: 'Envío gratis' },
-    { icon: '✅', title: '100% originales', sub: 'Garantía Brooklyn' },
+    { icon: '🛡️', title: 'Compra segura', sub: 'Garantía Brooklyn' },
     { icon: '🔄', title: 'Cambio de talla', sub: 'Sin complicaciones' },
   ],
   benefitsHeading: '¿Por qué comprar en Brooklyn Store?',
   benefits: [
     {
       icon: '✅',
-      title: 'Marcas originales',
-      text: 'Trabajamos solo con producto original. Si no es original, te devolvemos tu plata. Así de claro.',
+      title: 'Calidad garantizada',
+      text: 'Revisamos cada par antes de despacharlo. Si llega con un defecto de fábrica, te lo cambiamos. Así de claro.',
     },
     {
       icon: '💵',
@@ -133,7 +133,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
       name: 'Andrés M.',
       city: 'Quito',
       review:
-        'Full recomendados, ñaño. Pedí unas Air Force por contra entrega, adelanté los $5 y me llegaron en dos días. Originales y con su caja. De una vuelvo a comprar.',
+        'Full recomendados, ñaño. Pedí unas Air Force por contra entrega, adelanté los $5 y me llegaron en dos días, con su caja y todo. De una vuelvo a comprar.',
     },
     {
       name: 'Gabriela V.',
@@ -165,9 +165,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
         'Al confirmar tu pedido te mostramos nuestras cuentas bancarias. Haces la transferencia o el depósito en ventanilla / agente, nos mandas la foto del comprobante por WhatsApp y despachamos ese mismo día. ¡Y el envío te sale gratis!',
     },
     {
-      question: '¿Los zapatos son originales?',
+      question: '¿Qué garantía tengo?',
       answer:
-        'Sí, 100% originales. Trabajamos solo con producto original y te lo garantizamos. Si no es original, te devolvemos tu dinero.',
+        'Revisamos cada par antes de enviarlo. Si tu pedido llega con un defecto de fábrica o no es lo que pediste, te lo cambiamos sin costo. Y con contra entrega pagas el resto solo cuando lo tienes en tus manos.',
     },
     {
       question: '¿Cuánto se demora en llegar?',
@@ -194,7 +194,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   },
   footer: {
     brandText:
-      'Tienda multimarca de zapatos originales en Ecuador. Nike, Adidas, New Balance, Puma y más, con envío a todo el país.',
+      'Tienda multimarca de zapatos en Ecuador. Nike, Adidas, New Balance, Puma y más, con envío a todo el país.',
     contactText: '¿Dudas con tu talla o tu pedido? Escríbenos, te respondemos ya mismo.',
     email: 'brooklynstore.ec@gmail.com',
     address: 'Ecuador',

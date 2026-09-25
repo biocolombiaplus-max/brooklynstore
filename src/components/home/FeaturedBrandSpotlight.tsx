@@ -37,7 +37,7 @@ export default function FeaturedBrandSpotlight() {
 
   const stats = [
     sold > 0 ? { value: `+${sold}`, label: 'Pares vendidos' } : { value: '4.9', label: 'Calificación' },
-    fromPrice ? { value: formatPrice(fromPrice), label: 'Desde' } : { value: '100%', label: 'Originales' },
+    fromPrice ? { value: formatPrice(fromPrice), label: 'Desde' } : { value: '4.9★', label: 'Calificación' },
     payments.codEnabled ? { value: formatPrice(payments.codAdvance), label: 'Y el resto al recibir' } : { value: '24-72h', label: 'Entrega' },
   ];
 
@@ -57,7 +57,7 @@ export default function FeaturedBrandSpotlight() {
               {fb.name}
             </span>
           </span>
-          {fb.image && <ShoeStage src={fb.image} alt={`${fb.name} — zapatos originales`} sizes="(max-width: 1024px) 100vw, 55vw" className="mx-auto aspect-[16/11] w-full max-w-2xl" />}
+          {fb.image && <ShoeStage src={fb.image} alt={`${fb.name} — zapatos`} sizes="(max-width: 1024px) 100vw, 55vw" className="mx-auto aspect-[16/11] w-full max-w-2xl" />}
           <StarSeal label={fb.badge} className="absolute right-0 top-0 w-24 text-[15px] sm:w-32 sm:text-[20px] lg:-right-2 lg:top-2" />
         </Link>
 
