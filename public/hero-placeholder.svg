@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F5E6CE"/>
+      <stop offset="55%" stop-color="#C9A06C"/>
+      <stop offset="100%" stop-color="#A9673A"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#g)"/>
+  <g opacity="0.9" transform="translate(400,520)">
+    <ellipse cx="0" cy="160" rx="230" ry="34" fill="#1C1208" opacity="0.12"/>
+    <path d="M-190,60 C-190,-40 -120,-120 0,-120 C120,-120 190,-40 190,60 C190,120 140,150 0,150 C-140,150 -190,120 -190,60 Z" fill="#FBF3E5" stroke="#1C1208" stroke-opacity="0.15" stroke-width="4"/>
+    <path d="M-150,40 C-150,-20 -80,-70 0,-70 C80,-70 150,-20 150,40" fill="none" stroke="#A9673A" stroke-width="10" stroke-linecap="round"/>
+  </g>
+  <text x="400" y="880" text-anchor="middle" font-family="Georgia, serif" font-size="34" fill="#1C1208" opacity="0.55">Sube tu foto de producto</text>
+</svg>

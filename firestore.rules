@@ -1,0 +1,52 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    // Productos: lectura pública, escritura solo administradores.
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Pedidos: cualquiera puede crear un pedido (checkout público),
+    // pero solo el administrador puede leerlos, editarlos o borrarlos.
+    match /orders/{orderId} {
+      allow create: if isAdmin() || (
+        request.resource.data.keys().hasAll(['items', 'subtotal', 'total', 'customer', 'paymentMethod', 'status'])
+        && request.resource.data.status == 'pendiente'
+        && request.resource.data.paymentMethod in ['transferencia', 'contra_entrega']
+      );
+      allow read, update, delete: if isAdmin();
+    }
+
+    // Lista de administradores: solo un admin ya autenticado puede leer/gestionar esta colección.
+    // El primer admin debe crearse manualmente desde la consola de Firebase (ver README).
+    match /admins/{uid} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if isAdmin();
+    }
+
+    // Configuración del sitio (textos, colores, WhatsApp, etc.): lectura
+    // pública, escritura solo administradores.
+    match /settings/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // Suscripciones de notificación push del celular de la administradora:
+    // el checkout (público, sin sesión) necesita LEERLAS para poder avisarle
+    // de un pedido nuevo, pero solo un admin ya logueado puede crear/borrar
+    // la suscripción de su propio dispositivo.
+    match /pushSubscriptions/{subId} {
+      allow read: if true;
+      allow create, update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}
