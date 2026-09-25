@@ -28,6 +28,10 @@ export function sizeHelpMessage(): string {
   return `${HELLO}\nNecesito ayuda con mi talla 📏\n\n• Largo de mi pie: ___ cm\n• Modelo que me interesa: \n• Talla que uso normalmente: `;
 }
 
+export function exchangeMessage(hours = 48): string {
+  return `${HELLO}\nQuiero solicitar un *cambio de talla* 🔄 (dentro de las ${hours} h de recibido)\n\n• N.º de pedido: \n• Modelo: \n• Talla que recibí: \n• Talla que necesito: \n• Fecha en que lo recibí: \n\nTe envío fotos del zapato sin uso y con su caja. 📸`;
+}
+
 export function brandMessage(brand: string): string {
   return `${HELLO}\nMe interesan los zapatos *${brand}* ⭐ ¿Qué modelos y tallas tienen disponibles?\n\n${pageUrl()}`;
 }

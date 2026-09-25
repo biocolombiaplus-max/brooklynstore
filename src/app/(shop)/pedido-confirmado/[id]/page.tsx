@@ -1,5 +1,6 @@
 'use client';
 
+import ExchangePolicy from '@/components/ExchangePolicy';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -222,6 +223,8 @@ export default function OrderConfirmationPage() {
             {order.customer.reference && <p>Referencia: {order.customer.reference}</p>}
           </div>
         </div>
+
+        <ExchangePolicy compact className="mt-4" />
 
         <p className="mt-6 text-center text-xs text-muted">
           ¿Alguna duda? Escríbenos por WhatsApp o al correo{' '}

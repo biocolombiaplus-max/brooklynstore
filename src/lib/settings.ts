@@ -51,7 +51,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     '💵 Pago contra entrega: solo adelantas $5 del envío y el resto al recibir',
     '🏦 Paga por transferencia o depósito en Banco Pichincha',
     '🛡️ Compra segura · Garantía Brooklyn',
-    '🔄 ¿No te quedó? Cambio de talla sin complicaciones',
+    '🔄 ¿No te quedó? Solicita tu cambio de talla hasta 48 h después de recibir',
     '⚡ Pilas: los más vendidos se agotan ya mismo',
   ],
   hero: {
@@ -81,6 +81,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     rates: [{ province: 'Galápagos', rate: 15 }],
     deliveryTime: '24 a 72 horas hábiles',
   },
+  exchangeWindowHours: 48,
   payments: {
     codAdvance: 5,
     codEnabled: true,
@@ -100,7 +101,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     { icon: '💵', title: 'Contra entrega', sub: 'Adelantas solo $5' },
     { icon: '🏦', title: 'Transferencia', sub: 'Envío gratis' },
     { icon: '🛡️', title: 'Compra segura', sub: 'Garantía Brooklyn' },
-    { icon: '🔄', title: 'Cambio de talla', sub: 'Sin complicaciones' },
+    { icon: '🔄', title: 'Cambio de talla', sub: 'Hasta 48 h tras recibir' },
   ],
   benefitsHeading: '¿Por qué comprar en Brooklyn Store?',
   benefits: [
@@ -117,7 +118,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       icon: '📏',
       title: 'Tu talla, a la primera',
-      text: 'Guía de tallas súper clara y asesoría por WhatsApp. ¿No te quedó? Te lo cambiamos sin drama.',
+      text: 'Guía de tallas súper clara y asesoría por WhatsApp. ¿No te quedó? Avísanos por WhatsApp dentro de las 48 horas de recibido y gestionamos el cambio.',
     },
     {
       icon: '⚡',
@@ -176,7 +177,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       question: '¿Y si no me queda la talla?',
       answer:
-        'Tranquilo. Tienes 7 días para pedir el cambio de talla, siempre que el zapato esté sin uso y con su caja. Escríbenos por WhatsApp y lo coordinamos.',
+        'Escríbenos por WhatsApp máximo 48 horas después de recibir tu pedido. El zapato debe estar sin uso, con su caja y etiquetas. Nos envías fotos, coordinamos el retiro y te despachamos la nueva talla. Pasadas las 48 horas no podemos procesar el cambio.',
     },
     {
       question: '¿Cómo sé cuál es mi talla?',
@@ -243,6 +244,7 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
     whatsappCountryCode: data.whatsappCountryCode || DEFAULT_SETTINGS.whatsappCountryCode,
     notificationEmail: data.notificationEmail || DEFAULT_SETTINGS.notificationEmail,
     logoHeight: data.logoHeight ?? DEFAULT_SETTINGS.logoHeight,
+    exchangeWindowHours: data.exchangeWindowHours || DEFAULT_SETTINGS.exchangeWindowHours,
     collectionsMenu: data.collectionsMenu ?? DEFAULT_SETTINGS.collectionsMenu,
     brands: withFeaturedFirst(data.brands?.length ? data.brands : DEFAULT_SETTINGS.brands, {
       ...DEFAULT_SETTINGS.featuredBrand,

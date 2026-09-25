@@ -243,6 +243,8 @@ export interface SiteSettings {
   };
   shipping: ShippingSettings;
   payments: PaymentSettings;
+  // Plazo (en horas desde que recibe el pedido) para pedir cambio de talla.
+  exchangeWindowHours: number;
   trustItems: TrustItem[];
   benefitsHeading: string;
   benefits: BenefitItem[];

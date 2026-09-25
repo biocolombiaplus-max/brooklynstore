@@ -1,5 +1,6 @@
 'use client';
 
+import ExchangePolicy from '../ExchangePolicy';
 import { useMemo, useState } from 'react';
 import { ADULT_SIZES, recommendSize } from '@/lib/sizes';
 import { FITS, type Fit } from '@/lib/types';
@@ -126,16 +127,12 @@ export default function SizeGuide({
         </div>
       </div>
 
-      <div className="grid gap-3 text-sm sm:grid-cols-2">
-        <p className="rounded-2xl bg-cream-alt p-4 text-muted">
-          <strong className="text-ink">¿Entre dos tallas?</strong> Elige la mayor. Si tienes el pie ancho o el empeine alto, también sube
-          media talla.
-        </p>
-        <p className="rounded-2xl bg-cream-alt p-4 text-muted">
-          <strong className="text-ink">¿No te quedó?</strong> Tranqui: tienes 7 días para cambiar la talla, con el zapato sin uso y en su
-          caja.
-        </p>
-      </div>
+      <p className="rounded-2xl bg-cream-alt p-4 text-sm text-muted">
+        <strong className="text-ink">¿Entre dos tallas?</strong> Elige la mayor. Si tienes el pie ancho o el empeine alto, también sube
+        media talla.
+      </p>
+
+      <ExchangePolicy />
     </div>
   );
 }

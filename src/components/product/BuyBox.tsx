@@ -310,7 +310,7 @@ export default function BuyBox({
         {[
           { icon: '🛡️', title: 'Compra segura' },
           { icon: '🚚', title: `Llega en ${shipping.deliveryTime.replace(' hábiles', '')}` },
-          { icon: '🔄', title: 'Cambio de talla' },
+          { icon: '🔄', title: 'Cambio en 48 h' },
         ].map((item) => (
           <div key={item.title} className="rounded-xl border border-border px-2 py-3">
             <span className="text-lg">{item.icon}</span>

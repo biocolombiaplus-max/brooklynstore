@@ -41,7 +41,7 @@ function buildStatusMessage(order: Order, storeName: string): string {
       return `Hola ${firstName}! Tu pedido ${order.orderNumber} ya salió hacia ${order.customer.city}.${shippingInfo}\n\nCualquier novedad con la entrega, escríbenos por este mismo medio.`;
     }
     case 'entregado':
-      return `Hola ${firstName}! Vimos que tu pedido ${order.orderNumber} ya fue entregado. Esperamos que disfrutes tus zapatos nuevos 🔥 Si necesitas cambio de talla o tienes alguna duda, aquí estamos.`;
+      return `Hola ${firstName}! Vimos que tu pedido ${order.orderNumber} ya fue entregado. Esperamos que disfrutes tus zapatos nuevos 🔥 Si necesitas cambio de talla, recuerda escribirnos dentro de las 48 horas de recibido. Si tienes alguna duda, aquí estamos.`;
     case 'cancelado':
       return `Hola ${firstName}, tu pedido ${order.orderNumber} en ${storeName} fue cancelado. Si fue un error o quieres hacer un nuevo pedido, escríbenos y con gusto te ayudamos.`;
     default:

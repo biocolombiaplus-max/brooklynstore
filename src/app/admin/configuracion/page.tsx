@@ -566,6 +566,15 @@ export default function ConfiguracionPage() {
               placeholder="24 a 72 horas hábiles"
             />
           </Field>
+          <Field label="Plazo para pedir cambio de talla (horas desde que recibe el pedido)">
+            <input
+              type="number"
+              min={1}
+              value={settings.exchangeWindowHours}
+              onChange={(e) => update('exchangeWindowHours', Number(e.target.value) || 48)}
+              className={inputClass}
+            />
+          </Field>
         </div>
 
         <div>
