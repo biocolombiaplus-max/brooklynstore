@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { FIREBASE_CONFIG } from '@/lib/firebase-config';
 import { DEMO_PRODUCTS } from '@/lib/demo-products';
 import { formatPrice } from '@/lib/utils';
 
@@ -14,7 +15,7 @@ interface ShareProduct {
 }
 
 async function findProduct(slug: string): Promise<ShareProduct | null> {
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const projectId = FIREBASE_CONFIG.projectId;
   if (projectId) {
     try {
       const controller = new AbortController();

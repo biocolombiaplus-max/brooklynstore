@@ -1,3 +1,5 @@
+import { FIREBASE_CONFIG } from './firebase-config';
+
 // Estos archivos (icon.tsx, apple-icon.tsx, opengraph-image.tsx) se generan
 // en el servidor y no pueden usar el SDK de cliente de Firebase (src/lib/
 // firebase.ts está deliberadamente deshabilitado fuera del navegador). En
@@ -25,7 +27,7 @@ const DEFAULTS: Branding = {
 };
 
 export async function getBranding(): Promise<Branding> {
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const projectId = FIREBASE_CONFIG.projectId;
   if (!projectId) return DEFAULTS;
 
   try {

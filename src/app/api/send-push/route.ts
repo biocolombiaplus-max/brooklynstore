@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { FIREBASE_CONFIG } from '@/lib/firebase-config';
 import webpush from 'web-push';
 
 // Lee la colección de suscripciones push vía la API REST de Firestore (esta
@@ -30,7 +31,7 @@ interface StoredSubscription {
 }
 
 async function loadSubscriptions(): Promise<StoredSubscription[]> {
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const projectId = FIREBASE_CONFIG.projectId;
   if (!projectId) return [];
 
   const res = await fetch(

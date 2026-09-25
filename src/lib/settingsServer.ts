@@ -7,6 +7,7 @@
 // "salto"/demora al entrar por primera vez). Usa la misma API REST pública
 // de Firestore que src/lib/branding.ts, porque el SDK de cliente de
 // Firebase está deliberadamente deshabilitado fuera del navegador.
+import { FIREBASE_CONFIG } from '@/lib/firebase-config';
 import { DEFAULT_SETTINGS, mergeWithDefaults } from './settings';
 import type { SiteSettings } from './types';
 
@@ -29,7 +30,7 @@ function unwrapFields(fields: Record<string, any>): Record<string, any> {
 }
 
 export async function getSiteSettingsServer(): Promise<SiteSettings> {
-  const projectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+  const projectId = FIREBASE_CONFIG.projectId;
   if (!projectId) return DEFAULT_SETTINGS;
 
   try {
