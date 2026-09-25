@@ -25,6 +25,9 @@ const CROP_TRANSFORMS = {
   // franjas se noten lo menos posible tanto en las tarjetas de producto
   // (fondo blanco) como en la ficha del producto.
   fit: 'c_pad,b_white,w_1200,h_1200,q_auto,f_auto',
+  // Logo, fotos de portada y foto de la marca estrella: sin recortar y sin
+  // fondo añadido (conserva la transparencia de los PNG), solo comprimida.
+  original: 'c_limit,w_1800,q_auto,f_auto',
 } as const;
 
 export type ImageCropMode = keyof typeof CROP_TRANSFORMS;

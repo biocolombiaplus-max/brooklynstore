@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { useSiteSettings } from '@/lib/settings-context';
+import { isStarBrand } from '@/lib/brand';
+import { classNames } from '@/lib/utils';
 
 // Cinta de marcas en movimiento — cada marca lleva a su catálogo filtrado.
 export default function BrandStrip() {
-  const { brands } = useSiteSettings();
+  const { brands, featuredBrand } = useSiteSettings();
   if (brands.length === 0) return null;
   const loop = [...brands, ...brands, ...brands];
 
@@ -20,8 +22,14 @@ export default function BrandStrip() {
             <Link
               key={brand + i}
               href={`/catalogo?marca=${encodeURIComponent(brand)}`}
-              className="whitespace-nowrap font-heading text-2xl font-black uppercase italic tracking-tight text-ink/25 transition-colors hover:text-primary sm:text-3xl"
+              className={classNames(
+                'whitespace-nowrap font-heading font-black uppercase italic tracking-tight transition-colors hover:text-primary',
+                isStarBrand(featuredBrand, brand)
+                  ? 'flex items-center gap-2 rounded-full bg-ink px-5 py-1.5 text-2xl not-italic text-gold-gradient sm:text-3xl'
+                  : 'text-2xl text-ink/25 sm:text-3xl',
+              )}
             >
+              {isStarBrand(featuredBrand, brand) && <span className="text-base not-italic">⭐</span>}
               {brand}
             </Link>
           ))}

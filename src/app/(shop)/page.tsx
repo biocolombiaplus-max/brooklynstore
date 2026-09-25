@@ -1,6 +1,7 @@
 import Hero from '@/components/Hero';
 import TrustBar from '@/components/TrustBar';
 import BrandStrip from '@/components/home/BrandStrip';
+import FeaturedBrandSpotlight from '@/components/home/FeaturedBrandSpotlight';
 import CategoryTiles from '@/components/home/CategoryTiles';
 import FeaturedProducts from '@/components/FeaturedProducts';
 import PaymentMethods from '@/components/home/PaymentMethods';
@@ -16,6 +17,7 @@ export default function HomePage() {
     <>
       <Hero />
       <TrustBar />
+      <FeaturedBrandSpotlight />
       <BrandStrip />
       <CategoryTiles />
       <FeaturedProducts />

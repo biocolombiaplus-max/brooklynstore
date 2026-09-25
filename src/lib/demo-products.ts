@@ -29,6 +29,34 @@ const REVIEWS = {
 
 export const DEMO_PRODUCTS: Product[] = [
   {
+    id: 'demo-on-cloudtec',
+    slug: 'on-cloud-cloudtec-phase',
+    title: 'On Cloud · CloudTec Phase®',
+    brand: 'On',
+    gender: 'unisex',
+    description:
+      'Ingeniería suiza para correr y caminar como sobre nubes. La suela CloudTec Phase® se comprime como un dominó en cada pisada para darte una transición suavecita y un impulso natural hacia adelante.\n\n• Amortiguación CloudTec Phase®\n• Capellada tejida ultraligera y transpirable\n• Diseño Swiss Engineering\n• Perfectos para correr, entrenar o el día a día\n• 100% originales, con su caja',
+    price: 189.99,
+    compareAtPrice: 219.99,
+    images: ['/products/on-cloudtec-phase.jpg', '/products/on-cloudtec-phase-cutout.png'],
+    sizes: ADULT_SIZES,
+    colors: [{ name: 'Pearl / Fog', hex: '#C9C3BA' }],
+    collection: 'running',
+    fit: 'normal',
+    stock: 6,
+    featured: true,
+    isNew: true,
+    active: true,
+    soldCount: 634,
+    reviewsCount: 187,
+    reviews: [
+      { name: 'Sebastián R.', city: 'Quito', rating: 5, text: 'Lo más cómodo que he usado en mi vida, literal se siente como caminar en nubes. Originales y llegaron al día siguiente.' },
+      { name: 'Camila E.', city: 'Guayaquil', rating: 5, text: 'Full bonitos en persona, el color es elegantísimo. Los uso para el gym y para salir. De una los recomiendo.' },
+      { name: 'Mateo V.', city: 'Cuenca', rating: 5, text: 'Pagué contra entrega, adelanté los $5 y todo perfecto. La talla exacta con la calculadora.' },
+    ],
+    createdAt: BASE,
+  },
+  {
     id: 'demo-af1',
     slug: 'nike-air-force-1-07-blanco',
     title: "Nike Air Force 1 '07",

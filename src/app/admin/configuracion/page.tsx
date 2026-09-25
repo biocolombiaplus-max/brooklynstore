@@ -172,7 +172,7 @@ function ImageUploadField({
     if (!file) return;
     setUploading(true);
     try {
-      const url = await uploadProductImage(file, folder);
+      const url = await uploadProductImage(file, folder, 'original');
       onChange(url);
     } catch (err) {
       alert(err instanceof Error ? err.message : 'No se pudo subir la imagen.');
@@ -234,7 +234,7 @@ function MultiImageUploadField({
     try {
       for (const file of queued) {
         try {
-          const url = await uploadProductImage(file, folder);
+          const url = await uploadProductImage(file, folder, 'original');
           onChange([...values, url]);
         } catch (err) {
           setUploadError(err instanceof Error ? err.message : 'No se pudo subir la foto. Intenta de nuevo.');
@@ -312,6 +312,10 @@ export default function ConfiguracionPage() {
     setSettings((s) => (s ? { ...s, shipping: { ...s.shipping, [field]: value } } : s));
   }
 
+  function updateFeatured<F extends keyof SiteSettings['featuredBrand']>(field: F, value: SiteSettings['featuredBrand'][F]) {
+    setSettings((s) => (s ? { ...s, featuredBrand: { ...s.featuredBrand, [field]: value } } : s));
+  }
+
   function updatePayments<F extends keyof SiteSettings['payments']>(field: F, value: SiteSettings['payments'][F]) {
     setSettings((s) => (s ? { ...s, payments: { ...s.payments, [field]: value } } : s));
   }
@@ -360,6 +364,11 @@ export default function ConfiguracionPage() {
       await updateSiteSettings({
         ...settings,
         brands: settings.brands.map((b) => b.trim()).filter(Boolean),
+        featuredBrand: {
+          ...settings.featuredBrand,
+          name: settings.featuredBrand.name.trim(),
+          bullets: settings.featuredBrand.bullets.map((b) => b.trim()).filter(Boolean),
+        },
         announcementMessages: settings.announcementMessages.map((m) => m.trim()).filter(Boolean),
       });
       setSaved(true);
@@ -607,6 +616,54 @@ export default function ConfiguracionPage() {
             )}
           />
         </div>
+      </Section>
+
+      <Section
+        title="⭐ Marca estrella"
+        description="Tu marca más vendida: aparece con bloque premium en el inicio, tarjeta en la portada, primera en el menú y en la cinta de marcas, con insignia dorada en sus productos y portada propia en el catálogo. El nombre debe coincidir con el campo Marca de los productos."
+      >
+        <label className="flex items-center gap-3 rounded-lg bg-cream-alt/60 p-3 text-sm font-semibold text-ink">
+          <input
+            type="checkbox"
+            checked={settings.featuredBrand.enabled}
+            onChange={(e) => updateFeatured('enabled', e.target.checked)}
+          />
+          Destacar una marca estrella
+        </label>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Marca">
+            <input value={settings.featuredBrand.name} onChange={(e) => updateFeatured('name', e.target.value)} className={inputClass} placeholder="On" />
+          </Field>
+          <Field label="Insignia">
+            <input value={settings.featuredBrand.badge} onChange={(e) => updateFeatured('badge', e.target.value)} className={inputClass} placeholder="Más vendida" />
+          </Field>
+          <Field label="Texto del botón">
+            <input value={settings.featuredBrand.buttonText} onChange={(e) => updateFeatured('buttonText', e.target.value)} className={inputClass} />
+          </Field>
+        </div>
+        <Field label="Texto pequeño (arriba del título)">
+          <input value={settings.featuredBrand.eyebrow} onChange={(e) => updateFeatured('eyebrow', e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Título">
+          <input value={settings.featuredBrand.heading} onChange={(e) => updateFeatured('heading', e.target.value)} className={inputClass} />
+        </Field>
+        <Field label="Descripción">
+          <textarea value={settings.featuredBrand.text} onChange={(e) => updateFeatured('text', e.target.value)} rows={3} className={inputClass} />
+        </Field>
+        <Field label="Beneficios (uno por línea, ideal 4)">
+          <textarea
+            value={settings.featuredBrand.bullets.join('\n')}
+            onChange={(e) => updateFeatured('bullets', e.target.value.split('\n'))}
+            rows={4}
+            className={inputClass}
+          />
+        </Field>
+        <ImageUploadField
+          label="Foto del zapato (mejor en PNG sin fondo, se muestra flotando)"
+          value={settings.featuredBrand.image}
+          folder="site"
+          onChange={(url) => updateFeatured('image', url)}
+        />
       </Section>
 
       <Section title="Marcas" description="Aparecen en el menú Marcas, en la cinta de marcas del inicio y como sugerencia al crear productos. Una por línea.">

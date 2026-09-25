@@ -17,10 +17,11 @@ import ProductReviews from '@/components/product/ProductReviews';
 import RelatedProducts from '@/components/product/RelatedProducts';
 import HowItWorks from '@/components/HowItWorks';
 import { discountPercentOf } from '@/components/ProductCard';
+import { isStarBrand } from '@/lib/brand';
 
 export default function ProductPage() {
   const params = useParams<{ slug: string }>();
-  const { payments, shipping } = useSiteSettings();
+  const { payments, shipping, featuredBrand } = useSiteSettings();
   const [product, setProduct] = useState<Product | null | undefined>(undefined);
   const [colorImage, setColorImage] = useState<string | undefined>(undefined);
   const [ctaVisible, setCtaVisible] = useState(true);
@@ -114,6 +115,18 @@ export default function ProductPage() {
                 </span>
               )}
             </div>
+            {isStarBrand(featuredBrand, product.brand) && (
+              <Link
+                href={`/catalogo?marca=${encodeURIComponent(product.brand)}`}
+                className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-white"
+              >
+                <span className="flex items-center gap-2 text-xs font-bold">
+                  <span className="rounded-full bg-gold-gradient px-2 py-0.5 text-[10px] font-extrabold uppercase text-ink">⭐ {featuredBrand.badge}</span>
+                  <span className="text-white/85">{featuredBrand.eyebrow}</span>
+                </span>
+                <span className="shrink-0 text-[11px] font-extrabold text-primary-light">Ver más {featuredBrand.name} →</span>
+              </Link>
+            )}
             <h1 className="mt-2 font-heading text-3xl font-black uppercase leading-tight text-ink sm:text-4xl">{product.title}</h1>
             {(!!product.reviewsCount || !!product.soldCount) && (
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">

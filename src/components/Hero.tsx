@@ -6,6 +6,7 @@ import { useSiteSettings } from '@/lib/settings-context';
 import { classNames, whatsappLinkTo } from '@/lib/utils';
 import SafeImage from './SafeImage';
 import { WhatsAppIcon } from './icons';
+import { brandHref } from '@/lib/brand';
 
 const ROTATE_MS = 5500;
 
@@ -37,7 +38,8 @@ const SUBTEXT_SIZE_CLASSES: Record<string, string> = {
 // fondo que rota con un zoom lento, texto grande en mayúsculas y dos
 // botones bien visibles.
 export default function Hero() {
-  const { hero, storeName, whatsappCountryCode, whatsappNumber } = useSiteSettings();
+  const { hero, storeName, whatsappCountryCode, whatsappNumber, featuredBrand } = useSiteSettings();
+  const starOn = featuredBrand.enabled && !!featuredBrand.name;
   const images = hero.images.length > 0 ? hero.images : ['/hero-placeholder.svg'];
   const activeIndex = useRotatingIndex(images.length);
 
@@ -66,7 +68,33 @@ export default function Hero() {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/70 to-transparent" />
       </div>
 
-      <div className="container-page flex min-h-[78vh] flex-col justify-center py-16 sm:min-h-[82vh] lg:min-h-[86vh]">
+      <div className="container-page relative flex min-h-[78vh] flex-col justify-center py-16 sm:min-h-[82vh] lg:min-h-[86vh]">
+        {/* Marca estrella flotando a la derecha (PC) */}
+        {starOn && (
+          <Link
+            href={brandHref(featuredBrand.name)}
+            className="group absolute right-8 top-1/2 hidden w-[340px] -translate-y-1/2 animate-slideUp rounded-3xl border border-white/15 bg-white/10 p-5 text-white shadow-dark backdrop-blur-md transition-colors hover:border-primary xl:block"
+          >
+            <span className="inline-block rounded-full bg-gold-gradient px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink">
+              ⭐ {featuredBrand.badge}
+            </span>
+            <span className="relative mt-2 block h-44 animate-float">
+              {featuredBrand.image && (
+                <SafeImage src={featuredBrand.image} alt={featuredBrand.name} fill sizes="340px" className="-rotate-6 object-contain drop-shadow-[0_25px_30px_rgba(0,0,0,0.6)]" />
+              )}
+            </span>
+            <span className="mt-2 flex items-end justify-between">
+              <span>
+                <span className="block text-4xl font-black leading-none text-gold-gradient">{featuredBrand.name}</span>
+                <span className="mt-1 block text-xs text-white/70">{featuredBrand.eyebrow}</span>
+              </span>
+              <span className="rounded-full bg-white px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-ink transition-colors group-hover:bg-primary">
+                Ver →
+              </span>
+            </span>
+          </Link>
+        )}
+
         <div className="max-w-2xl animate-slideUp">
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/60 bg-black/30 px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.22em] text-primary-light backdrop-blur">
             <span className="h-1.5 w-1.5 animate-pulseSoft rounded-full bg-primary-light" />
@@ -109,6 +137,22 @@ export default function Hero() {
               </span>
             ))}
           </div>
+
+          {starOn && (
+            <Link
+              href={brandHref(featuredBrand.name)}
+              className="mt-6 flex max-w-sm items-center gap-3 rounded-2xl border border-primary/50 bg-black/40 p-2.5 pr-4 backdrop-blur xl:hidden"
+            >
+              <span className="relative h-14 w-20 shrink-0">
+                {featuredBrand.image && <SafeImage src={featuredBrand.image} alt={featuredBrand.name} fill sizes="80px" className="-rotate-6 object-contain" />}
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[10px] font-extrabold uppercase tracking-wider text-primary-light">⭐ {featuredBrand.badge}</span>
+                <span className="block text-xl font-black leading-tight text-white">{featuredBrand.name}</span>
+              </span>
+              <span className="text-xs font-extrabold text-white">Ver →</span>
+            </Link>
+          )}
 
           <a
             href={whatsappLinkTo(whatsappNumber, `¡Hola ${storeName}! 👋 Quiero ver el catálogo`, whatsappCountryCode)}

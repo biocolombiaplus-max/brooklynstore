@@ -1,7 +1,12 @@
+'use client';
+
 import Link from 'next/link';
 import type { Product } from '@/lib/types';
 import { formatPrice } from '@/lib/utils';
 import SafeImage from './SafeImage';
+import { useSiteSettings } from '@/lib/settings-context';
+import { isStarBrand } from '@/lib/brand';
+import { classNames } from '@/lib/utils';
 
 export function discountPercentOf(product: Pick<Product, 'price' | 'compareAtPrice'>): number {
   if (!product.compareAtPrice || product.compareAtPrice <= product.price) return 0;
@@ -9,12 +14,19 @@ export function discountPercentOf(product: Pick<Product, 'price' | 'compareAtPri
 }
 
 export default function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
+  const { featuredBrand } = useSiteSettings();
+  const star = isStarBrand(featuredBrand, product.brand);
   const discountPct = discountPercentOf(product);
   const secondImage = product.images[1];
 
   return (
     <Link href={`/producto/${product.slug}`} className="group block">
-      <div className="relative aspect-square overflow-hidden rounded-2xl bg-cream-alt">
+      <div
+        className={classNames(
+          'relative aspect-square overflow-hidden rounded-2xl bg-cream-alt',
+          star && 'ring-2 ring-primary ring-offset-2 transition-shadow group-hover:shadow-lift',
+        )}
+      >
         {product.images[0] ? (
           <>
             <SafeImage
@@ -52,6 +64,12 @@ export default function ProductCard({ product, priority = false }: { product: Pr
           )}
         </div>
 
+        {star && (
+          <span className="absolute right-2.5 top-2.5 rounded-full bg-gold-gradient px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink shadow-lift">
+            ⭐ {featuredBrand.badge}
+          </span>
+        )}
+
         {product.stock > 0 && product.stock <= 5 && (
           <span className="absolute bottom-2.5 left-2.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-extrabold uppercase text-urgent shadow-soft">
             🔥 Últimos {product.stock}
@@ -70,7 +88,10 @@ export default function ProductCard({ product, priority = false }: { product: Pr
 
       <div className="mt-3 px-0.5">
         {product.brand && (
-          <p className="text-[10px] font-extrabold uppercase tracking-[0.18em] text-primary">{product.brand}</p>
+          <p className={classNames('text-[10px] font-extrabold uppercase tracking-[0.18em]', star ? 'text-ink' : 'text-primary')}>
+            {star && '⭐ '}
+            {product.brand}
+          </p>
         )}
         <h3 className="mt-0.5 line-clamp-2 text-sm font-bold leading-snug text-ink group-hover:underline">{product.title}</h3>
         <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">

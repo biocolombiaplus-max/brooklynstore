@@ -12,7 +12,7 @@ export default function FloatingBadge({ href = '/catalogo?ofertas=1' }: { href?:
   if (dismissed || hidden) return null;
 
   return (
-    <div className="fixed bottom-5 left-4 z-30 animate-popIn sm:bottom-6 sm:left-6">
+    <div className="fixed bottom-5 left-4 z-30 hidden animate-popIn sm:bottom-6 sm:left-6 sm:block">
       <div className="relative animate-float">
         <Link
           href={href}

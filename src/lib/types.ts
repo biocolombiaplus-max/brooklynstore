@@ -180,6 +180,21 @@ export interface PaymentSettings {
   transferNote: string;
 }
 
+// Marca estrella: la que más vende la tienda. Se destaca con un bloque
+// premium en el inicio, primera en el menú de marcas, en la cinta de marcas,
+// con insignia en sus productos y con portada propia en el catálogo.
+export interface FeaturedBrand {
+  enabled: boolean;
+  name: string;
+  eyebrow: string;
+  heading: string;
+  text: string;
+  image: string;
+  badge: string;
+  bullets: string[];
+  buttonText: string;
+}
+
 export interface SiteColors {
   primary: string;
   primaryHover: string;
@@ -205,6 +220,7 @@ export interface SiteSettings {
   notificationEmail: string;
   collectionsMenu: CollectionMenuItem[];
   brands: string[];
+  featuredBrand: FeaturedBrand;
   colors: SiteColors;
   fonts: {
     headingFont: string;

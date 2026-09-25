@@ -10,6 +10,8 @@ import { classNames } from '@/lib/utils';
 import ProductGrid, { ProductGridSkeleton } from '@/components/ProductGrid';
 import { discountPercentOf } from '@/components/ProductCard';
 import { CloseIcon } from '@/components/icons';
+import SafeImage from '@/components/SafeImage';
+import { isStarBrand } from '@/lib/brand';
 
 type SortOption = 'relevancia' | 'vendidos' | 'nuevo' | 'precio_asc' | 'precio_desc' | 'descuento';
 
@@ -73,7 +75,7 @@ function CatalogoContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const { collectionsMenu } = useSiteSettings();
+  const { collectionsMenu, featuredBrand } = useSiteSettings();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
 
@@ -117,7 +119,14 @@ function CatalogoContent() {
     };
   }, [filtersOpen]);
 
-  const brands = useMemo(() => Array.from(new Set((products ?? []).map((p) => p.brand).filter(Boolean))).sort(), [products]);
+  const brands = useMemo(
+    () =>
+      Array.from(new Set((products ?? []).map((p) => p.brand).filter(Boolean))).sort(
+        (a, b) => Number(isStarBrand(featuredBrand, b)) - Number(isStarBrand(featuredBrand, a)) || a.localeCompare(b),
+      ),
+    [products, featuredBrand],
+  );
+  const starView = !!brand && isStarBrand(featuredBrand, brand);
   const styles = useMemo(() => {
     const present = new Set((products ?? []).map((p) => p.collection));
     const fromMenu = collectionsMenu.filter((c) => present.has(c.value));
@@ -174,11 +183,25 @@ function CatalogoContent() {
         <div>
           <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">Marca</p>
           <div className="flex flex-wrap gap-2">
-            {brands.map((b) => (
-              <FilterChip key={b} active={brand.toLowerCase() === b.toLowerCase()} onClick={() => toggleParam('marca', b)}>
-                {b}
-              </FilterChip>
-            ))}
+            {brands.map((b) =>
+              isStarBrand(featuredBrand, b) ? (
+                <button
+                  key={b}
+                  type="button"
+                  onClick={() => toggleParam('marca', b)}
+                  className={classNames(
+                    'rounded-full px-4 py-2 text-xs font-extrabold transition-all',
+                    brand.toLowerCase() === b.toLowerCase() ? 'bg-ink text-primary-light ring-2 ring-primary' : 'bg-gold-gradient text-ink shadow-lift',
+                  )}
+                >
+                  ⭐ {b}
+                </button>
+              ) : (
+                <FilterChip key={b} active={brand.toLowerCase() === b.toLowerCase()} onClick={() => toggleParam('marca', b)}>
+                  {b}
+                </FilterChip>
+              ),
+            )}
           </div>
         </div>
       )}
@@ -243,6 +266,31 @@ function CatalogoContent() {
 
   return (
     <div>
+      {starView ? (
+        <div className="relative isolate overflow-hidden bg-ink text-white">
+          <div className="pointer-events-none absolute -right-24 top-1/2 -z-10 h-96 w-96 -translate-y-1/2 rounded-full bg-primary/30 blur-[100px]" />
+          <div className="container-page grid items-center gap-6 py-10 sm:grid-cols-[1fr_320px] sm:py-12">
+            <div>
+              <nav className="mb-3 text-xs text-white/50">
+                <Link href="/" className="hover:text-primary-light">Inicio</Link> / <Link href="/catalogo" className="hover:text-primary-light">Catálogo</Link> /{' '}
+                <span className="text-white">{featuredBrand.name}</span>
+              </nav>
+              <span className="inline-block rounded-full bg-gold-gradient px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink">
+                ⭐ {featuredBrand.eyebrow}
+              </span>
+              <h1 className="mt-3 font-heading text-4xl font-black uppercase leading-none sm:text-6xl">
+                <span className="text-gold-gradient">{featuredBrand.heading}</span>
+              </h1>
+              <p className="mt-4 max-w-xl text-sm text-white/70">{featuredBrand.text}</p>
+            </div>
+            <div className="relative mx-auto aspect-[4/3] w-full max-w-xs animate-float">
+              {featuredBrand.image && (
+                <SafeImage src={featuredBrand.image} alt={featuredBrand.name} fill sizes="320px" className="-rotate-6 object-contain drop-shadow-[0_25px_30px_rgba(0,0,0,0.6)]" />
+              )}
+            </div>
+          </div>
+        </div>
+      ) : (
       <div className="border-b border-border bg-cream-alt/60">
         <div className="container-page py-8 sm:py-10">
           <nav className="mb-3 text-xs text-muted">
@@ -252,6 +300,7 @@ function CatalogoContent() {
           <p className="mt-2 text-sm text-muted">Zapatos 100% originales · Envío a todo el Ecuador · Paga por transferencia o contra entrega</p>
         </div>
       </div>
+      )}
 
       <div className="container-page py-8">
         <div className="sticky top-16 z-20 -mx-4 mb-6 flex items-center justify-between gap-3 border-b border-border bg-white/95 px-4 py-3 backdrop-blur sm:top-20 lg:static lg:mx-0 lg:border-0 lg:bg-transparent lg:px-0 lg:py-0">

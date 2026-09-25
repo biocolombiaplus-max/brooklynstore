@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react';
 import { useCartStore } from '@/lib/cart-store';
 import { useSiteSettings } from '@/lib/settings-context';
 import { classNames } from '@/lib/utils';
+import { brandHref, isStarBrand } from '@/lib/brand';
+import SafeImage from './SafeImage';
 import { CartIcon, ChevronIcon, CloseIcon, MenuIcon, SearchIcon } from './icons';
 
 const MAIN_LINKS = [
@@ -24,7 +26,31 @@ export default function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [scrolled, setScrolled] = useState(false);
-  const { storeName, logoUrl, logoHeight, brands, collectionsMenu } = useSiteSettings();
+  const { storeName, logoUrl, logoHeight, brands: allBrands, collectionsMenu, featuredBrand } = useSiteSettings();
+  const starOn = featuredBrand.enabled && !!featuredBrand.name;
+  const brands = allBrands.filter((b) => !isStarBrand(featuredBrand, b));
+
+  // Tarjeta premium de la marca estrella (menú de marcas en PC y celular).
+  const starCard = starOn ? (
+    <Link
+      href={brandHref(featuredBrand.name)}
+      className="group relative col-span-2 flex items-center gap-4 overflow-hidden rounded-2xl bg-ink p-4 text-white"
+    >
+      <span className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/40 blur-2xl" />
+      <span className="relative h-16 w-24 shrink-0">
+        {featuredBrand.image && (
+          <SafeImage src={featuredBrand.image} alt={featuredBrand.name} fill sizes="96px" className="-rotate-6 object-contain transition-transform duration-500 group-hover:scale-110" />
+        )}
+      </span>
+      <span className="relative min-w-0 normal-case tracking-normal">
+        <span className="inline-block rounded-full bg-gold-gradient px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-ink">
+          ⭐ {featuredBrand.badge}
+        </span>
+        <span className="mt-1 block text-2xl font-black leading-none text-gold-gradient">{featuredBrand.name}</span>
+        <span className="mt-1 block text-[11px] font-semibold text-white/70">Ver modelos →</span>
+      </span>
+    </Link>
+  ) : null;
   const totalItems = useCartStore((s) => s.totalItems());
   const openCart = useCartStore((s) => s.open);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -103,7 +129,7 @@ export default function Header() {
           {logo}
         </Link>
 
-        <nav ref={menuRef} className="hidden flex-1 items-center gap-1 text-[13px] font-extrabold uppercase tracking-wider text-ink lg:flex">
+        <nav ref={menuRef} className="hidden flex-1 items-center gap-0.5 whitespace-nowrap text-[13px] font-extrabold uppercase tracking-wider text-ink lg:flex xl:gap-1">
           {MAIN_LINKS.map((link) => (
             <Link
               key={link.href}
@@ -115,6 +141,15 @@ export default function Header() {
             </Link>
           ))}
 
+          {starOn && (
+            <Link
+              href={brandHref(featuredBrand.name)}
+              className="mx-1 flex items-center gap-1 rounded-full bg-ink px-3.5 py-1.5 text-primary-light transition-colors hover:bg-primary hover:text-ink"
+            >
+              ⭐ {featuredBrand.name}
+            </Link>
+          )}
+
           <div className="relative">
             <button
               onClick={() => setOpenMenu((m) => (m === 'marcas' ? null : 'marcas'))}
@@ -124,6 +159,7 @@ export default function Header() {
             </button>
             {openMenu === 'marcas' && (
               <div className="absolute left-0 top-full z-10 mt-3 grid w-[420px] animate-slideUp grid-cols-2 gap-1 rounded-2xl border border-border bg-white p-3 shadow-dark">
+                {starCard && <div className="col-span-2 mb-2 grid grid-cols-2">{starCard}</div>}
                 {brands.map((b) => (
                   <Link
                     key={b}
@@ -170,7 +206,7 @@ export default function Header() {
           <Link href="/catalogo?ofertas=1" className="px-3 py-2 text-urgent transition-colors hover:text-ink">
             Ofertas 🔥
           </Link>
-          <Link href="/guia-de-tallas" className="px-3 py-2 transition-colors hover:text-primary">
+          <Link href="/guia-de-tallas" className="hidden px-3 py-2 transition-colors hover:text-primary xl:block">
             Guía de tallas
           </Link>
         </nav>
@@ -252,6 +288,7 @@ export default function Header() {
               </Link>
 
               <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">Marcas</p>
+              {starCard && <div className="mt-3 grid grid-cols-2">{starCard}</div>}
               <div className="mt-3 flex flex-wrap gap-2">
                 {brands.map((b) => (
                   <Link

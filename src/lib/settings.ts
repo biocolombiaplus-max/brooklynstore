@@ -19,7 +19,18 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     { label: 'Running', value: 'running' },
     { label: 'Formales', value: 'formales' },
   ],
-  brands: ['Nike', 'Adidas', 'New Balance', 'Puma', 'Converse', 'Vans', 'Reebok', 'Asics'],
+  featuredBrand: {
+    enabled: true,
+    name: 'On',
+    eyebrow: 'La marca #1 de Brooklyn Store',
+    heading: 'On. Corre sobre nubes.',
+    text: 'Ingeniería suiza con tecnología CloudTec® que amortigua cada paso y te impulsa hacia adelante. La marca que más piden nuestros clientes en todo el Ecuador — ahora con envío a tu puerta y pago contra entrega.',
+    image: '/products/on-cloudtec-phase-cutout.png',
+    badge: 'Más vendida',
+    bullets: ['Ingeniería suiza', 'Amortiguación CloudTec®', 'Ultraligeros y transpirables', '100% originales'],
+    buttonText: 'Comprar On',
+  },
+  brands: ['On', 'Nike', 'Adidas', 'New Balance', 'Puma', 'Converse', 'Vans', 'Reebok', 'Asics'],
   colors: {
     primary: '#B8923A',
     primaryHover: '#96742A',
@@ -35,6 +46,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     bodyFont: 'Montserrat',
   },
   announcementMessages: [
+    '☁️ Llegó On — la marca más vendida de Brooklyn, 100% original',
     '🚚 Envíos a todito el Ecuador — llegamos a tu puerta',
     '💵 Pago contra entrega: solo adelantas $5 del envío y el resto al recibir',
     '🏦 Paga por transferencia o depósito — Pichincha, Guayaquil, Produbanco y más',
@@ -191,6 +203,14 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   },
 };
 
+// La marca estrella siempre va primera en la lista de marcas (menú, cinta,
+// footer), aunque en el panel se haya guardado otro orden.
+function withFeaturedFirst(brands: string[], featured: { enabled: boolean; name: string }): string[] {
+  if (!featured.enabled || !featured.name.trim()) return brands;
+  const name = featured.name.trim();
+  return [name, ...brands.filter((b) => b.trim().toLowerCase() !== name.toLowerCase())];
+}
+
 export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): SiteSettings {
   if (!data) return DEFAULT_SETTINGS;
   return {
@@ -220,7 +240,15 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
     logoUrl: data.logoUrl || DEFAULT_SETTINGS.logoUrl,
     logoHeight: data.logoHeight ?? DEFAULT_SETTINGS.logoHeight,
     collectionsMenu: data.collectionsMenu ?? DEFAULT_SETTINGS.collectionsMenu,
-    brands: data.brands?.length ? data.brands : DEFAULT_SETTINGS.brands,
+    brands: withFeaturedFirst(data.brands?.length ? data.brands : DEFAULT_SETTINGS.brands, {
+      ...DEFAULT_SETTINGS.featuredBrand,
+      ...data.featuredBrand,
+    }),
+    featuredBrand: {
+      ...DEFAULT_SETTINGS.featuredBrand,
+      ...data.featuredBrand,
+      bullets: data.featuredBrand?.bullets?.length ? data.featuredBrand.bullets : DEFAULT_SETTINGS.featuredBrand.bullets,
+    },
     announcementMessages: data.announcementMessages?.length ? data.announcementMessages : DEFAULT_SETTINGS.announcementMessages,
     trustItems: data.trustItems?.length ? data.trustItems : DEFAULT_SETTINGS.trustItems,
     benefits: data.benefits?.length ? data.benefits : DEFAULT_SETTINGS.benefits,
