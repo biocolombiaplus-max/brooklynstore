@@ -34,7 +34,7 @@ export default function CarritoPage() {
     <div className="container-page py-10">
       <h1 className="section-title mb-8">Tu carrito</h1>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-3">
         <ul className="space-y-4 lg:col-span-2">
           {items.map((item) => (
             <li key={`${item.productId}-${item.size}-${item.color}`} className="flex gap-4 rounded-2xl border border-border p-4">

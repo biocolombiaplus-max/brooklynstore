@@ -46,7 +46,7 @@ body {
      pasar el mouse y "clic" al presionar, para que se sientan vivos tanto en
      PC como en celular. */
   .btn-base {
-    @apply relative inline-flex select-none items-center justify-center gap-2 overflow-hidden rounded-btn px-7 py-4 text-sm font-extrabold uppercase tracking-wider transition-all duration-300 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply relative inline-flex select-none items-center justify-center gap-2 overflow-hidden rounded-btn px-5 py-4 text-center text-sm font-extrabold uppercase leading-tight tracking-wide transition-all duration-300 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 sm:px-7 sm:tracking-wider;
   }
   .btn-base::after {
     content: '';

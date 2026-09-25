@@ -249,11 +249,14 @@ export default function BuyBox({
           </a>
         ) : (
           <>
-            <button type="button" onClick={() => openBuy('transferencia')} className="btn-primary btn-shine w-full flex-col gap-0.5 py-4 normal-case tracking-normal">
-              <span className="text-base font-black uppercase tracking-wider">🏦 Comprar con transferencia</span>
-              <span className="text-xs font-bold opacity-80">
-                Transferencia o depósito · {transferShipping === 0 ? 'Envío GRATIS' : `Envío ${formatPrice(transferShipping)}`} ·{' '}
-                {formatPrice(lineTotal + transferShipping)}
+            <button
+              type="button"
+              onClick={() => openBuy('transferencia')}
+              className="btn-primary btn-shine w-full flex-col gap-1 rounded-2xl px-4 py-4 normal-case tracking-normal sm:rounded-full"
+            >
+              <span className="text-[15px] font-black uppercase tracking-wide sm:text-base sm:tracking-wider">🏦 Pagar con transferencia</span>
+              <span className="text-[12px] font-bold opacity-80">
+                {transferShipping === 0 ? 'Envío GRATIS' : `Envío ${formatPrice(transferShipping)}`} · Total {formatPrice(lineTotal + transferShipping)}
               </span>
             </button>
 
@@ -261,11 +264,11 @@ export default function BuyBox({
               <button
                 type="button"
                 onClick={() => openBuy('contra_entrega')}
-                className="btn-dark w-full flex-col gap-0.5 py-4 normal-case tracking-normal"
+                className="btn-dark w-full flex-col gap-1 rounded-2xl px-4 py-4 normal-case tracking-normal sm:rounded-full"
               >
-                <span className="text-base font-black uppercase tracking-wider">💵 Pago contra entrega</span>
-                <span className="text-xs font-semibold text-primary-light">
-                  Adelantas solo {formatPrice(payments.codAdvance)} del envío · El resto ({formatPrice(lineTotal)}) al recibir
+                <span className="text-[15px] font-black uppercase tracking-wide sm:text-base sm:tracking-wider">💵 Pago contra entrega</span>
+                <span className="text-[12px] font-semibold text-primary-light">
+                  Hoy solo {formatPrice(payments.codAdvance)} de envío · {formatPrice(lineTotal)} al recibir
                 </span>
               </button>
             )}

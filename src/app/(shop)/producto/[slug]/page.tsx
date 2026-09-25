@@ -91,7 +91,7 @@ export default function ProductPage() {
           <span className="text-ink">{product.title}</span>
         </nav>
 
-        <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-14">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14">
           <ProductGallery
             images={product.images}
             title={product.title}

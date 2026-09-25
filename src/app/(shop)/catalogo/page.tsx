@@ -337,7 +337,7 @@ function CatalogoContent() {
           </select>
         </div>
 
-        <div className="grid gap-10 lg:grid-cols-[250px_1fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-10 lg:grid-cols-[250px_minmax(0,1fr)]">
           <aside className="hidden lg:block">
             <div className="sticky top-28">{filtersPanel}</div>
           </aside>
