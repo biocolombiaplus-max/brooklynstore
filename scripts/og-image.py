@@ -85,7 +85,7 @@ for l,wid in zip(labels,widths):
 img=Image.alpha_composite(img,layer); d=ImageDraw.Draw(img)
 for l,wid,x0 in zip(labels,widths,xs):
     plain_text(l,f,x0+wid/2,ys+11*S,GOLD_L,track=2.2)
-plain_text('ON  ·  NIKE  ·  ADIDAS  ·  NEW BALANCE  ·  PUMA  ·  CONVERSE  ·  VANS',mont(600,12),cx,H-inset-30*S,(150,142,125),track=3)
+plain_text('ON  ·  NIKE  ·  ADIDAS  ·  JORDAN  ·  NEW BALANCE  ·  ASICS  ·  HOKA  ·  Y MÁS',mont(600,12),cx,H-inset-30*S,(150,142,125),track=3)
 
 out=img.convert('RGB').resize((1200,630),Image.LANCZOS)
 out.save('public/og-image.jpg',quality=90,optimize=True,progressive=True)

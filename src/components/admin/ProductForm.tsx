@@ -28,7 +28,7 @@ const QUICK_COLORS: ProductColor[] = [
   { name: 'Beige', hex: '#E8DCC4' },
   { name: 'Rosado', hex: '#F9A8D4' },
 ];
-const COMMON_COLLECTIONS = ['deportivos', 'urbanos', 'running', 'formales', 'sandalias', 'botas'];
+const COMMON_COLLECTIONS = ['deportivos', 'urbanos', 'running', 'basket', 'sandalias', 'botas'];
 const sortSizes = (list: string[]) => [...list].sort((a, b) => Number(a) - Number(b) || a.localeCompare(b));
 
 export default function ProductForm({ product }: { product?: Product }) {

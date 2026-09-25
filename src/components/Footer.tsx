@@ -85,7 +85,7 @@ export default function Footer() {
             <li><Link href="/#preguntas" className="hover:text-white">❓ Preguntas frecuentes</Link></li>
           </ul>
           <p className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/40">Marcas</p>
-          <p className="mt-2 text-xs leading-relaxed text-white/60">{brands.join(' · ')}</p>
+          <p className="mt-2 text-xs leading-relaxed text-white/60">{brands.join(' · ')} · y más</p>
         </div>
 
         <div>

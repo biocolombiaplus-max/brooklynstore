@@ -18,7 +18,6 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     { label: 'Deportivos', value: 'deportivos' },
     { label: 'Urbanos / Casual', value: 'urbanos' },
     { label: 'Running', value: 'running' },
-    { label: 'Formales', value: 'formales' },
   ],
   featuredBrand: {
     enabled: true,
@@ -31,7 +30,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     bullets: ['Ingeniería suiza', 'Amortiguación CloudTec®', 'Ultraligeros y transpirables', 'Diseño premium'],
     buttonText: 'Comprar On',
   },
-  brands: ['On', 'Nike', 'Adidas', 'New Balance', 'Puma', 'Converse', 'Vans', 'Reebok', 'Asics'],
+  brands: ['On', 'Nike', 'Adidas', 'Jordan', 'New Balance', 'Asics', 'Onitsuka Tiger', 'Hoka', 'Puma', 'Reebok', 'Vans', 'Under Armour'],
   colors: {
     primary: '#B8923A',
     primaryHover: '#96742A',
@@ -59,7 +58,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     eyebrow: 'Nueva colección 2026',
     heading: 'Los zapatos que buscas, al precio que te gusta',
     subtext:
-      'Nike, Adidas, New Balance y más marcas top, con envío a todo el Ecuador. Pagas por transferencia o contra entrega — full fácil y seguro.',
+      'On, Nike, Adidas, Jordan, New Balance, Hoka y más marcas top, con envío a todo el Ecuador. Pagas por transferencia o contra entrega — full fácil y seguro.',
     images: [
       'https://images.unsplash.com/photo-1552346154-21d32810aba3?auto=format&fit=crop&w=1400&q=80',
       'https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=1400&q=80',
@@ -194,7 +193,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   },
   footer: {
     brandText:
-      'Tienda multimarca de zapatos en Ecuador. Nike, Adidas, New Balance, Puma y más, con envío a todo el país.',
+      'Tienda multimarca de zapatos en Ecuador. On, Nike, Adidas, Jordan, New Balance, Asics, Hoka y más, con envío a todo el país.',
     contactText: '¿Dudas con tu talla o tu pedido? Escríbenos, te respondemos ya mismo.',
     email: 'brooklynstore.ec@gmail.com',
     address: 'Ecuador',

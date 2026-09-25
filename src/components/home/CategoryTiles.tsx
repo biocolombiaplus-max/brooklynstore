@@ -4,7 +4,7 @@ import SafeImage from '../SafeImage';
 const img = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=75`;
 
 const TILES = [
-  { label: 'Hombre', sub: 'Urbanos, running y formales', href: '/catalogo?genero=hombre', image: img('photo-1491553895911-0055eca6402d') },
+  { label: 'Hombre', sub: 'Urbanos, running y deportivos', href: '/catalogo?genero=hombre', image: img('photo-1491553895911-0055eca6402d') },
   { label: 'Mujer', sub: 'Estilo y comodidad todo el día', href: '/catalogo?genero=mujer', image: img('photo-1543163521-1bf539c55dd2') },
   { label: 'Running', sub: 'Para correr y entrenar', href: '/catalogo?estilo=running', image: img('photo-1542291026-7eec264c27ff') },
   { label: 'Ofertas', sub: 'Precios que no se repiten', href: '/catalogo?ofertas=1', image: img('photo-1556906781-9a412961c28c') },

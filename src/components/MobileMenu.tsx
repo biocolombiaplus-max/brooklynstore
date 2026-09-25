@@ -140,11 +140,18 @@ export default function MobileMenu({ open, onClose }: { open: boolean; onClose: 
                 key={b}
                 href={brandHref(b)}
                 onClick={onClose}
-                className="flex h-12 items-center justify-center rounded-xl border border-border text-[13px] font-extrabold text-ink active:border-ink active:bg-ink active:text-white"
+                className="flex h-12 items-center justify-center rounded-xl border border-border px-1.5 text-center text-[12px] font-extrabold leading-tight text-ink active:border-ink active:bg-ink active:text-white"
               >
                 {b}
               </Link>
             ))}
+            <Link
+              href="/catalogo"
+              onClick={onClose}
+              className="flex h-12 items-center justify-center rounded-xl bg-ink px-1.5 text-center text-[12px] font-extrabold leading-tight text-primary-light"
+            >
+              Y más →
+            </Link>
           </div>
 
           {/* Estilos */}

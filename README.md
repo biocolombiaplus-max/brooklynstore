@@ -41,7 +41,7 @@ de Brooklyn Store.
 ### Funciona desde el primer día
 
 Sin Firebase configurado (o mientras no hayas publicado productos) la tienda
-muestra un **catálogo de demostración** de 12 modelos con fotos de ejemplo, y
+muestra un **catálogo de demostración** de 15 modelos con fotos de ejemplo, y
 los pedidos igual llegan completos a tu WhatsApp. Apenas publicas tu primer
 producto desde `/admin`, el catálogo de demostración desaparece solo.
 
@@ -137,7 +137,7 @@ echo "SEED_ADMIN_PASSWORD=tu-contraseña" >> .env.local
 npm run seed
 ```
 
-Esto sube los 12 modelos del catálogo de demostración — entra a
+Esto sube los 15 modelos del catálogo de demostración — entra a
 `/admin/productos` para ajustar precios, stock y cambiar las fotos por las reales.
 
 ## 7. Desplegar en Vercel

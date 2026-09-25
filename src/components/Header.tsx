@@ -237,7 +237,7 @@ export default function Header() {
               ref={searchRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Busca por marca o modelo: Nike, Samba, Air Force..."
+              placeholder="Busca marca o modelo: On Cloud, Jordan, Samba, Hoka..."
               className="w-full bg-transparent py-2 text-base text-ink placeholder:text-muted focus:outline-none"
             />
             <button type="submit" className="btn-dark shrink-0 px-5 py-2.5 text-xs">
