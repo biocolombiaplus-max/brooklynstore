@@ -1,5 +1,6 @@
 'use client';
 
+import { adviceMessage } from '@/lib/wa-messages';
 import Link from 'next/link';
 import { useSiteSettings } from '@/lib/settings-context';
 import { whatsappLinkTo } from '@/lib/utils';
@@ -23,7 +24,7 @@ export default function HomeCTA() {
             {cta.buttonText} →
           </Link>
           <a
-            href={whatsappLinkTo(whatsappNumber, `¡Hola ${storeName}! 👋 Quiero asesoría para elegir mis zapatos`, whatsappCountryCode)}
+            href={whatsappLinkTo(whatsappNumber, adviceMessage(), whatsappCountryCode)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-whatsapp text-base"

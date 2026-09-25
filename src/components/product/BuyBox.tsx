@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, type RefObject } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
+import { productMessage, useWaContext } from '@/lib/wa-messages';
 import type { PaymentMethod, Product } from '@/lib/types';
 import { classNames, formatPrice, resolveColorImage, whatsappLinkTo } from '@/lib/utils';
 import { useCartStore } from '@/lib/cart-store';
@@ -84,9 +85,15 @@ export default function BuyBox({
     setTimeout(() => setAdded(false), 2200);
   }
 
-  const waMessage = `¡Hola Brooklyn Store! 👋 Me interesa:\n• ${product.title}${size ? `\n• Talla: ${size}` : ''}${
-    color ? `\n• Color: ${color}` : ''
-  }\n\n¿Está disponible?`;
+  const waMessage = productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size, color });
+  const setWaContext = useWaContext((s) => s.setMessage);
+
+  // El botón flotante de WhatsApp también manda este modelo con la talla y
+  // el color que el cliente tenga elegidos.
+  useEffect(() => {
+    setWaContext(productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size, color }));
+  }, [product, size, color, setWaContext]);
+  useEffect(() => () => setWaContext(null), [setWaContext]);
 
   const transferShipping = shipping.defaultRate;
   const lineTotal = product.price * quantity;
@@ -233,7 +240,7 @@ export default function BuyBox({
       <div ref={ctaRef} className="space-y-3">
         {soldOut ? (
           <a
-            href={whatsappLinkTo(whatsappNumber, `${waMessage}\n\n(Lo vi agotado en la web, ¿me avisan cuando llegue?)`, whatsappCountryCode)}
+            href={whatsappLinkTo(whatsappNumber, productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size, color }, 'Lo vi agotado en la web. ¿Me avisan cuando llegue? 🙏'), whatsappCountryCode)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-dark w-full py-5"

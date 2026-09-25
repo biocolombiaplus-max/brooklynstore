@@ -261,6 +261,7 @@ export interface SiteSettings {
   footer: {
     brandText: string;
     contactText: string;
+    email: string;
     address: string;
     instagram: string;
     facebook: string;

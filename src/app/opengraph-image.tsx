@@ -7,7 +7,7 @@ export const contentType = 'image/png';
 const BADGES = ['✅ 100% originales', '💵 Contra entrega', '🚚 Envío a todo Ecuador'];
 
 function siteDomain(): string {
-  const raw = process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore.ec';
+  const raw = process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore-six.vercel.app';
   return raw.replace(/^https?:\/\//, '').replace(/\/$/, '');
 }
 

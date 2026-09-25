@@ -45,7 +45,14 @@ muestra un **catálogo de demostración** de 12 modelos con fotos de ejemplo, y
 los pedidos igual llegan completos a tu WhatsApp. Apenas publicas tu primer
 producto desde `/admin`, el catálogo de demostración desaparece solo.
 
-> ⚠️ Antes de vender: configura tu **número de WhatsApp** y tus **cuentas
+**Contacto ya configurado:** WhatsApp **+593 99 873 5273** en todos los
+botones (con mensaje distinto según la página: modelo con talla y color,
+carrito con totales, pedido completo, ayuda con la talla, marca...) y correo
+**brooklynstore.ec@gmail.com** en el pie de página, en la confirmación del
+pedido y para los avisos de pedidos nuevos. Se pueden cambiar en
+`/admin/configuracion`.
+
+> ⚠️ Antes de vender: revisa tu **número de WhatsApp** y configura tus **cuentas
 > bancarias reales** en `/admin/configuracion` (o `NEXT_PUBLIC_WHATSAPP_NUMBER`
 > en Vercel). Las cuentas que vienen por defecto son de ejemplo (`0000000000`).
 > Reemplaza también las fotos de ejemplo por fotos reales de tus productos.
@@ -111,8 +118,9 @@ publicar desde ahí.
 
 ## 5. Crear tu primer usuario administrador
 
-1. En Firebase Console → **Authentication → Users → Add user**, crea tu
-   usuario (correo + contraseña) con el que vas a entrar al panel `/admin`.
+1. En Firebase Console → **Authentication → Users → Add user**, crea el
+   usuario **brooklynstore.ec@gmail.com** con la contraseña que quieras (es el
+   correo que ya viene escrito en `/admin/login`).
 2. Copia el **UID** de ese usuario (aparece en la lista de usuarios).
 3. En **Firestore Database**, crea manualmente la colección `admins` con un
    documento cuyo **ID sea ese UID** (el contenido puede quedar vacío, `{}`).

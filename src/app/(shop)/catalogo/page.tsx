@@ -11,7 +11,9 @@ import ProductGrid, { ProductGridSkeleton } from '@/components/ProductGrid';
 import { discountPercentOf } from '@/components/ProductCard';
 import { CloseIcon } from '@/components/icons';
 import SafeImage from '@/components/SafeImage';
-import { isStarBrand } from '@/lib/brand';
+import { brandTagline, isStarBrand } from '@/lib/brand';
+import ShoeStage from '@/components/brand/ShoeStage';
+import StarSeal from '@/components/brand/StarSeal';
 
 type SortOption = 'relevancia' | 'vendidos' | 'nuevo' | 'precio_asc' | 'precio_desc' | 'descuento';
 
@@ -190,11 +192,14 @@ function CatalogoContent() {
                   type="button"
                   onClick={() => toggleParam('marca', b)}
                   className={classNames(
-                    'rounded-full px-4 py-2 text-xs font-extrabold transition-all',
-                    brand.toLowerCase() === b.toLowerCase() ? 'bg-ink text-primary-light ring-2 ring-primary' : 'bg-gold-gradient text-ink shadow-lift',
+                    'flex items-center gap-1.5 rounded-full border py-1.5 pl-1.5 pr-4 text-xs font-extrabold transition-all',
+                    brand.toLowerCase() === b.toLowerCase()
+                      ? 'border-primary bg-ink text-white shadow-lift'
+                      : 'border-primary/60 bg-ink text-white hover:border-primary',
                   )}
                 >
-                  ⭐ {b}
+                  <span className="rounded-full bg-gold-gradient px-1.5 py-0.5 font-display text-[10px] italic text-ink">Nº1</span>
+                  {b}
                 </button>
               ) : (
                 <FilterChip key={b} active={brand.toLowerCase() === b.toLowerCase()} onClick={() => toggleParam('marca', b)}>
@@ -267,26 +272,30 @@ function CatalogoContent() {
   return (
     <div>
       {starView ? (
-        <div className="relative isolate overflow-hidden bg-ink text-white">
-          <div className="pointer-events-none absolute -right-24 top-1/2 -z-10 h-96 w-96 -translate-y-1/2 rounded-full bg-primary/30 blur-[100px]" />
-          <div className="container-page grid items-center gap-6 py-10 sm:grid-cols-[1fr_320px] sm:py-12">
-            <div>
-              <nav className="mb-3 text-xs text-white/50">
+        <div className="relative isolate overflow-hidden bg-[#070707] text-white">
+          <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_78%_50%,rgba(184,146,58,0.25),transparent_60%)]" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+          <div className="container-page grid items-center gap-4 py-10 sm:grid-cols-[1fr_380px] sm:py-14">
+            <div className="order-2 sm:order-1">
+              <nav className="mb-4 text-xs text-white/45">
                 <Link href="/" className="hover:text-primary-light">Inicio</Link> / <Link href="/catalogo" className="hover:text-primary-light">Catálogo</Link> /{' '}
                 <span className="text-white">{featuredBrand.name}</span>
               </nav>
-              <span className="inline-block rounded-full bg-gold-gradient px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink">
-                ⭐ {featuredBrand.eyebrow}
-              </span>
-              <h1 className="mt-3 font-heading text-4xl font-black uppercase leading-none sm:text-6xl">
-                <span className="text-gold-gradient">{featuredBrand.heading}</span>
+              <p className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.35em] text-primary-light">
+                <span className="h-px w-10 bg-gold-gradient" />
+                {featuredBrand.eyebrow}
+              </p>
+              <h1 className="mt-4">
+                <span className="block font-heading text-7xl font-black leading-[0.85] tracking-tight sm:text-8xl">{featuredBrand.name}</span>
+                <span className="mt-2 block font-display text-2xl italic text-gold-gradient sm:text-4xl">{brandTagline(featuredBrand)}</span>
               </h1>
-              <p className="mt-4 max-w-xl text-sm text-white/70">{featuredBrand.text}</p>
+              <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/60">{featuredBrand.text}</p>
             </div>
-            <div className="relative mx-auto aspect-[4/3] w-full max-w-xs animate-float">
+            <div className="relative order-1 sm:order-2">
               {featuredBrand.image && (
-                <SafeImage src={featuredBrand.image} alt={featuredBrand.name} fill sizes="320px" className="-rotate-6 object-contain drop-shadow-[0_25px_30px_rgba(0,0,0,0.6)]" />
+                <ShoeStage src={featuredBrand.image} alt={featuredBrand.name} sizes="380px" className="mx-auto aspect-[16/11] w-full max-w-sm" />
               )}
+              <StarSeal label={featuredBrand.badge} className="absolute -top-2 right-0 w-20 text-[13px] sm:w-24 sm:text-[15px]" />
             </div>
           </div>
         </div>

@@ -1119,6 +1119,15 @@ export default function ConfiguracionPage() {
             className={inputClass}
           />
         </Field>
+        <Field label="Correo de contacto (se muestra en el pie de página y en la confirmación del pedido)">
+          <input
+            type="email"
+            value={settings.footer.email}
+            onChange={(e) => updateNested('footer', 'email', e.target.value)}
+            className={inputClass}
+            placeholder="brooklynstore.ec@gmail.com"
+          />
+        </Field>
         <Field label="Ciudad / dirección (opcional)">
           <input
             value={settings.footer.address}

@@ -11,8 +11,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   logoUrl: '/logo.png',
   logoHeight: 56,
   whatsappCountryCode: process.env.NEXT_PUBLIC_WHATSAPP_COUNTRY_CODE || '593',
-  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '',
-  notificationEmail: process.env.NEXT_PUBLIC_NOTIFICATION_EMAIL || '',
+  // WhatsApp oficial de la tienda: +593 99 873 5273
+  whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '0998735273',
+  notificationEmail: process.env.NEXT_PUBLIC_NOTIFICATION_EMAIL || 'brooklynstore.ec@gmail.com',
   collectionsMenu: [
     { label: 'Deportivos', value: 'deportivos' },
     { label: 'Urbanos / Casual', value: 'urbanos' },
@@ -23,7 +24,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     enabled: true,
     name: 'On',
     eyebrow: 'La marca #1 de Brooklyn Store',
-    heading: 'On. Corre sobre nubes.',
+    heading: 'Corre sobre nubes.',
     text: 'Ingeniería suiza con tecnología CloudTec® que amortigua cada paso y te impulsa hacia adelante. La marca que más piden nuestros clientes en todo el Ecuador — ahora con envío a tu puerta y pago contra entrega.',
     image: '/products/on-cloudtec-phase-cutout.png',
     badge: 'Más vendida',
@@ -195,6 +196,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     brandText:
       'Tienda multimarca de zapatos originales en Ecuador. Nike, Adidas, New Balance, Puma y más, con envío a todo el país.',
     contactText: '¿Dudas con tu talla o tu pedido? Escríbenos, te respondemos ya mismo.',
+    email: 'brooklynstore.ec@gmail.com',
     address: 'Ecuador',
     instagram: '',
     facebook: '',
@@ -224,7 +226,7 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
       images: data.hero?.images?.length ? data.hero.images : DEFAULT_SETTINGS.hero.images,
     },
     cta: { ...DEFAULT_SETTINGS.cta, ...data.cta },
-    footer: { ...DEFAULT_SETTINGS.footer, ...data.footer },
+    footer: { ...DEFAULT_SETTINGS.footer, ...data.footer, email: data.footer?.email || DEFAULT_SETTINGS.footer.email },
     shipping: {
       ...DEFAULT_SETTINGS.shipping,
       ...data.shipping,
@@ -238,6 +240,9 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
         : DEFAULT_SETTINGS.payments.bankAccounts,
     },
     logoUrl: data.logoUrl || DEFAULT_SETTINGS.logoUrl,
+    whatsappNumber: data.whatsappNumber || DEFAULT_SETTINGS.whatsappNumber,
+    whatsappCountryCode: data.whatsappCountryCode || DEFAULT_SETTINGS.whatsappCountryCode,
+    notificationEmail: data.notificationEmail || DEFAULT_SETTINGS.notificationEmail,
     logoHeight: data.logoHeight ?? DEFAULT_SETTINGS.logoHeight,
     collectionsMenu: data.collectionsMenu ?? DEFAULT_SETTINGS.collectionsMenu,
     brands: withFeaturedFirst(data.brands?.length ? data.brands : DEFAULT_SETTINGS.brands, {

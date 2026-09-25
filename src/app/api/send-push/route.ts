@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   }
 
   webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:soporte@brooklynstore.ec',
+    process.env.VAPID_SUBJECT || 'mailto:brooklynstore.ec@gmail.com',
     publicKey,
     privateKey,
   );

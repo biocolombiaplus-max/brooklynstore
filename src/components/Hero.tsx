@@ -1,12 +1,15 @@
 'use client';
 
+import { catalogMessage } from '@/lib/wa-messages';
+import ShoeStage from './brand/ShoeStage';
+import StarTag from './brand/StarTag';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useSiteSettings } from '@/lib/settings-context';
 import { classNames, whatsappLinkTo } from '@/lib/utils';
 import SafeImage from './SafeImage';
 import { WhatsAppIcon } from './icons';
-import { brandHref } from '@/lib/brand';
+import { brandHref, brandTagline } from '@/lib/brand';
 
 const ROTATE_MS = 5500;
 
@@ -73,23 +76,23 @@ export default function Hero() {
         {starOn && (
           <Link
             href={brandHref(featuredBrand.name)}
-            className="group absolute right-8 top-1/2 hidden w-[340px] -translate-y-1/2 animate-slideUp rounded-3xl border border-white/15 bg-white/10 p-5 text-white shadow-dark backdrop-blur-md transition-colors hover:border-primary xl:block"
+            className="group absolute right-8 top-1/2 hidden w-[360px] -translate-y-1/2 animate-slideUp overflow-hidden rounded-[28px] border border-primary/40 bg-black/55 p-6 text-white shadow-dark backdrop-blur-xl transition-colors hover:border-primary xl:block"
           >
-            <span className="inline-block rounded-full bg-gold-gradient px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink">
-              ⭐ {featuredBrand.badge}
+            <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(184,146,58,0.25),transparent_65%)]" />
+            <span className="relative flex items-center justify-between">
+              <StarTag label={featuredBrand.badge} />
+              <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-white/50">Colección</span>
             </span>
-            <span className="relative mt-2 block h-44 animate-float">
-              {featuredBrand.image && (
-                <SafeImage src={featuredBrand.image} alt={featuredBrand.name} fill sizes="340px" className="-rotate-6 object-contain drop-shadow-[0_25px_30px_rgba(0,0,0,0.6)]" />
-              )}
-            </span>
-            <span className="mt-2 flex items-end justify-between">
+            {featuredBrand.image && (
+              <ShoeStage src={featuredBrand.image} alt={featuredBrand.name} sizes="360px" glow={false} className="relative mt-1 h-48" />
+            )}
+            <span className="relative mt-1 flex items-end justify-between gap-3">
               <span>
-                <span className="block text-4xl font-black leading-none text-gold-gradient">{featuredBrand.name}</span>
-                <span className="mt-1 block text-xs text-white/70">{featuredBrand.eyebrow}</span>
+                <span className="block font-heading text-5xl font-black leading-none text-white">{featuredBrand.name}</span>
+                <span className="mt-1.5 block font-display text-base italic text-gold-gradient">{brandTagline(featuredBrand)}</span>
               </span>
-              <span className="rounded-full bg-white px-3 py-2 text-[10px] font-extrabold uppercase tracking-wider text-ink transition-colors group-hover:bg-primary">
-                Ver →
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold-gradient text-ink transition-transform group-hover:translate-x-1">
+                →
               </span>
             </span>
           </Link>
@@ -141,21 +144,22 @@ export default function Hero() {
           {starOn && (
             <Link
               href={brandHref(featuredBrand.name)}
-              className="mt-6 flex max-w-sm items-center gap-3 rounded-2xl border border-primary/50 bg-black/40 p-2.5 pr-4 backdrop-blur xl:hidden"
+              className="relative mt-6 flex max-w-sm items-center gap-3 overflow-hidden rounded-2xl border border-primary/50 bg-black/60 p-3 pr-4 backdrop-blur-xl xl:hidden"
             >
-              <span className="relative h-14 w-20 shrink-0">
-                {featuredBrand.image && <SafeImage src={featuredBrand.image} alt={featuredBrand.name} fill sizes="80px" className="-rotate-6 object-contain" />}
+              <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_15%_50%,rgba(184,146,58,0.3),transparent_60%)]" />
+              {featuredBrand.image && (
+                <ShoeStage src={featuredBrand.image} alt={featuredBrand.name} sizes="110px" float={false} glow={false} className="h-14 w-24 shrink-0" />
+              )}
+              <span className="relative min-w-0 flex-1">
+                <StarTag label={featuredBrand.badge} size="xs" />
+                <span className="mt-1 block font-heading text-2xl font-black leading-none text-white">{featuredBrand.name}</span>
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-[10px] font-extrabold uppercase tracking-wider text-primary-light">⭐ {featuredBrand.badge}</span>
-                <span className="block text-xl font-black leading-tight text-white">{featuredBrand.name}</span>
-              </span>
-              <span className="text-xs font-extrabold text-white">Ver →</span>
+              <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold-gradient text-sm text-ink">→</span>
             </Link>
           )}
 
           <a
-            href={whatsappLinkTo(whatsappNumber, `¡Hola ${storeName}! 👋 Quiero ver el catálogo`, whatsappCountryCode)}
+            href={whatsappLinkTo(whatsappNumber, catalogMessage(), whatsappCountryCode)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-6 inline-flex items-center gap-2 text-sm font-bold text-white/90 underline-offset-4 hover:text-whatsapp hover:underline"

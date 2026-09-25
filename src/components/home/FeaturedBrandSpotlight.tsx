@@ -4,16 +4,18 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { getActiveProducts } from '@/lib/products';
 import { useSiteSettings } from '@/lib/settings-context';
-import { brandHref, isStarBrand } from '@/lib/brand';
+import { brandHref, brandTagline, isStarBrand } from '@/lib/brand';
 import { formatPrice } from '@/lib/utils';
 import type { Product } from '@/lib/types';
 import SafeImage from '../SafeImage';
+import ShoeStage from '../brand/ShoeStage';
+import StarSeal from '../brand/StarSeal';
 
-// Bloque premium de la marca estrella (la que más vende la tienda): fondo
-// negro con brillo dorado, la foto del zapato flotando, beneficios y sus
-// modelos disponibles. Todo se edita en /admin/configuracion → Marca estrella.
+// Bloque premium de la marca estrella: nombre gigante, lema en serif
+// itálica dorada, zapato sobre un escenario con foco de luz y sello Nº1.
+// Todo se edita en /admin/configuracion → Marca estrella.
 export default function FeaturedBrandSpotlight() {
-  const { featuredBrand: fb } = useSiteSettings();
+  const { featuredBrand: fb, payments } = useSiteSettings();
   const [products, setProducts] = useState<Product[]>([]);
 
   useEffect(() => {
@@ -31,101 +33,100 @@ export default function FeaturedBrandSpotlight() {
   const sold = products.reduce((sum, p) => sum + (p.soldCount ?? 0), 0);
   const fromPrice = products.length ? Math.min(...products.map((p) => p.price)) : null;
   const href = brandHref(fb.name);
+  const tagline = brandTagline(fb);
+
+  const stats = [
+    sold > 0 ? { value: `+${sold}`, label: 'Pares vendidos' } : { value: '4.9', label: 'Calificación' },
+    fromPrice ? { value: formatPrice(fromPrice), label: 'Desde' } : { value: '100%', label: 'Originales' },
+    payments.codEnabled ? { value: formatPrice(payments.codAdvance), label: 'Y el resto al recibir' } : { value: '24-72h', label: 'Entrega' },
+  ];
 
   return (
-    <section className="relative isolate overflow-hidden bg-ink text-white">
-      {/* Fondo: brillo dorado + nombre gigante de la marca como marca de agua */}
-      <div className="pointer-events-none absolute -right-40 top-1/2 -z-10 h-[620px] w-[620px] -translate-y-1/2 rounded-full bg-primary/25 blur-[120px]" />
-      <div className="pointer-events-none absolute -left-32 -top-32 -z-10 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
-      <span className="pointer-events-none absolute -bottom-10 right-0 -z-10 select-none font-heading text-[42vw] font-black leading-none tracking-tighter text-white/[0.03] lg:text-[26vw]">
-        {fb.name}
-      </span>
+    <section className="relative isolate overflow-hidden bg-[#070707] text-white">
+      {/* Atmósfera: halo dorado, viñeta y líneas finas */}
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_75%_40%,rgba(184,146,58,0.22),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_10%_100%,rgba(184,146,58,0.10),transparent_50%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-      <div className="container-page grid items-center gap-10 py-16 sm:py-24 lg:grid-cols-2 lg:gap-16">
-        <div className="order-2 lg:order-1">
-          <span className="inline-flex items-center gap-2 rounded-full bg-gold-gradient px-4 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-ink shadow-lift">
-            ⭐ {fb.eyebrow}
+      <div className="container-page grid items-center gap-6 pb-14 pt-12 sm:pb-20 sm:pt-16 lg:grid-cols-[1fr_1.1fr] lg:gap-10 lg:py-24">
+        {/* Zapato */}
+        <Link href={href} className="relative order-1 block lg:order-2" aria-label={`Ver ${fb.name}`}>
+          <span className="pointer-events-none absolute inset-0 flex items-center justify-center" aria-hidden>
+            <span className="select-none font-heading text-[42vw] font-black leading-none tracking-tighter text-white/[0.04] sm:text-[30vw] lg:text-[17vw]">
+              {fb.name}
+            </span>
           </span>
-          <h2 className="mt-6 font-heading text-4xl font-black uppercase leading-[1.02] tracking-tight sm:text-6xl">
-            <span className="text-gold-gradient">{fb.heading}</span>
-          </h2>
-          <p className="mt-5 max-w-xl text-sm leading-relaxed text-white/75 sm:text-base">{fb.text}</p>
+          {fb.image && <ShoeStage src={fb.image} alt={`${fb.name} — zapatos originales`} sizes="(max-width: 1024px) 100vw, 55vw" className="mx-auto aspect-[16/11] w-full max-w-2xl" />}
+          <StarSeal label={fb.badge} className="absolute right-0 top-0 w-24 text-[15px] sm:w-32 sm:text-[20px] lg:-right-2 lg:top-2" />
+        </Link>
 
-          <ul className="mt-7 grid max-w-lg grid-cols-2 gap-2.5">
-            {fb.bullets.map((b) => (
-              <li key={b} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2.5 text-xs font-bold sm:text-sm">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gold-gradient text-[10px] text-ink">✓</span>
-                {b}
+        {/* Texto */}
+        <div className="order-2 lg:order-1">
+          <p className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.35em] text-primary-light sm:text-[11px]">
+            <span className="h-px w-10 bg-gold-gradient" />
+            {fb.eyebrow}
+          </p>
+          <h2 className="mt-5">
+            <span className="block font-heading text-7xl font-black leading-[0.85] tracking-tight text-white sm:text-8xl lg:text-[8.5rem]">{fb.name}</span>
+            {tagline && (
+              <span className="mt-3 block font-display text-3xl italic leading-tight text-gold-gradient sm:text-5xl">{tagline}</span>
+            )}
+          </h2>
+          <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-white/65">{fb.text}</p>
+
+          <ul className="mt-8 grid max-w-xl grid-cols-2 gap-x-6 border-t border-white/10">
+            {fb.bullets.map((b, i) => (
+              <li key={b} className="flex items-baseline gap-3 border-b border-white/10 py-3.5">
+                <span className="font-display text-sm italic text-primary">{String(i + 1).padStart(2, '0')}</span>
+                <span className="text-[13px] font-semibold text-white/90 sm:text-sm">{b}</span>
               </li>
             ))}
           </ul>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
             <Link href={href} className="btn-primary btn-shine text-base">
               {fb.buttonText} →
             </Link>
-            <Link href={href} className="btn-outline-light text-base">
-              Ver todos los modelos
+            <Link
+              href={href}
+              className="btn-base border border-white/25 text-white hover:border-primary hover:text-primary-light"
+            >
+              Ver colección
             </Link>
           </div>
 
-          <div className="mt-9 grid max-w-lg grid-cols-3 divide-x divide-white/10 rounded-2xl border border-white/10 bg-white/[0.03] py-4 text-center">
-            <div>
-              <p className="text-xl font-black text-primary-light sm:text-2xl">{sold > 0 ? `+${sold}` : '4.9★'}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">{sold > 0 ? 'Pares vendidos' : 'Calificación'}</p>
-            </div>
-            <div>
-              <p className="text-xl font-black text-primary-light sm:text-2xl">{fromPrice ? formatPrice(fromPrice) : '100%'}</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">{fromPrice ? 'Desde' : 'Originales'}</p>
-            </div>
-            <div>
-              <p className="text-xl font-black text-primary-light sm:text-2xl">$5</p>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">Y el resto al recibir</p>
-            </div>
-          </div>
+          <dl className="mt-10 grid max-w-xl grid-cols-3">
+            {stats.map((s, i) => (
+              <div key={s.label} className={`flex flex-col-reverse ${i > 0 ? 'border-l border-white/10 pl-4 sm:pl-6' : ''}`}>
+                <dt className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-white/45 sm:text-[10px]">{s.label}</dt>
+                <dd className="font-display text-2xl text-gold-gradient sm:text-3xl">{s.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
-
-        {/* Zapato flotando */}
-        <Link href={href} className="group relative order-1 block lg:order-2" aria-label={`Ver ${fb.name}`}>
-          <div className="relative mx-auto aspect-[4/3] w-full max-w-2xl">
-            <div className="absolute inset-x-[12%] bottom-[6%] h-[12%] rounded-[50%] bg-black/70 blur-2xl transition-transform duration-700 group-hover:scale-90" />
-            <div className="absolute inset-0 animate-float">
-              {fb.image && (
-                <SafeImage
-                  src={fb.image}
-                  alt={`${fb.name} — zapatos originales`}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 50vw"
-                  className="-rotate-6 object-contain drop-shadow-[0_35px_45px_rgba(0,0,0,0.55)] transition-transform duration-700 group-hover:-rotate-3 group-hover:scale-105"
-                />
-              )}
-            </div>
-            <span className="absolute right-2 top-2 flex h-20 w-20 animate-attention items-center justify-center rounded-full bg-gold-gradient text-center text-[10px] font-black uppercase leading-tight text-ink shadow-lift sm:h-24 sm:w-24 sm:text-xs">
-              <span>
-                ⭐<br />
-                {fb.badge}
-              </span>
-            </span>
-          </div>
-        </Link>
       </div>
 
       {products.length > 0 && (
-        <div className="border-t border-white/10 bg-black/40">
+        <div className="border-t border-white/10">
           <div className="container-page no-scrollbar flex gap-3 overflow-x-auto py-5">
             {products.slice(0, 6).map((p) => (
               <Link
                 key={p.id}
                 href={`/producto/${p.slug}`}
-                className="group flex min-w-[260px] items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-2.5 pr-4 transition-colors hover:border-primary"
+                className="group flex min-w-[270px] items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.03] p-2.5 pr-5 transition-all hover:border-primary/70 hover:bg-white/[0.06]"
               >
-                <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white">
-                  {p.images[0] && <SafeImage src={p.images[0]} alt={p.title} fill sizes="64px" className="object-cover" />}
+                <span className="relative h-16 w-20 shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-white to-[#e9e5dd]">
+                  {p.images[0] && <SafeImage src={p.images[0]} alt={p.title} fill sizes="80px" className="object-cover" />}
                 </span>
                 <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold">{p.title}</span>
-                  <span className="text-sm font-black text-primary-light">{formatPrice(p.price)}</span>
-                  <span className="ml-2 text-[11px] font-bold text-white/50 group-hover:text-white">Comprar →</span>
+                  <span className="block truncate text-sm font-semibold text-white">{p.title}</span>
+                  <span className="mt-0.5 flex items-center gap-2">
+                    <span className="font-display text-base text-gold-gradient">{formatPrice(p.price)}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-white/40 transition-colors group-hover:text-primary-light">
+                      Comprar →
+                    </span>
+                  </span>
                 </span>
               </Link>
             ))}

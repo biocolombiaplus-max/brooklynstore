@@ -7,7 +7,7 @@ import { loginAdmin } from '@/lib/auth';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('brooklynstore.ec@gmail.com');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(
@@ -30,8 +30,10 @@ function LoginForm() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-cream px-4">
+    <div className="flex min-h-screen items-center justify-center bg-ink px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-card bg-white p-8 shadow-soft">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="Brooklyn Store" className="mx-auto mb-5 h-16 w-auto" />
         <h1 className="mb-1 font-heading text-2xl font-bold text-ink">Panel administrativo</h1>
         <p className="mb-6 text-sm text-muted">Inicia sesión para gestionar tu tienda</p>
 
@@ -41,6 +43,7 @@ function LoginForm() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          autoComplete="username"
           className="mb-4 w-full rounded-lg border border-border px-4 py-2.5 focus:border-primary focus:outline-none"
         />
 

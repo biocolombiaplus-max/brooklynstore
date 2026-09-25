@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import '../styles/globals.css';
 
 const STORE_NAME = process.env.NEXT_PUBLIC_STORE_NAME || 'Brooklyn Store';
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore.ec';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore-six.vercel.app';
 const TITLE = `${STORE_NAME} — Zapatos originales multimarca en Ecuador`;
 const DESCRIPTION =
   'Nike, Adidas, New Balance, Puma, Converse y más. Zapatos 100% originales con envío a todo el Ecuador. Paga por transferencia o contra entrega adelantando solo $5.';

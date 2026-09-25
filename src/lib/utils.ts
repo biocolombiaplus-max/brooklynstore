@@ -66,9 +66,21 @@ export function whatsappLinkTo(phone: string, message: string, countryCode?: str
   return `https://wa.me/${fullNumber}?text=${encodeURIComponent(message)}`;
 }
 
-export function buildCartWhatsAppMessage(items: { title: string; size: string; color: string; quantity: number }[]): string {
-  const lines = items.map((i) => `• ${i.title} (talla ${i.size}${i.color ? `, ${i.color}` : ''}) x${i.quantity}`).join('\n');
-  return `¡Hola Brooklyn Store! 👋 Quiero terminar mi compra:\n\n${lines}\n\n¿Me ayudan a confirmar el pedido?`;
+export function buildCartWhatsAppMessage(
+  items: { title: string; size: string; color: string; quantity: number; price?: number }[],
+): string {
+  const lines = items
+    .map(
+      (i) =>
+        `• ${i.title}\n   Talla ${i.size}${i.color ? ` · ${i.color}` : ''} · x${i.quantity}${
+          i.price !== undefined ? ` — ${formatPrice(i.price * i.quantity)}` : ''
+        }`,
+    )
+    .join('\n');
+  const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.quantity, 0);
+  return `¡Hola Brooklyn Store! 👋 Quiero terminar mi compra:\n\n🛒 *Mi carrito:*\n${lines}${
+    subtotal > 0 ? `\n\n*Subtotal: ${formatPrice(subtotal)}*` : ''
+  }\n\n¿Me ayudan a confirmar el pedido? Pago por: (transferencia / contra entrega)`;
 }
 
 export function paymentMethodLabel(method: PaymentMethod): string {

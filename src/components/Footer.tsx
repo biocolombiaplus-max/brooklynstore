@@ -1,5 +1,6 @@
 'use client';
 
+import { generalMessage } from '@/lib/wa-messages';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSiteSettings } from '@/lib/settings-context';
@@ -91,14 +92,28 @@ export default function Footer() {
           <h4 className="mb-4 text-xs font-extrabold uppercase tracking-[0.2em] text-primary-light">Contacto</h4>
           <p className="mb-5 text-sm text-white/75">{footer.contactText}</p>
           <a
-            href={whatsappLinkTo(whatsappNumber, `¡Hola ${storeName}! 👋 Quiero información`, whatsappCountryCode)}
+            href={whatsappLinkTo(whatsappNumber, generalMessage(), whatsappCountryCode)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-whatsapp"
           >
             <WhatsAppIcon /> Escríbenos
           </a>
-          {footer.address && <p className="mt-4 text-xs text-white/50">📍 {footer.address}</p>}
+          <p className="mt-5 text-xs text-white/50">
+            📱{' '}
+            <a href={`tel:+${whatsappCountryCode}${whatsappNumber.replace(/\D/g, '').replace(/^0+/, '')}`} className="text-white/80 hover:text-primary-light">
+              +{whatsappCountryCode} {whatsappNumber.replace(/\D/g, '').replace(/^0+/, '').replace(/^(\d{2})(\d{3})(\d{4})$/, '$1 $2 $3')}
+            </a>
+          </p>
+          {footer.email && (
+            <p className="mt-1.5 text-xs text-white/50">
+              ✉️{' '}
+              <a href={`mailto:${footer.email}`} className="break-all text-white/80 hover:text-primary-light">
+                {footer.email}
+              </a>
+            </p>
+          )}
+          {footer.address && <p className="mt-1.5 text-xs text-white/50">📍 {footer.address}</p>}
           <div className="mt-6">
             <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/40">Formas de pago</p>
             <PaymentBadges dark />

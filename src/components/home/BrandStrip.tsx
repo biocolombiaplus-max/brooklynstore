@@ -25,11 +25,13 @@ export default function BrandStrip() {
               className={classNames(
                 'whitespace-nowrap font-heading font-black uppercase italic tracking-tight transition-colors hover:text-primary',
                 isStarBrand(featuredBrand, brand)
-                  ? 'flex items-center gap-2 rounded-full bg-ink px-5 py-1.5 text-2xl not-italic text-gold-gradient sm:text-3xl'
+                  ? 'flex items-center gap-2 rounded-full border border-primary/60 bg-ink px-6 py-2 text-2xl not-italic normal-case text-white sm:text-3xl'
                   : 'text-2xl text-ink/25 sm:text-3xl',
               )}
             >
-              {isStarBrand(featuredBrand, brand) && <span className="text-base not-italic">⭐</span>}
+              {isStarBrand(featuredBrand, brand) && (
+                <span className="rounded-full bg-gold-gradient px-1.5 py-0.5 font-display text-[11px] italic text-ink">Nº1</span>
+              )}
               {brand}
             </Link>
           ))}

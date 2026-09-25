@@ -52,7 +52,7 @@ function BankCard({ account }: { account: BankAccount }) {
 
 export default function OrderConfirmationPage() {
   const params = useParams<{ id: string }>();
-  const { whatsappCountryCode, whatsappNumber, payments, shipping } = useSiteSettings();
+  const { whatsappCountryCode, whatsappNumber, payments, shipping, footer } = useSiteSettings();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
 
   useEffect(() => {
@@ -222,6 +222,13 @@ export default function OrderConfirmationPage() {
             {order.customer.reference && <p>Referencia: {order.customer.reference}</p>}
           </div>
         </div>
+
+        <p className="mt-6 text-center text-xs text-muted">
+          ¿Alguna duda? Escríbenos por WhatsApp o al correo{' '}
+          <a href={`mailto:${footer.email}`} className="font-bold text-ink underline">
+            {footer.email}
+          </a>
+        </p>
 
         <div className="mt-8 text-center">
           <Link href="/catalogo" className="text-sm font-bold text-ink underline decoration-primary decoration-2 underline-offset-4">

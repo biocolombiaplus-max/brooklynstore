@@ -1,5 +1,6 @@
 'use client';
 
+import StarTag from '@/components/brand/StarTag';
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
@@ -118,13 +119,14 @@ export default function ProductPage() {
             {isStarBrand(featuredBrand, product.brand) && (
               <Link
                 href={`/catalogo?marca=${encodeURIComponent(product.brand)}`}
-                className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-ink px-4 py-3 text-white"
+                className="relative mt-3 flex items-center justify-between gap-3 overflow-hidden rounded-2xl border border-primary/40 bg-[#070707] px-4 py-3 text-white"
               >
-                <span className="flex items-center gap-2 text-xs font-bold">
-                  <span className="rounded-full bg-gold-gradient px-2 py-0.5 text-[10px] font-extrabold uppercase text-ink">⭐ {featuredBrand.badge}</span>
-                  <span className="text-white/85">{featuredBrand.eyebrow}</span>
+                <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_0%_50%,rgba(184,146,58,0.28),transparent_60%)]" />
+                <span className="relative flex min-w-0 items-center gap-3">
+                  <StarTag label={featuredBrand.badge} size="xs" />
+                  <span className="truncate font-display text-sm italic text-primary-light">{featuredBrand.eyebrow}</span>
                 </span>
-                <span className="shrink-0 text-[11px] font-extrabold text-primary-light">Ver más {featuredBrand.name} →</span>
+                <span className="relative shrink-0 text-[10px] font-bold uppercase tracking-[0.18em] text-white/70">Ver colección →</span>
               </Link>
             )}
             <h1 className="mt-2 font-heading text-3xl font-black uppercase leading-tight text-ink sm:text-4xl">{product.title}</h1>

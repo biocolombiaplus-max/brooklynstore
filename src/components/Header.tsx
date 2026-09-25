@@ -1,14 +1,17 @@
 'use client';
 
+import ShoeStage from './brand/ShoeStage';
+import StarTag from './brand/StarTag';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useCartStore } from '@/lib/cart-store';
 import { useSiteSettings } from '@/lib/settings-context';
 import { classNames } from '@/lib/utils';
-import { brandHref, isStarBrand } from '@/lib/brand';
+import { brandHref, brandTagline, isStarBrand } from '@/lib/brand';
 import SafeImage from './SafeImage';
+import MobileMenu from './MobileMenu';
 import { CartIcon, ChevronIcon, CloseIcon, MenuIcon, SearchIcon } from './icons';
 
 const MAIN_LINKS = [
@@ -34,20 +37,14 @@ export default function Header() {
   const starCard = starOn ? (
     <Link
       href={brandHref(featuredBrand.name)}
-      className="group relative col-span-2 flex items-center gap-4 overflow-hidden rounded-2xl bg-ink p-4 text-white"
+      className="group relative col-span-2 flex items-center gap-4 overflow-hidden rounded-2xl border border-primary/30 bg-[#070707] p-4 text-white transition-colors hover:border-primary"
     >
-      <span className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary/40 blur-2xl" />
-      <span className="relative h-16 w-24 shrink-0">
-        {featuredBrand.image && (
-          <SafeImage src={featuredBrand.image} alt={featuredBrand.name} fill sizes="96px" className="-rotate-6 object-contain transition-transform duration-500 group-hover:scale-110" />
-        )}
-      </span>
+      <span className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(184,146,58,0.28),transparent_65%)]" />
+      <ShoeStage src={featuredBrand.image} alt={featuredBrand.name} sizes="120px" float={false} glow={false} className="h-16 w-28 shrink-0" />
       <span className="relative min-w-0 normal-case tracking-normal">
-        <span className="inline-block rounded-full bg-gold-gradient px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider text-ink">
-          ⭐ {featuredBrand.badge}
-        </span>
-        <span className="mt-1 block text-2xl font-black leading-none text-gold-gradient">{featuredBrand.name}</span>
-        <span className="mt-1 block text-[11px] font-semibold text-white/70">Ver modelos →</span>
+        <StarTag label={featuredBrand.badge} size="xs" />
+        <span className="mt-1.5 block font-heading text-3xl font-black leading-none text-white">{featuredBrand.name}</span>
+        <span className="mt-1 block font-display text-xs italic text-primary-light">{brandTagline(featuredBrand) || 'Ver modelos'} →</span>
       </span>
     </Link>
   ) : null;
@@ -55,6 +52,8 @@ export default function Header() {
   const openCart = useCartStore((s) => s.open);
   const menuRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  const closeMobile = useCallback(() => setMobileOpen(false), []);
 
   useEffect(() => setMounted(true), []);
 
@@ -79,12 +78,6 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : '';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [mobileOpen]);
 
   useEffect(() => {
     if (searchOpen) setTimeout(() => searchRef.current?.focus(), 50);
@@ -144,9 +137,10 @@ export default function Header() {
           {starOn && (
             <Link
               href={brandHref(featuredBrand.name)}
-              className="mx-1 flex items-center gap-1 rounded-full bg-ink px-3.5 py-1.5 text-primary-light transition-colors hover:bg-primary hover:text-ink"
+              className="group/on relative mx-1.5 flex items-center gap-2 overflow-hidden rounded-full border border-primary/60 bg-ink py-1.5 pl-2 pr-4 normal-case tracking-normal transition-all hover:border-primary hover:shadow-lift"
             >
-              ⭐ {featuredBrand.name}
+              <span className="rounded-full bg-gold-gradient px-1.5 py-0.5 font-display text-[10px] italic text-ink">Nº1</span>
+              <span className="font-heading text-[15px] font-black text-white transition-colors group-hover/on:text-primary-light">{featuredBrand.name}</span>
             </Link>
           )}
 
@@ -253,81 +247,7 @@ export default function Header() {
         </div>
       )}
 
-      {/* Menú móvil a pantalla completa */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-ink/60" onClick={() => setMobileOpen(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-[86%] max-w-sm animate-slideUp flex-col bg-white shadow-dark">
-            <div className="flex items-center justify-between border-b border-border px-5 py-3">
-              <span className="scale-90">{logo}</span>
-              <button
-                onClick={() => setMobileOpen(false)}
-                aria-label="Cerrar menú"
-                className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-cream-alt"
-              >
-                <CloseIcon />
-              </button>
-            </div>
-            <nav className="flex-1 overflow-y-auto px-5 py-4">
-              {[...MAIN_LINKS, { href: '/catalogo', label: 'Ver todo' }].map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="flex items-center justify-between border-b border-border py-4 text-lg font-black uppercase tracking-wide text-ink"
-                >
-                  {link.label}
-                  <ChevronIcon dir="right" />
-                </Link>
-              ))}
-              <Link
-                href="/catalogo?ofertas=1"
-                className="flex items-center justify-between border-b border-border py-4 text-lg font-black uppercase tracking-wide text-urgent"
-              >
-                Ofertas 🔥
-                <ChevronIcon dir="right" />
-              </Link>
-
-              <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">Marcas</p>
-              {starCard && <div className="mt-3 grid grid-cols-2">{starCard}</div>}
-              <div className="mt-3 flex flex-wrap gap-2">
-                {brands.map((b) => (
-                  <Link
-                    key={b}
-                    href={`/catalogo?marca=${encodeURIComponent(b)}`}
-                    className="rounded-full border border-border px-4 py-2 text-sm font-bold text-ink active:bg-ink active:text-white"
-                  >
-                    {b}
-                  </Link>
-                ))}
-              </div>
-
-              {collectionsMenu.length > 0 && (
-                <>
-                  <p className="mt-6 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">Estilos</p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {collectionsMenu.map((c) => (
-                      <Link
-                        key={c.value}
-                        href={`/catalogo?estilo=${encodeURIComponent(c.value)}`}
-                        className="rounded-full bg-cream-alt px-4 py-2 text-sm font-bold text-ink"
-                      >
-                        {c.label}
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              )}
-
-              <Link
-                href="/guia-de-tallas"
-                className="mt-6 flex items-center gap-3 rounded-2xl border-2 border-primary/40 bg-gold-50 p-4 text-sm font-bold text-ink"
-              >
-                📏 ¿No sabes tu talla? Mira la guía de tallas
-              </Link>
-            </nav>
-          </div>
-        </div>
-      )}
+      <MobileMenu open={mobileOpen} onClose={closeMobile} />
     </header>
   );
 }
