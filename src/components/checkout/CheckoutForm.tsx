@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { createOrder, notifyOrderByEmail, notifyOrderByPush } from '@/lib/orders';
 import { getCantons, getProvinces } from '@/lib/ecuador';
-import { computeOrderTotals } from '@/lib/shipping';
+import { codUnitPrice, computeOrderTotals } from '@/lib/shipping';
 import { clearCoupon, getActiveCoupon, redeemCouponCode, type WonCoupon } from '@/lib/coupon';
 import { useSiteSettings } from '@/lib/settings-context';
 import { buildOrderWhatsAppMessage, classNames, formatPrice, whatsappLinkTo } from '@/lib/utils';
@@ -97,9 +97,9 @@ export default function CheckoutForm({
 
   const cantons = useMemo(() => getCantons(form.province), [form.province]);
   const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.price * i.quantity, 0), [items]);
-  const totals = computeOrderTotals(settings, subtotal, method, form.province, coupon?.percent ?? 0);
-  const transferTotals = computeOrderTotals(settings, subtotal, 'transferencia', form.province, coupon?.percent ?? 0);
-  const codTotals = computeOrderTotals(settings, subtotal, 'contra_entrega', form.province, coupon?.percent ?? 0);
+  const totals = computeOrderTotals(settings, items, method, form.province, coupon?.percent ?? 0);
+  const transferTotals = computeOrderTotals(settings, items, 'transferencia', form.province, coupon?.percent ?? 0);
+  const codTotals = computeOrderTotals(settings, items, 'contra_entrega', form.province, coupon?.percent ?? 0);
 
   const errors = {
     name: form.name.trim().length < 3,
@@ -165,8 +165,12 @@ export default function CheckoutForm({
         ...(locationUrl ? { locationUrl } : {}),
       };
 
+      // En contra entrega cada producto se registra con su precio contra
+      // entrega, para que el detalle cuadre con el total del pedido.
+      const orderItems =
+        method === 'contra_entrega' ? items.map((i) => ({ ...i, price: codUnitPrice(i, settings) })) : items;
       const orderData = {
-        items,
+        items: orderItems,
         subtotal: totals.subtotal,
         discount: totals.discount,
         shipping: totals.shipping,
@@ -186,7 +190,7 @@ export default function CheckoutForm({
         storeName: settings.storeName,
         accentColor: settings.colors.primary,
         orderNumber,
-        items,
+        items: orderItems,
         subtotal: totals.subtotal,
         shipping: totals.shipping,
         total: totals.total,
@@ -242,12 +246,50 @@ export default function CheckoutForm({
               onSelect={() => setMethod('contra_entrega')}
               icon="💵"
               title="Pago contra entrega"
-              badge={`Adelantas solo ${formatPrice(settings.payments.codAdvance)}`}
+              badge={`Hoy solo ${formatPrice(codTotals.payNow)}`}
               lines={[
-                `Hoy adelantas ${formatPrice(codTotals.payNow)} del envío por transferencia o depósito en Banco Pichincha`,
-                `El resto (${formatPrice(codTotals.payOnDelivery)}) lo pagas en efectivo al recibir en tu dirección`,
+                `Total ${formatPrice(codTotals.total)}${codTotals.shippingIncluded ? ' con envío incluido' : ''}`,
+                `Hoy ${formatPrice(codTotals.payNow)} para garantizar tu envío · ${formatPrice(codTotals.payOnDelivery)} al recibir`,
               ]}
             />
+          )}
+          {codEnabled && method === 'contra_entrega' && (
+            <div className="mt-3 animate-slideUp overflow-hidden rounded-2xl bg-ink text-white ring-1 ring-primary/40">
+              <p className="px-4 pt-4 text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary-light">
+                Así funciona el pago contra entrega
+              </p>
+              <ol className="space-y-3 px-4 pb-4 pt-3">
+                {[
+                  {
+                    amount: formatPrice(codTotals.payNow),
+                    title: 'Hoy: reservas y garantizas tu envío',
+                    text: 'Transferencia o depósito en Banco Pichincha. Te pasamos la cuenta por WhatsApp.',
+                  },
+                  { amount: '🚚', title: 'Despachamos tu pedido', text: `Llega a la dirección que nos indiques en ${settings.shipping.deliveryTime}.` },
+                  {
+                    amount: formatPrice(codTotals.payOnDelivery),
+                    title: 'Al recibir: pagas el resto',
+                    text: 'En efectivo, cuando tienes tus zapatos en la mano.',
+                  },
+                ].map((step, i) => (
+                  <li key={step.title} className="flex items-center gap-3">
+                    <span className="flex h-12 min-w-[64px] shrink-0 items-center justify-center rounded-xl bg-gold-gradient px-2 text-sm font-black text-ink">
+                      {step.amount}
+                    </span>
+                    <span>
+                      <span className="block text-sm font-extrabold">
+                        {i + 1}. {step.title}
+                      </span>
+                      <span className="block text-xs text-white/60">{step.text}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+              <p className="border-t border-white/10 px-4 py-3 text-center text-xs font-bold">
+                Total {formatPrice(codTotals.total)} = <span className="text-primary-light">{formatPrice(codTotals.payNow)} hoy</span> +{' '}
+                <span className="text-primary-light">{formatPrice(codTotals.payOnDelivery)} al recibir</span>
+              </p>
+            </div>
           )}
         </div>
       </fieldset>
@@ -357,7 +399,7 @@ export default function CheckoutForm({
         </legend>
 
         <div className="rounded-2xl border border-border bg-cream-alt/60 p-4 text-sm sm:p-5">
-          <Row label="Productos" value={formatPrice(totals.subtotal)} />
+          <Row label={method === 'contra_entrega' ? 'Productos (precio contra entrega)' : 'Productos'} value={formatPrice(totals.subtotal)} />
           {coupon ? (
             <div className="flex items-center justify-between py-1 font-bold text-primary">
               <span>🎟️ Cupón {coupon.code} (-{coupon.percent}%)</span>
@@ -402,8 +444,8 @@ export default function CheckoutForm({
             </button>
           )}
           <Row
-            label={method === 'contra_entrega' ? 'Envío (se adelanta)' : 'Envío'}
-            value={totals.shipping === 0 ? 'GRATIS 🎉' : formatPrice(totals.shipping)}
+            label="Envío"
+            value={totals.shippingIncluded ? 'Incluido' : totals.shipping === 0 ? 'GRATIS 🎉' : formatPrice(totals.shipping)}
             highlight={totals.shipping === 0}
           />
           <div className="mt-2 flex items-center justify-between border-t border-border pt-3 text-base font-black text-ink">
@@ -415,7 +457,7 @@ export default function CheckoutForm({
             <div className="rounded-xl bg-ink p-3 text-white">
               <p className="text-[10px] font-bold uppercase tracking-wider text-primary-light">Pagas ahora</p>
               <p className="mt-0.5 text-xl font-black">{formatPrice(totals.payNow)}</p>
-              <p className="text-[10px] text-white/70">{method === 'contra_entrega' ? 'solo el envío' : 'transferencia / depósito Pichincha'}</p>
+              <p className="text-[10px] text-white/70">{method === 'contra_entrega' ? 'garantiza tu envío' : 'transferencia / depósito Pichincha'}</p>
             </div>
             <div className="rounded-xl bg-white p-3 ring-1 ring-border">
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Pagas al recibir</p>

@@ -36,8 +36,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'Ingeniería suiza para correr y caminar como sobre nubes. La suela CloudTec Phase® se comprime como un dominó en cada pisada para darte una transición suavecita y un impulso natural hacia adelante.\n\n• Amortiguación CloudTec Phase®\n• Capellada tejida ultraligera y transpirable\n• Diseño Swiss Engineering\n• Perfectos para correr, entrenar o el día a día\n• Incluye su caja',
-    price: 189.99,
-    compareAtPrice: 219.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: ['/products/on-cloudtec-phase.jpg', '/products/on-cloudtec-phase-cutout.png'],
     sizes: ADULT_SIZES,
     colors: [{ name: 'Pearl / Fog', hex: '#D6D3CF', hex2: '#A39888' }],
@@ -64,8 +64,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'El clásico que nunca pasa de moda. Cuero premium, suela Air para amortiguación todo el día y ese blanco total que combina con todo.\n\n• Capellada de cuero\n• Unidad Air encapsulada en el talón\n• Suela de goma con patrón de pivote\n• Incluye su caja',
-    price: 119.99,
-    compareAtPrice: 149.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1600269452121-4f2416e55c28'), img('photo-1549298916-b41d501d3772')],
     sizes: ADULT_SIZES,
     colors: [{ name: 'Blanco', hex: '#FFFFFF' }],
@@ -88,8 +88,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'El ícono de la cancha que se tomó la calle. Capellada de cuero suave, puntera de gamuza y la clásica suela de goma color caramelo.\n\n• Cuero y gamuza\n• Suela de goma natural\n• Horma baja clásica\n• Incluye su caja',
-    price: 109.99,
-    compareAtPrice: 129.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1608231387042-66d1773070a5'), img('photo-1525966222134-fcfa99b8ae77')],
     sizes: ADULT_SIZES,
     colors: [
@@ -115,8 +115,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'Estética running de los 2000 con comodidad de hoy. Malla transpirable, detalles metalizados y amortiguación ABZORB.\n\n• Malla y cuero sintético\n• Mediasuela ABZORB\n• Suela de goma de alta tracción',
-    price: 99.99,
-    compareAtPrice: 124.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1539185441755-769473a23570'), img('photo-1560769629-975ec94e6a86')],
     sizes: ADULT_SIZES,
     colors: [
@@ -142,8 +142,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'hombre',
     description:
       'La unidad Air visible que cambió la historia. Diseño agresivo, amortiguación brutal y el estilo de las calles de los 90.\n\n• Unidad Max Air visible\n• Capellada de cuero y textil\n• Suela waffle de goma',
-    price: 129.99,
-    compareAtPrice: 159.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1595950653106-6c9ebd614d3a'), img('photo-1606107557195-0e29a4b5b4aa')],
     sizes: MEN_SIZES,
     colors: [{ name: 'Multicolor', hex: '#E4572E' }],
@@ -165,7 +165,7 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'hombre',
     description:
       'Tu compañero para cada kilómetro. Espuma ReactX más suave y con más retorno de energía, ideal para entrenar todos los días.\n\n• Espuma ReactX\n• Unidades Air Zoom en antepié y talón\n• Malla técnica transpirable',
-    price: 139.99,
+    price: 59.9,
     compareAtPrice: null,
     images: [img('photo-1542291026-7eec264c27ff'), img('photo-1491553895911-0055eca6402d')],
     sizes: MEN_SIZES,
@@ -189,8 +189,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'La leyenda de la cancha que manda en la calle. Silueta de caña media, cuero de calidad y el Wings logo que todos reconocen.\n\n• Capellada de cuero\n• Unidad Air en el talón\n• Suela de goma con patrón de pivote\n• Incluye su caja',
-    price: 149.99,
-    compareAtPrice: 174.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1514989940723-e8e51635b782'), img('photo-1463100099107-aa0980c362e6')],
     sizes: ADULT_SIZES,
     colors: [{ name: 'Negro / Blanco', hex: '#111111', hex2: '#FFFFFF' }],
@@ -212,8 +212,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'La línea lateral más reconocida del skate. Gamuza y lona resistentes, cuello acolchado y la suela waffle de siempre.\n\n• Gamuza y lona\n• Cuello acolchado\n• Suela waffle de goma',
-    price: 74.99,
-    compareAtPrice: 89.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1525966222134-fcfa99b8ae77'), img('photo-1543508282-6319a3e2621f')],
     sizes: ADULT_SIZES,
     colors: [{ name: 'Negro / Blanco', hex: '#111111', hex2: '#FFFFFF' }],
@@ -235,8 +235,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'Desde 1968 marcando estilo. Gamuza suave, la Formstrip lateral y una suela de goma cómoda para todo el día.\n\n• Capellada de gamuza\n• Plantilla SoftFoam+\n• Suela de goma',
-    price: 79.99,
-    compareAtPrice: 99.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1608231387042-66d1773070a5'), img('photo-1600185365483-26d7a4cc7519')],
     sizes: ADULT_SIZES,
     colors: [{ name: 'Azul marino', hex: '#1E3A8A' }],
@@ -258,8 +258,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'mujer',
     description:
       'La Ultraboost más liviana de la historia. Espuma Light BOOST con retorno de energía increíble y tejido Primeknit que se adapta a tu pie.\n\n• Mediasuela Light BOOST\n• Capellada Primeknit+\n• Suela Continental™',
-    price: 149.99,
-    compareAtPrice: 189.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1587563871167-1ee9c731aefb'), img('photo-1606107557195-0e29a4b5b4aa')],
     sizes: WOMEN_SIZES,
     colors: [{ name: 'Blanco / Rosado', hex: '#F9D5E5' }],
@@ -281,8 +281,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'mujer',
     description:
       'Estilo tenis retro con cuero suave y un toque vintage. Cómodos, livianos y perfectos para el día a día.\n\n• Cuero suave\n• Forro de felpa\n• Suela de goma',
-    price: 84.99,
-    compareAtPrice: 99.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1600185365483-26d7a4cc7519'), img('photo-1549298916-b41d501d3772')],
     sizes: WOMEN_SIZES,
     colors: [{ name: 'Tiza / Verde', hex: '#EDE9DD', hex2: '#2F6B3A' }],
@@ -305,8 +305,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'Look running de los 2000 con tecnología GEL en el talón. Tendencia total y comodidad de verdad.\n\n• Amortiguación GEL\n• Malla y cuero sintético\n• Suela de goma AHAR',
-    price: 114.99,
-    compareAtPrice: 134.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1560769629-975ec94e6a86'), img('photo-1539185441755-769473a23570')],
     sizes: ADULT_SIZES,
     colors: [{ name: 'Blanco / Plata', hex: '#E5E7EB' }],
@@ -328,8 +328,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'hombre',
     description:
       'Amortiguación HOVR™ que devuelve energía en cada paso, con un ajuste tipo calcetín que abraza el pie. Para entrenar y para el día a día.\n\n• Amortiguación HOVR™\n• Capellada tejida con ajuste de compresión\n• Suela de goma de alta tracción',
-    price: 129.99,
-    compareAtPrice: 154.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1606107557195-0e29a4b5b4aa'), img('photo-1539185441755-769473a23570')],
     sizes: MEN_SIZES,
     colors: [{ name: 'Negro', hex: '#111111' }],
@@ -351,8 +351,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'Máxima amortiguación con peso pluma. La favorita para correr largas distancias o pasar todo el día de pie sin cansarte.\n\n• Mediasuela de espuma de alta resiliencia\n• Geometría Meta-Rocker para una pisada fluida\n• Capellada de malla transpirable',
-    price: 159.99,
-    compareAtPrice: 179.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1600185365483-26d7a4cc7519'), img('photo-1560769629-975ec94e6a86')],
     sizes: ADULT_SIZES,
     colors: [{ name: 'Blanco / Negro', hex: '#F3F4F6', hex2: '#111111' }],
@@ -375,8 +375,8 @@ export const DEMO_PRODUCTS: Product[] = [
     gender: 'unisex',
     description:
       'Un ícono japonés desde 1966. Perfil delgado, las franjas Tiger y un estilo retro que combina con todo.\n\n• Capellada de cuero y gamuza\n• Refuerzo cruzado en el talón\n• Suela de goma delgada y flexible',
-    price: 139.99,
-    compareAtPrice: 159.99,
+    price: 59.9,
+    compareAtPrice: 79.9,
     images: [img('photo-1549298916-b41d501d3772'), img('photo-1525966222134-fcfa99b8ae77')],
     sizes: ADULT_SIZES,
     colors: [{ name: 'Amarillo / Negro', hex: '#F2C230', hex2: '#111111' }],

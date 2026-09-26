@@ -67,11 +67,16 @@ export async function createOrder(
   }
   if (db) {
     try {
-      const ref = await addDoc(collection(db, COLLECTION), {
-        ...stripUndefined(input),
-        orderNumber,
-        createdAt: serverTimestamp(),
-      });
+      // Si Firestore tarda más de 8 s (mala señal, base de datos caída...),
+      // no se hace esperar al cliente: el pedido sigue por WhatsApp.
+      const ref = await Promise.race([
+        addDoc(collection(db, COLLECTION), {
+          ...stripUndefined(input),
+          orderNumber,
+          createdAt: serverTimestamp(),
+        }),
+        new Promise<never>((_, reject) => setTimeout(() => reject(new Error('Tiempo de espera agotado')), 8000)),
+      ]);
       id = ref.id;
     } catch (error) {
       console.error('[Pedidos] No se pudo guardar en Firestore, se confirma solo por WhatsApp.', error);

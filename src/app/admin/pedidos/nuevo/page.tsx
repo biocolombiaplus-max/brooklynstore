@@ -47,12 +47,12 @@ export default function NuevoPedidoPage() {
   const pickedProduct = products?.find((p) => p.id === pickProductId);
   const cantons = useMemo(() => getCantons(form.province), [form.province]);
 
-  const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const auto = computeOrderTotals(settings, subtotal, paymentMethod, form.province);
+  const auto = computeOrderTotals(settings, items, paymentMethod, form.province);
+  const subtotal = auto.subtotal;
   const shippingCost = shippingOverride !== '' ? Number(shippingOverride) : auto.shipping;
   const total = subtotal + shippingCost;
-  const payNow = paymentMethod === 'contra_entrega' ? shippingCost : total;
-  const payOnDelivery = paymentMethod === 'contra_entrega' ? subtotal : 0;
+  const payNow = paymentMethod === 'contra_entrega' ? Math.min(settings.payments.codAdvance, total) : total;
+  const payOnDelivery = paymentMethod === 'contra_entrega' ? Math.round((total - payNow) * 100) / 100 : 0;
 
   function updateField<K extends keyof typeof form>(key: K, value: string) {
     setForm((f) => (key === 'province' ? { ...f, province: value, city: '' } : { ...f, [key]: value }));
@@ -68,6 +68,7 @@ export default function NuevoPedidoPage() {
         title: pickedProduct.title,
         brand: pickedProduct.brand,
         price: pickedProduct.price,
+        ...(pickedProduct.codPrice ? { codPrice: pickedProduct.codPrice } : {}),
         image: pickedProduct.images[0] ?? '',
         size: pickSize,
         color: pickColor,

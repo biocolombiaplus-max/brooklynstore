@@ -176,8 +176,8 @@ export default function ProductPage() {
                     </li>
                     {payments.codEnabled && (
                       <li>
-                        • <strong className="text-ink">Contra entrega:</strong> adelantas {formatPrice(payments.codAdvance)} del envío y pagas
-                        el resto en efectivo al recibir.
+                        • <strong className="text-ink">Contra entrega:</strong> hoy pagas {formatPrice(payments.codAdvance)} para garantizar tu envío y el resto
+                        en efectivo al recibir.
                       </li>
                     )}
                     <li>• Todos los pedidos se confirman por WhatsApp — te respondemos ya mismo.</li>

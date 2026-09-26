@@ -112,7 +112,7 @@ export function buildOrderWhatsAppMessage(order: {
 
   const paymentBlock =
     order.paymentMethod === 'contra_entrega'
-      ? `💵 *Pago contra entrega*\n➡️ Adelanto del envío (transferencia/depósito Banco Pichincha): *${formatPrice(order.payNow)}*\n➡️ Pago al recibir en mi dirección: *${formatPrice(order.payOnDelivery)}*`
+      ? `💵 *Pago contra entrega*\n➡️ Hoy, para garantizar el envío (transferencia/depósito Banco Pichincha): *${formatPrice(order.payNow)}*\n➡️ Pago al recibir en mi dirección: *${formatPrice(order.payOnDelivery)}*`
       : `🏦 *Transferencia / depósito Banco Pichincha*\n➡️ Total a transferir: *${formatPrice(order.payNow)}*`;
 
   const c = order.customer;
@@ -125,7 +125,7 @@ ${itemsList}
 Subtotal: ${formatPrice(order.subtotal)}${
     order.discount ? `\nDescuento${order.couponCode ? ` (${order.couponCode})` : ''}: -${formatPrice(order.discount)}` : ''
   }
-Envío: ${order.shipping === 0 ? 'GRATIS' : formatPrice(order.shipping)}
+Envío: ${order.shipping === 0 ? (order.paymentMethod === 'contra_entrega' ? 'Incluido' : 'GRATIS') : formatPrice(order.shipping)}
 *TOTAL: ${formatPrice(order.total)}*
 
 ${paymentBlock}
@@ -138,7 +138,7 @@ ${paymentBlock}
 
 ${
     order.paymentMethod === 'contra_entrega'
-      ? `Porfa, confírmenme el pedido para enviar el comprobante de los ${formatPrice(order.payNow)} del envío. ¡Gracias! 🙌`
+      ? `Porfa, confírmenme el pedido para enviar el comprobante de los ${formatPrice(order.payNow)} que garantizan el envío. ¡Gracias! 🙌`
       : 'Porfa, confírmenme el pedido. Ya mismo les envío la foto del comprobante. ¡Gracias! 🙌'
   }`;
 }

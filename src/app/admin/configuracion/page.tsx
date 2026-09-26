@@ -474,7 +474,7 @@ export default function ConfiguracionPage() {
           />
           Ofrecer pago contra entrega
         </label>
-        <Field label="Contra entrega: valor del envío que el cliente adelanta por transferencia/depósito (USD)">
+        <Field label="Contra entrega: lo que el cliente paga HOY para garantizar el envío (USD)">
           <input
             type="number"
             min={0}
@@ -488,6 +488,28 @@ export default function ConfiguracionPage() {
             aparece en el botón de contra entrega, en el checkout y en el mensaje de WhatsApp.
           </p>
         </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Precio general por transferencia (USD, se sugiere al crear productos)">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={settings.payments.defaultPrice}
+              onChange={(e) => updatePayments('defaultPrice', Number(e.target.value))}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Precio general contra entrega por par (USD, envío incluido; 0 = precio + envío)">
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={settings.payments.codUnitPrice}
+              onChange={(e) => updatePayments('codUnitPrice', Number(e.target.value))}
+              className={inputClass}
+            />
+          </Field>
+        </div>
 
         <div>
           <p className="mb-2 text-sm font-semibold text-ink">Cuentas bancarias para transferencias y depósitos</p>

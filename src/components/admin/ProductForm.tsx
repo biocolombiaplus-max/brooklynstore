@@ -47,14 +47,15 @@ const sortSizes = (list: string[]) => [...list].sort((a, b) => Number(a) - Numbe
 
 export default function ProductForm({ product }: { product?: Product }) {
   const router = useRouter();
-  const { brands: knownBrands } = useSiteSettings();
+  const { brands: knownBrands, payments: paySettings } = useSiteSettings();
   const isEditing = !!product;
 
   const [title, setTitle] = useState(product?.title ?? '');
   const [slug, setSlug] = useState(product?.slug ?? '');
   const [slugTouched, setSlugTouched] = useState(isEditing);
   const [description, setDescription] = useState(product?.description ?? '');
-  const [price, setPrice] = useState(product?.price?.toString() ?? '');
+  const [price, setPrice] = useState(product?.price?.toString() ?? String(paySettings.defaultPrice || ''));
+  const [codPrice, setCodPrice] = useState(product?.codPrice ? String(product.codPrice) : '');
   const [compareAtPrice, setCompareAtPrice] = useState(product?.compareAtPrice?.toString() ?? '');
   const [collectionName, setCollectionName] = useState(product?.collection ?? 'urbanos');
   const [brand, setBrand] = useState(product?.brand ?? '');
@@ -223,6 +224,7 @@ export default function ProductForm({ product }: { product?: Product }) {
       description,
       price: Number(price),
       compareAtPrice: compareAtPrice ? Number(compareAtPrice) : null,
+      codPrice: codPrice ? Number(codPrice) : null,
       images,
       sizes,
       colors,
@@ -730,6 +732,21 @@ export default function ProductForm({ product }: { product?: Product }) {
             className="mb-4 w-full rounded-lg border border-border px-4 py-2.5 focus:border-primary focus:outline-none"
             placeholder="Ej: 89.99"
           />
+
+          <label className="mb-1 block text-sm font-semibold text-ink">Precio contra entrega (opcional, envío incluido)</label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={codPrice}
+            onChange={(e) => setCodPrice(e.target.value)}
+            className="w-full rounded-lg border border-border px-4 py-2.5 focus:border-primary focus:outline-none"
+            placeholder={paySettings.codUnitPrice > 0 ? `Vacío = precio general ${paySettings.codUnitPrice}` : 'Ej: 68'}
+          />
+          <p className="mb-4 mt-1 text-xs text-muted">
+            El cliente paga hoy {paySettings.codAdvance} USD para garantizar el envío y el resto al recibir. Déjalo vacío para usar el precio
+            general de Configuración → Formas de pago.
+          </p>
 
           <label className="mb-1 block text-sm font-semibold text-ink">Precio comparación (opcional)</label>
           <input

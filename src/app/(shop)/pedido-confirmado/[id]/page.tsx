@@ -128,7 +128,7 @@ export default function OrderConfirmationPage() {
         <div className="mt-4 rounded-3xl bg-white p-5 shadow-soft sm:p-7">
           <p className="flex items-center gap-2 text-sm font-black uppercase text-ink">
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs text-white">2</span>
-            {isCod ? 'Adelanta el valor del envío' : 'Transfiere o deposita en Banco Pichincha'}
+            {isCod ? `Paga hoy ${formatPrice(order.payNow)} para garantizar tu envío` : 'Transfiere o deposita en Banco Pichincha'}
           </p>
 
           <div className="mt-4 grid grid-cols-2 gap-3 text-center">
@@ -146,7 +146,7 @@ export default function OrderConfirmationPage() {
 
           <p className="mt-5 text-sm text-muted">
             {isCod
-              ? `Transfiere o deposita ${formatPrice(order.payNow)} (valor del envío) en cualquiera de estas cuentas. El resto, ${formatPrice(
+              ? `Transfiere o deposita ${formatPrice(order.payNow)} en Banco Pichincha para garantizar tu envío. El resto, ${formatPrice(
                   order.payOnDelivery,
                 )}, lo pagas en efectivo cuando recibas tus zapatos.`
               : `Transfiere o deposita ${formatPrice(order.payNow)} en cualquiera de estas cuentas:`}
@@ -205,7 +205,7 @@ export default function OrderConfirmationPage() {
             )}
             <div className="flex justify-between">
               <span>Envío</span>
-              <span>{order.shipping === 0 ? 'GRATIS' : formatPrice(order.shipping)}</span>
+              <span>{order.shipping === 0 ? (isCod ? 'Incluido' : 'GRATIS') : formatPrice(order.shipping)}</span>
             </div>
             <div className="flex justify-between pt-1 text-base font-black text-ink">
               <span>Total</span>

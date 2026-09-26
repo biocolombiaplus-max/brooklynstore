@@ -8,6 +8,9 @@ import { formatPrice } from '@/lib/utils';
 // dudas genera antes de comprar en línea en Ecuador, así que va bien visible.
 export default function PaymentMethods() {
   const { payments, shipping } = useSiteSettings();
+  // Montos de ejemplo con el precio general (un par).
+  const unitCod = payments.codUnitPrice > 0 ? payments.codUnitPrice : payments.defaultPrice + payments.codAdvance;
+  const restCod = Math.max(0, Math.round((unitCod - payments.codAdvance) * 100) / 100);
   const banks = Array.from(new Set(payments.bankAccounts.map((b) => b.bank).filter(Boolean)));
 
   return (
@@ -36,6 +39,7 @@ export default function PaymentMethods() {
               del comprobante por WhatsApp y despachamos ese mismo día.
             </p>
             <ul className="mt-5 space-y-2 text-sm">
+              <li>✅ Precio por par: {formatPrice(payments.defaultPrice)}</li>
               <li>✅ {shipping.defaultRate === 0 ? 'Envío GRATIS a todo el Ecuador' : `Envío desde ${formatPrice(shipping.defaultRate)}`}</li>
               <li>✅ Despacho el mismo día</li>
               <li>✅ Pagas una sola vez y listo</li>
@@ -59,18 +63,19 @@ export default function PaymentMethods() {
               <span className="text-4xl">💵</span>
               <h3 className="mt-4 text-2xl font-black uppercase">Pago contra entrega</h3>
               <p className="mt-3 text-sm font-medium leading-relaxed text-ink/80">
-                Solo adelantas <strong>{formatPrice(payments.codAdvance)}</strong> por transferencia o depósito en Banco Pichincha, que es el valor del
-                envío. <strong>El resto lo pagas en efectivo cuando recibes tus zapatos</strong> en la dirección que nos indiques.
+                Hoy pagas solo <strong>{formatPrice(payments.codAdvance)}</strong> por transferencia o depósito en Banco Pichincha para
+                garantizar tu envío. <strong>El resto lo pagas en efectivo cuando recibes tus zapatos</strong> en la dirección que nos indiques.
+                Precio por par contra entrega: <strong>{formatPrice(unitCod)}</strong> con envío incluido.
               </p>
               <div className="mt-6 grid grid-cols-2 gap-3 text-center">
                 <div className="rounded-2xl bg-ink/90 p-4 text-white">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary-light">Hoy adelantas</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-primary-light">Hoy pagas</p>
                   <p className="mt-1 text-3xl font-black">{formatPrice(payments.codAdvance)}</p>
-                  <p className="text-[11px] text-white/70">del envío</p>
+                  <p className="text-[11px] text-white/70">garantiza tu envío</p>
                 </div>
                 <div className="rounded-2xl bg-white/70 p-4">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-ink/70">Al recibir pagas</p>
-                  <p className="mt-1 text-3xl font-black">El resto</p>
+                  <p className="mt-1 text-3xl font-black">{formatPrice(restCod)}</p>
                   <p className="text-[11px] text-ink/70">en efectivo</p>
                 </div>
               </div>

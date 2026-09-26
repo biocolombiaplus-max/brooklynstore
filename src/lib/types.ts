@@ -45,6 +45,9 @@ export interface Product {
   description: string;
   price: number;
   compareAtPrice?: number | null;
+  // Precio pagando contra entrega (incluye el envío). Si no se define, se
+  // cobra el precio normal + el envío del adelanto.
+  codPrice?: number | null;
   images: string[];
   sizes: string[];
   colors: ProductColor[];
@@ -69,6 +72,7 @@ export interface CartItem {
   title: string;
   brand?: string;
   price: number;
+  codPrice?: number;
   image: string;
   size: string;
   // Equivalencia US de la talla (solo informativa: la talla del pedido es la EC).
@@ -180,6 +184,12 @@ export interface PaymentSettings {
   // Valor del envío que se adelanta en el pago contra entrega.
   codAdvance: number;
   codEnabled: boolean;
+  // Precio por par pagando contra entrega (incluye el envío). Lo usan los
+  // productos que no tienen su propio precio contra entrega. 0 = precio
+  // normal + envío del adelanto.
+  codUnitPrice: number;
+  // Precio sugerido al crear un producto nuevo (precio por transferencia).
+  defaultPrice: number;
   bankAccounts: BankAccount[];
   transferNote: string;
 }

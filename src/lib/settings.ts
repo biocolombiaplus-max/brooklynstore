@@ -48,7 +48,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   announcementMessages: [
     '☁️ Llegó On — la marca más vendida de Brooklyn Store',
     '🚚 Envíos a todito el Ecuador — llegamos a tu puerta',
-    '💵 Pago contra entrega: solo adelantas $5 del envío y el resto al recibir',
+    '💵 Contra entrega: hoy solo $5 para garantizar tu envío y el resto al recibir',
     '🏦 Paga por transferencia o depósito en Banco Pichincha',
     '🛡️ Compra segura · Garantía Brooklyn',
     '🔄 ¿No te quedó? Solicita tu cambio de talla hasta 48 h después de recibir',
@@ -85,6 +85,8 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   payments: {
     codAdvance: 5,
     codEnabled: true,
+    codUnitPrice: 68,
+    defaultPrice: 59.9,
     bankAccounts: [
       {
         bank: 'Banco Pichincha',
@@ -98,7 +100,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   },
   trustItems: [
     { icon: '🚚', title: 'Envío a todo Ecuador', sub: 'De Tulcán a Zamora' },
-    { icon: '💵', title: 'Contra entrega', sub: 'Adelantas solo $5' },
+    { icon: '💵', title: 'Contra entrega', sub: 'Hoy solo $5' },
     { icon: '🏦', title: 'Transferencia', sub: 'Envío gratis' },
     { icon: '🛡️', title: 'Compra segura', sub: 'Garantía Brooklyn' },
     { icon: '🔄', title: 'Cambio de talla', sub: 'Hasta 48 h tras recibir' },
@@ -113,7 +115,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       icon: '💵',
       title: 'Pagas al recibir',
-      text: 'Con contra entrega solo adelantas $5 del envío y el resto lo pagas cuando tienes tus zapatos en la mano.',
+      text: 'Con contra entrega hoy pagas solo $5 para garantizar tu envío y el resto cuando tienes tus zapatos en la mano.',
     },
     {
       icon: '📏',
@@ -157,7 +159,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       question: '¿Cómo funciona el pago contra entrega?',
       answer:
-        'Adelantas solo $5 por transferencia o depósito en Banco Pichincha, que cubren el envío. El resto lo pagas en efectivo cuando el courier te entrega tus zapatos en la dirección que nos diste. Así los dos quedamos tranquilos.',
+        'Hoy pagas solo $5 por transferencia o depósito en Banco Pichincha para garantizar tu envío. El resto lo pagas en efectivo cuando el courier te entrega tus zapatos en la dirección que nos diste. Así los dos quedamos tranquilos.',
     },
     {
       question: '¿Cómo pago por transferencia o depósito?',

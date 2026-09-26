@@ -7,6 +7,7 @@ import { productMessage, useWaContext } from '@/lib/wa-messages';
 import type { PaymentMethod, Product } from '@/lib/types';
 import { classNames, formatPrice, resolveColorImage, whatsappLinkTo } from '@/lib/utils';
 import { useCartStore } from '@/lib/cart-store';
+import { computeOrderTotals } from '@/lib/shipping';
 import { useSiteSettings } from '@/lib/settings-context';
 import SafeImage from '../SafeImage';
 import { CartIcon, RulerIcon, WhatsAppIcon } from '../icons';
@@ -54,6 +55,7 @@ export default function BuyBox({
       title: product.title,
       brand: product.brand,
       price: product.price,
+      ...(product.codPrice ? { codPrice: product.codPrice } : {}),
       image: resolveColorImage(product, color) || product.images[0] || '',
       size: size || 'Única',
       ...(usSizeFor(size, product.gender) ? { sizeUs: usSizeFor(size, product.gender) } : {}),
@@ -98,6 +100,7 @@ export default function BuyBox({
 
   const transferShipping = shipping.defaultRate;
   const lineTotal = product.price * quantity;
+  const cod = computeOrderTotals(settings, [{ price: product.price, codPrice: product.codPrice ?? undefined, quantity }], 'contra_entrega', '');
 
   return (
     <div className="space-y-6">
@@ -262,25 +265,58 @@ export default function BuyBox({
             <button
               type="button"
               onClick={() => openBuy('transferencia')}
-              className="btn-primary btn-shine w-full flex-col gap-1 rounded-2xl px-4 py-4 normal-case tracking-normal sm:rounded-full"
+              className="btn-primary btn-shine w-full justify-between gap-3 rounded-2xl px-5 py-4 text-left normal-case tracking-normal"
             >
-              <span className="text-[15px] font-black uppercase tracking-wide sm:text-base sm:tracking-wider">🏦 Pagar con transferencia</span>
-              <span className="text-[12px] font-bold opacity-80">
-                {transferShipping === 0 ? 'Envío GRATIS' : `Envío ${formatPrice(transferShipping)}`} · Total {formatPrice(lineTotal + transferShipping)}
+              <span className="flex flex-col gap-1">
+                <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">🏦 Pago por transferencia</span>
+                <span className="text-[12px] font-bold opacity-80">
+                  {transferShipping === 0 ? 'Envío GRATIS' : `+ envío ${formatPrice(transferShipping)}`} · Depósito o transferencia Pichincha
+                </span>
+              </span>
+              <span className="shrink-0 text-right">
+                <span className="block text-2xl font-black leading-none">{formatPrice(lineTotal + transferShipping)}</span>
+                <span className="mt-1 block text-[10px] font-extrabold uppercase opacity-70">Total</span>
               </span>
             </button>
 
             {payments.codEnabled && (
-              <button
-                type="button"
-                onClick={() => openBuy('contra_entrega')}
-                className="btn-dark w-full flex-col gap-1 rounded-2xl px-4 py-4 normal-case tracking-normal sm:rounded-full"
-              >
-                <span className="text-[15px] font-black uppercase tracking-wide sm:text-base sm:tracking-wider">💵 Pago contra entrega</span>
-                <span className="text-[12px] font-semibold text-primary-light">
-                  Hoy solo {formatPrice(payments.codAdvance)} de envío · {formatPrice(lineTotal)} al recibir
-                </span>
-              </button>
+              <div className="overflow-hidden rounded-2xl bg-ink shadow-dark ring-1 ring-primary/40">
+                <button
+                  type="button"
+                  onClick={() => openBuy('contra_entrega')}
+                  className="btn-base w-full justify-between gap-3 rounded-none px-5 py-4 text-left normal-case tracking-normal text-white"
+                >
+                  <span className="flex flex-col gap-1">
+                    <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">💵 Pago contra entrega</span>
+                    <span className="text-[12px] font-semibold text-white/70">
+                      Total {formatPrice(cod.total)}
+                      {cod.shippingIncluded ? ' con envío incluido' : ' con envío'}
+                    </span>
+                  </span>
+                  <span className="shrink-0 rounded-xl bg-gold-gradient px-3 py-2 text-center text-ink">
+                    <span className="block text-[9px] font-extrabold uppercase">Hoy solo</span>
+                    <span className="block text-xl font-black leading-none">{formatPrice(cod.payNow)}</span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openBuy('contra_entrega')}
+                  className="grid w-full grid-cols-3 border-t border-white/10 text-center text-white"
+                >
+                  {[
+                    { n: '1', t: `Hoy ${formatPrice(cod.payNow)}`, s: 'garantiza tu envío' },
+                    { n: '2', t: 'Te llega', s: 'a tu dirección' },
+                    { n: '3', t: `Pagas ${formatPrice(cod.payOnDelivery)}`, s: 'en efectivo al recibir' },
+                  ].map((step, i) => (
+                    <span key={step.n} className={classNames('px-1.5 py-2.5', i > 0 && 'border-l border-white/10')}>
+                      <span className="block text-[12px] font-extrabold text-primary-light">
+                        {step.n}. {step.t}
+                      </span>
+                      <span className="block text-[10px] text-white/60">{step.s}</span>
+                    </span>
+                  ))}
+                </button>
+              </div>
             )}
 
             <button type="button" onClick={handleAddToCart} className="btn-secondary w-full">
@@ -309,10 +345,10 @@ export default function BuyBox({
               <strong className="text-ink">1.</strong> Confirmas tu pedido por WhatsApp.
             </li>
             <li>
-              <strong className="text-ink">2.</strong> Adelantas {formatPrice(payments.codAdvance)} del envío por transferencia o depósito en Banco Pichincha.
+              <strong className="text-ink">2.</strong> Adelantas solo {formatPrice(cod.payNow)} por transferencia o depósito en Banco Pichincha para garantizar tu envío.
             </li>
             <li>
-              <strong className="text-ink">3.</strong> Recibes tus zapatos en tu dirección y pagas el resto en efectivo. ¡Así de fácil!
+              <strong className="text-ink">3.</strong> Recibes tus zapatos en tu dirección y pagas los {formatPrice(cod.payOnDelivery)} restantes en efectivo. ¡Así de fácil!
             </li>
           </ol>
         </div>

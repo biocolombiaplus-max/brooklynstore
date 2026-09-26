@@ -129,6 +129,8 @@ function CatalogoContent() {
     [products, featuredBrand],
   );
   const starView = !!brand && isStarBrand(featuredBrand, brand);
+  // Si todos los modelos cuestan lo mismo, el filtro de precio no sirve.
+  const hasPriceRange = new Set((products ?? []).map((p) => p.price)).size > 1;
   const styles = useMemo(() => {
     const present = new Set((products ?? []).map((p) => p.collection));
     const fromMenu = collectionsMenu.filter((c) => present.has(c.value));
@@ -247,16 +249,18 @@ function CatalogoContent() {
           </div>
         </div>
       )}
+      {hasPriceRange && (
       <div>
-        <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">Precio</p>
-        <div className="flex flex-wrap gap-2">
-          {PRICE_RANGES.map((r) => (
-            <FilterChip key={r.value} active={price === r.value} onClick={() => toggleParam('precio', r.value)}>
-              {r.label}
-            </FilterChip>
-          ))}
+          <p className="mb-3 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">Precio</p>
+          <div className="flex flex-wrap gap-2">
+            {PRICE_RANGES.map((r) => (
+              <FilterChip key={r.value} active={price === r.value} onClick={() => toggleParam('precio', r.value)}>
+                {r.label}
+              </FilterChip>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
       <label className="flex cursor-pointer items-center justify-between rounded-2xl bg-urgent/5 px-4 py-3">
         <span className="text-sm font-extrabold text-urgent">🔥 Solo ofertas</span>
         <input type="checkbox" checked={onlyOffers} onChange={() => setParam('ofertas', onlyOffers ? null : '1')} className="h-5 w-5 accent-[#E2472D]" />
