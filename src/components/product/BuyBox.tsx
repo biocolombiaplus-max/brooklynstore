@@ -13,6 +13,7 @@ import SafeImage from '../SafeImage';
 import { CartIcon, RulerIcon, WhatsAppIcon } from '../icons';
 import { discountPercentOf } from '../ProductCard';
 import SizeGuideModal from '../sizes/SizeGuideModal';
+import LabelScanner from '../sizes/LabelScanner';
 import UrgencyTimer from './UrgencyTimer';
 import QuickBuyModal from './QuickBuyModal';
 import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
@@ -228,6 +229,18 @@ export default function BuyBox({
               Ver tabla con centímetros
             </button>
           </p>
+          <div className="mt-3">
+            <LabelScanner
+              compact
+              gender={product.gender}
+              availableSizes={product.sizes}
+              productTitle={product.title}
+              onPickSize={(s) => {
+                setSize(s);
+                setSizeError(false);
+              }}
+            />
+          </div>
         </div>
       )}
 

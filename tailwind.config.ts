@@ -45,6 +45,11 @@ const config: Config = {
         dark: '0 14px 34px rgba(14, 14, 14, 0.28)',
       },
       keyframes: {
+        scan: {
+          '0%': { top: '4%' },
+          '50%': { top: '92%' },
+          '100%': { top: '4%' },
+        },
         marquee: {
           '0%': { transform: 'translateX(0)' },
           '100%': { transform: 'translateX(-50%)' },
@@ -103,6 +108,7 @@ const config: Config = {
         },
       },
       animation: {
+        scan: 'scan 2.2s ease-in-out infinite',
         marquee: 'marquee 28s linear infinite',
         pulseSoft: 'pulseSoft 1.8s ease-in-out infinite',
         shimmer: 'shimmer 2.8s linear infinite',

@@ -6,6 +6,7 @@ import { recommendSize, sizeTableFor, type SizeGender } from '@/lib/sizes';
 import type { Fit, Gender } from '@/lib/types';
 import { classNames } from '@/lib/utils';
 import FootMeasureIllustration from './FootMeasureIllustration';
+import LabelScanner from './LabelScanner';
 
 // Guía de tallas completa: calculadora por centímetros, cómo medir el pie y
 // tabla de equivalencias. Hombre y mujer tienen tablas distintas: en la ficha
@@ -58,6 +59,9 @@ export default function SizeGuide({
           ))}
         </div>
       )}
+
+      {/* Escáner de etiqueta */}
+      <LabelScanner gender={locked ? gender : current} availableSizes={availableSizes} onPickSize={onPickSize} />
 
       {/* Calculadora */}
       <div className="rounded-2xl bg-ink p-5 text-white sm:p-6">
