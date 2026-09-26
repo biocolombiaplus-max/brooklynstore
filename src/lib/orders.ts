@@ -40,6 +40,16 @@ function saveLocalOrder(order: Order): void {
   }
 }
 
+// Último pedido hecho desde este navegador (para "Rastrear pedido").
+export function getLastLocalOrder(): Order | null {
+  try {
+    const raw = localStorage.getItem(LAST_ORDER_KEY);
+    return raw ? (JSON.parse(raw) as Order) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function getLocalOrder(id: string): Order | null {
   try {
     const raw = localStorage.getItem(LAST_ORDER_KEY);

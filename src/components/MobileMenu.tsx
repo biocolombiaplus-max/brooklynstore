@@ -185,7 +185,8 @@ export default function MobileMenu({ open, onClose }: { open: boolean; onClose: 
                 sub: `Adelantas ${formatPrice(payments.codAdvance)} y el resto al recibir`,
               },
               { href: '/#como-comprar', icon: '🛍️', title: 'Cómo comprar', sub: 'En 4 pasos, confirmas por WhatsApp' },
-              { href: '/#preguntas', icon: '❓', title: 'Preguntas frecuentes', sub: `Envíos en ${shipping.deliveryTime}` },
+              { href: '/ayuda/rastrear-pedido', icon: '📦', title: 'Rastrear mi pedido', sub: 'Estado y guía Servientrega' },
+              { href: '/ayuda', icon: '❓', title: 'Centro de ayuda', sub: `Envíos en ${shipping.deliveryTime}, cambios y garantía` },
             ].map((item) => (
               <Link key={item.title} href={item.href} onClick={onClose} className="flex items-center gap-3 px-4 py-3.5">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold-50 text-lg ring-1 ring-primary/30">

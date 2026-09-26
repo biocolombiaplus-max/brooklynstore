@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSiteSettings } from '@/lib/settings-context';
 import { formatPrice, whatsappLinkTo } from '@/lib/utils';
 import PaymentBadges from '@/components/PaymentBadges';
+import { HELP_PAGES } from '@/lib/help-pages';
 import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 import { WhatsAppIcon } from './icons';
 
@@ -39,7 +40,7 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_1.3fr]">
         <div>
           {logoUrl ? (
             <span className="relative block h-16 w-32">
@@ -73,19 +74,36 @@ export default function Footer() {
             <li><Link href="/catalogo?genero=mujer" className="hover:text-white">Mujer</Link></li>
             <li><Link href="/catalogo?ofertas=1" className="hover:text-white">Ofertas</Link></li>
             <li><Link href="/catalogo" className="hover:text-white">Todo el catálogo</Link></li>
+            <li><Link href="/guia-de-tallas" className="hover:text-white">Guía de tallas</Link></li>
+          </ul>
+          <p className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/40">Marcas</p>
+          <p className="mt-2 text-xs leading-relaxed text-white/60">{brands.join(' · ')} · y más</p>
+        </div>
+
+        <div>
+          <h4 className="mb-4 text-xs font-extrabold uppercase tracking-[0.2em] text-primary-light">Centro de ayuda</h4>
+          <ul className="space-y-2.5 text-sm text-white/75">
+            {HELP_PAGES.filter((p) => p.group === 'compra').map((p) => (
+              <li key={p.slug}>
+                <Link href={`/ayuda/${p.slug}`} className="hover:text-white">
+                  {p.title}
+                </Link>
+              </li>
+            ))}
           </ul>
         </div>
 
         <div>
-          <h4 className="mb-4 text-xs font-extrabold uppercase tracking-[0.2em] text-primary-light">Ayuda</h4>
+          <h4 className="mb-4 text-xs font-extrabold uppercase tracking-[0.2em] text-primary-light">{storeName}</h4>
           <ul className="space-y-2.5 text-sm text-white/75">
-            <li><Link href="/guia-de-tallas" className="hover:text-white">📏 Guía de tallas</Link></li>
-            <li><Link href="/#como-comprar" className="hover:text-white">🛍️ Cómo comprar</Link></li>
-            <li><Link href="/#formas-de-pago" className="hover:text-white">💳 Formas de pago</Link></li>
-            <li><Link href="/#preguntas" className="hover:text-white">❓ Preguntas frecuentes</Link></li>
+            {HELP_PAGES.filter((p) => p.group !== 'compra').map((p) => (
+              <li key={p.slug}>
+                <Link href={`/ayuda/${p.slug}`} className="hover:text-white">
+                  {p.title}
+                </Link>
+              </li>
+            ))}
           </ul>
-          <p className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/40">Marcas</p>
-          <p className="mt-2 text-xs leading-relaxed text-white/60">{brands.join(' · ')} · y más</p>
         </div>
 
         <div>
@@ -125,10 +143,16 @@ export default function Footer() {
       </div>
 
       <div className="border-t border-white/10 py-6 text-center text-xs text-white/40">
-        <p>{footer.copyrightText || `© ${new Date().getFullYear()} ${storeName} · Ecuador. Todos los derechos reservados.`}</p>
-        <Link href="/admin/login" className="mt-2 inline-block text-white/25 transition-colors hover:text-white/60">
-          Iniciar sesión
-        </Link>
+        <div className="container-page flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
+          <p>{footer.copyrightText || `© ${new Date().getFullYear()} ${storeName} · Ecuador. Todos los derechos reservados.`}</p>
+          <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+            <Link href="/ayuda/politica-de-privacidad" className="hover:text-white/80">Privacidad</Link>
+            <Link href="/ayuda/terminos-y-condiciones" className="hover:text-white/80">Términos</Link>
+            <Link href="/ayuda/rastrear-pedido" className="hover:text-white/80">Rastrear pedido</Link>
+            <Link href="/ayuda" className="hover:text-white/80">Ayuda</Link>
+            <Link href="/admin/login" className="text-white/25 transition-colors hover:text-white/60">Iniciar sesión</Link>
+          </nav>
+        </div>
       </div>
     </footer>
   );
