@@ -1,6 +1,7 @@
 'use client';
 
 import StarTag from './brand/StarTag';
+import ColorSwatch from './ColorSwatch';
 import Link from 'next/link';
 import type { Product } from '@/lib/types';
 import { formatPrice } from '@/lib/utils';
@@ -93,6 +94,15 @@ export default function ProductCard({ product, priority = false }: { product: Pr
           </p>
         )}
         <h3 className="mt-0.5 line-clamp-2 text-sm font-bold leading-snug text-ink group-hover:underline">{product.title}</h3>
+        {product.colors.length > 1 && (
+          <div className="mt-1.5 flex items-center gap-1">
+            {product.colors.slice(0, 4).map((c) => (
+              <ColorSwatch key={c.name} hex={c.hex} hex2={c.hex2} title={c.name} className="h-3.5 w-3.5" />
+            ))}
+            {product.colors.length > 4 && <span className="text-[10px] font-bold text-muted">+{product.colors.length - 4}</span>}
+            <span className="ml-1 text-[10px] font-semibold text-muted">{product.colors.length} colores</span>
+          </div>
+        )}
         <div className="mt-1.5 flex flex-wrap items-baseline gap-x-2">
           <span className={discountPct > 0 ? 'text-base font-black text-urgent' : 'text-base font-black text-ink'}>
             {formatPrice(product.price)}

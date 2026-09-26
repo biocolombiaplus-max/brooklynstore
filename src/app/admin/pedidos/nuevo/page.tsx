@@ -150,7 +150,7 @@ export default function NuevoPedidoPage() {
                   <div className="text-sm">
                     <p className="font-semibold text-ink">{item.title}</p>
                     <p className="text-xs text-muted">
-                      Talla {item.size} · {item.color} · x{item.quantity}
+                      Talla {item.size}{item.sizeUs && ` (US ${item.sizeUs})`} · {item.color} · x{item.quantity}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">

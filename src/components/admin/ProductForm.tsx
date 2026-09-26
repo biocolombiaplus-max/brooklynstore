@@ -9,6 +9,9 @@ import { slugify } from '@/lib/utils';
 import { createProduct, updateProduct, deleteProduct } from '@/lib/products';
 import { uploadProductImage, deleteProductImage, type ImageCropMode } from '@/lib/storage';
 import { resizeForUpload } from '@/lib/imageCrop';
+import { detectShoeColors, type DetectedColor } from '@/lib/colorDetect';
+import { usSizeFor } from '@/lib/sizes';
+import ColorSwatch from '@/components/ColorSwatch';
 
 const COMMON_SIZES = ['34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
 const SIZE_PRESETS: { label: string; sizes: string[] }[] = [
@@ -25,8 +28,21 @@ const QUICK_COLORS: ProductColor[] = [
   { name: 'Café', hex: '#6B4226' },
   { name: 'Beige', hex: '#E8DCC4' },
   { name: 'Rosado', hex: '#F9A8D4' },
+  // Dos tonos: capellada / suela
+  { name: 'Blanco / Negro', hex: '#FFFFFF', hex2: '#111111' },
+  { name: 'Negro / Blanco', hex: '#111111', hex2: '#FFFFFF' },
+  { name: 'Blanco / Goma', hex: '#FFFFFF', hex2: '#B5835A' },
+  { name: 'Negro / Goma', hex: '#111111', hex2: '#B5835A' },
+  { name: 'Gris / Blanco', hex: '#9CA3AF', hex2: '#FFFFFF' },
 ];
 const COMMON_COLLECTIONS = ['deportivos', 'urbanos', 'running', 'basket', 'sandalias', 'botas'];
+// Un color de un solo tono no guarda "hex2" (Firestore no acepta undefined).
+function stripHex2(color: ProductColor): ProductColor {
+  if (color.hex2 && color.hex2.toLowerCase() !== color.hex.toLowerCase()) return color;
+  const { hex2: _hex2, ...rest } = color;
+  return rest;
+}
+
 const sortSizes = (list: string[]) => [...list].sort((a, b) => Number(a) - Number(b) || a.localeCompare(b));
 
 export default function ProductForm({ product }: { product?: Product }) {
@@ -62,6 +78,10 @@ export default function ProductForm({ product }: { product?: Product }) {
   const [customSize, setCustomSize] = useState('');
   const [customColorName, setCustomColorName] = useState('');
   const [customColorHex, setCustomColorHex] = useState('#111111');
+  const [customTwoTone, setCustomTwoTone] = useState(false);
+  const [customColorHex2, setCustomColorHex2] = useState('#FFFFFF');
+  const [autoColors, setAutoColors] = useState(true);
+  const [detectNote, setDetectNote] = useState('');
   const [newReview, setNewReview] = useState<ProductReview>({ name: '', city: '', rating: 5, text: '' });
 
   function handleTitleChange(value: string) {
@@ -89,12 +109,32 @@ export default function ProductForm({ product }: { product?: Product }) {
   function addCustomColor() {
     const name = customColorName.trim();
     if (!name) return;
+    const hex2 = customTwoTone ? customColorHex2 : undefined;
     if (colors.some((c) => c.name.toLowerCase() === name.toLowerCase())) {
-      setColors((c) => c.map((x) => (x.name.toLowerCase() === name.toLowerCase() ? { ...x, hex: customColorHex } : x)));
+      setColors((c) =>
+        c.map((x) => (x.name.toLowerCase() === name.toLowerCase() ? stripHex2({ ...x, hex: customColorHex, hex2 }) : x)),
+      );
     } else {
-      setColors((c) => [...c, { name, hex: customColorHex }]);
+      setColors((c) => [...c, stripHex2({ name, hex: customColorHex, hex2 })]);
     }
     setCustomColorName('');
+  }
+
+  function editColor(name: string, patch: Partial<ProductColor>) {
+    setColors((c) => c.map((x) => (x.name === name ? stripHex2({ ...x, ...patch }) : x)));
+  }
+
+  // Agrega el color detectado en una foto (o le asigna la foto si ese color
+  // ya existía sin foto) — así, al subir las fotos, los colores quedan listos.
+  function applyDetectedColor(detected: DetectedColor, url: string) {
+    let added = false;
+    setColors((prev) => {
+      const existing = prev.find((c) => c.name.toLowerCase() === detected.name.toLowerCase());
+      if (existing) return prev.map((c) => (c === existing && !c.image ? { ...c, image: url } : c));
+      added = true;
+      return [...prev, stripHex2({ name: detected.name, hex: detected.hex, hex2: detected.hex2, image: url })];
+    });
+    return added;
   }
 
   function removeColor(name: string) {
@@ -142,8 +182,13 @@ export default function ProductForm({ product }: { product?: Product }) {
         try {
           const resized = await resizeForUpload(original);
           const uploadFile = new File([resized], original.name || `${slug}.jpg`, { type: 'image/jpeg' });
+          const detected = autoColors ? await detectShoeColors(resized).catch(() => null) : null;
           const url = await uploadProductImage(uploadFile, slug, cropMode);
           setImages((prev) => [...prev, url]);
+          if (detected) {
+            applyDetectedColor(detected, url);
+            setDetectNote(`🎨 Detectamos «${detected.name}» en tu foto y lo dejamos listo con su foto. Puedes cambiar el nombre o el tono abajo.`);
+          }
         } catch (err) {
           setUploadError(err instanceof Error ? err.message : 'No se pudo subir la foto. Intenta de nuevo.');
         }
@@ -367,7 +412,11 @@ export default function ProductForm({ product }: { product?: Product }) {
         <div className="rounded-card bg-white p-6 shadow-soft">
           <h2 className="mb-4 font-heading text-lg font-bold text-ink">Tallas y colores</h2>
 
-          <p className="mb-2 text-sm font-semibold text-ink">Tallas disponibles (EC)</p>
+          <p className="mb-1 text-sm font-semibold text-ink">Tallas disponibles</p>
+          <p className="mb-2 text-xs text-muted">
+            Número grande = talla Ecuador (EC). Debajo, su equivalente US ({gender === 'mujer' ? 'mujer' : 'hombre'}), que también verá el
+            cliente.
+          </p>
           <div className="mb-3 flex flex-wrap gap-2">
             {SIZE_PRESETS.map((preset) => (
               <button
@@ -386,11 +435,14 @@ export default function ProductForm({ product }: { product?: Product }) {
                 key={s}
                 type="button"
                 onClick={() => toggleSize(s)}
-                className={`h-10 w-10 rounded-lg border-2 text-sm font-semibold ${
+                className={`flex h-14 w-14 flex-col items-center justify-center rounded-lg border-2 leading-none ${
                   sizes.includes(s) ? 'border-primary bg-primary text-white' : 'border-border bg-white text-ink'
                 }`}
               >
-                {s}
+                <span className="text-sm font-bold">{s}</span>
+                <span className={`mt-1 text-[10px] font-semibold ${sizes.includes(s) ? 'text-white/80' : 'text-muted'}`}>
+                  US {usSizeFor(s, gender)}
+                </span>
               </button>
             ))}
             {sizes
@@ -424,7 +476,14 @@ export default function ProductForm({ product }: { product?: Product }) {
             </button>
           </div>
 
-          <p className="mb-2 text-sm font-semibold text-ink">Colores disponibles</p>
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm font-semibold text-ink">Colores disponibles</p>
+            <label className="flex items-center gap-2 rounded-full bg-gold-50 px-3 py-1.5 text-xs font-bold text-ink ring-1 ring-primary/30">
+              <input type="checkbox" checked={autoColors} onChange={(e) => setAutoColors(e.target.checked)} />
+              🎨 Detectar colores al subir fotos
+            </label>
+          </div>
+          {detectNote && <p className="mb-3 rounded-lg bg-gold-50 p-2.5 text-xs font-semibold text-ink">{detectNote}</p>}
           <div className="mb-3 flex flex-wrap gap-2">
             {QUICK_COLORS.map((c) => (
               <button
@@ -435,7 +494,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                   colors.some((x) => x.name === c.name) ? 'border-primary bg-primary-light/20' : 'border-border'
                 }`}
               >
-                <span className="h-4 w-4 rounded-full border border-border" style={{ backgroundColor: c.hex }} />
+                <ColorSwatch hex={c.hex} hex2={c.hex2} className="h-4 w-4" />
                 {c.name}
               </button>
             ))}
@@ -448,18 +507,37 @@ export default function ProductForm({ product }: { product?: Product }) {
                   onClick={() => removeColor(c.name)}
                   className="flex items-center gap-2 rounded-full border-2 border-primary bg-primary-light/20 px-3 py-1.5 text-xs font-semibold"
                 >
-                  <span className="h-4 w-4 rounded-full border border-border" style={{ backgroundColor: c.hex }} />
+                  <ColorSwatch hex={c.hex} hex2={c.hex2} className="h-4 w-4" />
                   {c.name} <span>✕</span>
                 </button>
               ))}
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <input
-              type="color"
-              value={customColorHex}
-              onChange={(e) => setCustomColorHex(e.target.value)}
-              className="h-10 w-12 cursor-pointer rounded-lg border border-border"
-            />
+            <label className="flex flex-col items-center text-[10px] font-semibold text-muted">
+              <input
+                type="color"
+                value={customColorHex}
+                onChange={(e) => setCustomColorHex(e.target.value)}
+                className="h-10 w-12 cursor-pointer rounded-lg border border-border"
+              />
+              Zapato
+            </label>
+            {customTwoTone && (
+              <label className="flex flex-col items-center text-[10px] font-semibold text-muted">
+                <input
+                  type="color"
+                  value={customColorHex2}
+                  onChange={(e) => setCustomColorHex2(e.target.value)}
+                  className="h-10 w-12 cursor-pointer rounded-lg border border-border"
+                />
+                Suela
+              </label>
+            )}
+            <ColorSwatch hex={customColorHex} hex2={customTwoTone ? customColorHex2 : undefined} className="h-9 w-9" />
+            <label className="flex items-center gap-1.5 text-xs font-semibold text-ink">
+              <input type="checkbox" checked={customTwoTone} onChange={(e) => setCustomTwoTone(e.target.checked)} />
+              Dos colores
+            </label>
             <input
               value={customColorName}
               onChange={(e) => setCustomColorName(e.target.value)}
@@ -469,7 +547,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                   addCustomColor();
                 }
               }}
-              placeholder="Nombre del color (ej: Rosa palo)"
+              placeholder={customTwoTone ? 'Nombre (ej: Blanco / Negro)' : 'Nombre del color (ej: Rosa palo)'}
               className="flex-1 rounded-lg border border-border px-3 py-2 text-sm focus:border-primary focus:outline-none"
             />
             <button type="button" onClick={addCustomColor} className="btn-secondary px-4 py-2 text-sm">
@@ -496,12 +574,40 @@ export default function ProductForm({ product }: { product?: Product }) {
 
               {colors.map((c) => (
                 <div key={c.name}>
-                  <div className="mb-1.5 flex items-center gap-2">
-                    <span
-                      className="h-5 w-5 shrink-0 rounded-full border border-border"
-                      style={{ backgroundColor: c.hex }}
+                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                    <ColorSwatch hex={c.hex} hex2={c.hex2} className="h-6 w-6" />
+                    <input
+                      defaultValue={c.name}
+                      onBlur={(e) => {
+                        const name = e.target.value.trim();
+                        if (name && name !== c.name && !colors.some((x) => x.name.toLowerCase() === name.toLowerCase())) {
+                          editColor(c.name, { name });
+                        } else e.target.value = c.name;
+                      }}
+                      className="w-44 rounded-md border border-border px-2 py-1 text-sm font-semibold text-ink focus:border-primary focus:outline-none"
+                      aria-label="Nombre del color"
                     />
-                    <span className="text-sm font-semibold text-ink">{c.name}</span>
+                    <input
+                      type="color"
+                      value={c.hex}
+                      onChange={(e) => editColor(c.name, { hex: e.target.value })}
+                      title="Color del zapato"
+                      className="h-7 w-9 cursor-pointer rounded border border-border"
+                    />
+                    <input
+                      type="color"
+                      value={c.hex2 ?? c.hex}
+                      onChange={(e) => editColor(c.name, { hex2: e.target.value })}
+                      title="Color de la suela (dos tonos)"
+                      className="h-7 w-9 cursor-pointer rounded border border-border"
+                    />
+                    {c.hex2 ? (
+                      <button type="button" onClick={() => editColor(c.name, { hex2: undefined })} className="text-[11px] text-muted underline">
+                        Un solo color
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-muted">← toca para agregar color de suela</span>
+                    )}
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <button

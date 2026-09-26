@@ -62,6 +62,7 @@ export default function QuickBuyModal({
                   <span className="block truncate text-sm font-bold text-ink">{item.title}</span>
                   <span className="block text-xs text-muted">
                     Talla <strong className="text-ink">{item.size}</strong>
+                        {item.sizeUs && <span> (US {item.sizeUs})</span>}
                     {item.color && ` · ${item.color}`} · x{item.quantity}
                   </span>
                 </span>

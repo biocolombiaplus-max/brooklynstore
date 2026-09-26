@@ -60,6 +60,7 @@ export default function CheckoutPage() {
                   <span className="block truncate text-sm font-bold text-ink">{item.title}</span>
                   <span className="block text-xs text-muted">
                     Talla {item.size}
+                    {item.sizeUs && ` (US ${item.sizeUs})`}
                     {item.color && ` · ${item.color}`}
                   </span>
                 </span>

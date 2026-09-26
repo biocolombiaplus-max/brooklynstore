@@ -1,6 +1,9 @@
 export interface ProductColor {
   name: string;
+  // Color principal (capellada) y, opcional, el segundo color (suela o
+  // detalles) para zapatos de dos tonos.
   hex: string;
+  hex2?: string;
   image?: string;
 }
 
@@ -68,6 +71,8 @@ export interface CartItem {
   price: number;
   image: string;
   size: string;
+  // Equivalencia US de la talla (solo informativa: la talla del pedido es la EC).
+  sizeUs?: string;
   color: string;
   quantity: number;
 }

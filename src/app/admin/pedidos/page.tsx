@@ -202,7 +202,7 @@ function OrderCard({
           <ul className="space-y-1 text-sm text-ink">
             {order.items.map((item, i) => (
               <li key={i}>
-                {item.title} (T.{item.size}, {item.color}) × {item.quantity}
+                {item.title} (T.{item.size}{item.sizeUs ? ` · US ${item.sizeUs}` : ''}, {item.color}) × {item.quantity}
               </li>
             ))}
           </ul>

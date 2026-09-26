@@ -188,6 +188,7 @@ export default function OrderConfirmationPage() {
                   <span className="font-bold text-ink">{item.title}</span> × {item.quantity}
                   <span className="block text-xs text-muted">
                     Talla {item.size}
+                    {item.sizeUs && ` (US ${item.sizeUs})`}
                     {item.color && ` · ${item.color}`}
                   </span>
                 </span>

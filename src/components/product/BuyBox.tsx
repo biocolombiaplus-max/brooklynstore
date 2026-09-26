@@ -1,5 +1,7 @@
 'use client';
 
+import ColorSwatch, { swatchBackground } from '../ColorSwatch';
+import { usSizeFor } from '@/lib/sizes';
 import { useEffect, useState, type RefObject } from 'react';
 import { productMessage, useWaContext } from '@/lib/wa-messages';
 import type { PaymentMethod, Product } from '@/lib/types';
@@ -54,6 +56,7 @@ export default function BuyBox({
       price: product.price,
       image: resolveColorImage(product, color) || product.images[0] || '',
       size: size || 'Única',
+      ...(usSizeFor(size, product.gender) ? { sizeUs: usSizeFor(size, product.gender) } : {}),
       color,
       quantity,
     };
@@ -83,13 +86,13 @@ export default function BuyBox({
     setTimeout(() => setAdded(false), 2200);
   }
 
-  const waMessage = productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size, color });
+  const waMessage = productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size: size && usSizeFor(size, product.gender) ? `${size} EC (US ${usSizeFor(size, product.gender)})` : size, color });
   const setWaContext = useWaContext((s) => s.setMessage);
 
   // El botón flotante de WhatsApp también manda este modelo con la talla y
   // el color que el cliente tenga elegidos.
   useEffect(() => {
-    setWaContext(productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size, color }));
+    setWaContext(productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size: size && usSizeFor(size, product.gender) ? `${size} EC (US ${usSizeFor(size, product.gender)})` : size, color }));
   }, [product, size, color, setWaContext]);
   useEffect(() => () => setWaContext(null), [setWaContext]);
 
@@ -151,9 +154,12 @@ export default function BuyBox({
                   )}
                 >
                   {thumb ? (
-                    <SafeImage src={thumb} alt={c.name} fill sizes="64px" className="object-cover" />
+                    <>
+                      <SafeImage src={thumb} alt={c.name} fill sizes="64px" className="object-cover" />
+                      <ColorSwatch hex={c.hex} hex2={c.hex2} className="absolute bottom-1 right-1 h-4 w-4 ring-2 ring-white" />
+                    </>
                   ) : (
-                    <span className="absolute inset-1 rounded-full" style={{ backgroundColor: c.hex }} />
+                    <span className="absolute inset-1 rounded-full" style={{ background: swatchBackground(c.hex, c.hex2) }} />
                   )}
                 </button>
               );
@@ -170,6 +176,7 @@ export default function BuyBox({
               {size ? (
                 <>
                   Talla elegida: <span className="text-primary">EC {size}</span>
+                  {usSizeFor(size, product.gender) && <span className="text-muted"> · US {usSizeFor(size, product.gender)}</span>}
                 </>
               ) : sizeError ? (
                 '👇 Elige tu talla para continuar'
@@ -195,7 +202,7 @@ export default function BuyBox({
                   setSizeError(false);
                 }}
                 className={classNames(
-                  'h-12 rounded-xl border-2 text-sm font-extrabold transition-all duration-150 active:scale-95',
+                  'flex h-14 flex-col items-center justify-center rounded-xl border-2 leading-none transition-all duration-150 active:scale-95',
                   size === s
                     ? 'border-ink bg-ink text-white shadow-dark'
                     : sizeError
@@ -203,12 +210,17 @@ export default function BuyBox({
                       : 'border-border bg-white text-ink hover:border-ink',
                 )}
               >
-                {s}
+                <span className="text-[15px] font-extrabold">{s}</span>
+                {usSizeFor(s, product.gender) && (
+                  <span className={classNames('mt-1 text-[10px] font-bold', size === s ? 'text-primary-light' : 'text-muted')}>
+                    US {usSizeFor(s, product.gender)}
+                  </span>
+                )}
               </button>
             ))}
           </div>
           <p className="mt-2 text-[11px] text-muted">
-            Tallas ecuatorianas. ¿Sabes tu talla en US o EU? <button type="button" onClick={() => setGuideOpen(true)} className="font-bold text-ink underline">Mira la equivalencia</button>
+            Número grande: talla Ecuador · debajo: talla US {product.gender === 'mujer' ? 'mujer' : 'hombre'}. ¿Necesitas la EU? <button type="button" onClick={() => setGuideOpen(true)} className="font-bold text-ink underline">Mira la equivalencia</button>
           </p>
         </div>
       )}
@@ -238,7 +250,7 @@ export default function BuyBox({
       <div ref={ctaRef} className="space-y-3">
         {soldOut ? (
           <a
-            href={whatsappLinkTo(whatsappNumber, productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size, color }, 'Lo vi agotado en la web. ¿Me avisan cuando llegue? 🙏'), whatsappCountryCode)}
+            href={whatsappLinkTo(whatsappNumber, productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size: size && usSizeFor(size, product.gender) ? `${size} EC (US ${usSizeFor(size, product.gender)})` : size, color }, 'Lo vi agotado en la web. ¿Me avisan cuando llegue? 🙏'), whatsappCountryCode)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-dark w-full py-5"

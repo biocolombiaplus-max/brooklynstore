@@ -67,12 +67,12 @@ export function whatsappLinkTo(phone: string, message: string, countryCode?: str
 }
 
 export function buildCartWhatsAppMessage(
-  items: { title: string; size: string; color: string; quantity: number; price?: number }[],
+  items: { title: string; size: string; sizeUs?: string; color: string; quantity: number; price?: number }[],
 ): string {
   const lines = items
     .map(
       (i) =>
-        `• ${i.title}\n   Talla ${i.size}${i.color ? ` · ${i.color}` : ''} · x${i.quantity}${
+        `• ${i.title}\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity}${
           i.price !== undefined ? ` — ${formatPrice(i.price * i.quantity)}` : ''
         }`,
     )
@@ -92,7 +92,7 @@ export function paymentMethodLabel(method: PaymentMethod): string {
 // es lo que más confianza genera (y evita malentendidos con el courier).
 export function buildOrderWhatsAppMessage(order: {
   orderNumber: string;
-  items: { title: string; size: string; color: string; quantity: number; price: number }[];
+  items: { title: string; size: string; sizeUs?: string; color: string; quantity: number; price: number }[];
   subtotal: number;
   discount?: number;
   shipping: number;
@@ -106,7 +106,7 @@ export function buildOrderWhatsAppMessage(order: {
   const itemsList = order.items
     .map(
       (i) =>
-        `• ${i.title}\n   Talla ${i.size}${i.color ? ` · ${i.color}` : ''} · x${i.quantity} — ${formatPrice(i.price * i.quantity)}`,
+        `• ${i.title}\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity} — ${formatPrice(i.price * i.quantity)}`,
     )
     .join('\n');
 

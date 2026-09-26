@@ -54,7 +54,9 @@ export default function SizeGuide({
                 <p className="text-sm text-white/80">Tu talla recomendada es:</p>
                 <p className="mt-1 flex flex-wrap items-baseline gap-x-3">
                   <span className="text-4xl font-black text-gold-gradient">EC {recommended.ec}</span>
-                  <span className="text-xs text-white/70">(EU {recommended.eu})</span>
+                  <span className="text-xs text-white/70">
+                    (US {recommended.usM} hombre · US {recommended.usW} mujer · EU {recommended.eu})
+                  </span>
                 </p>
                 {fit !== 'normal' && <p className="mt-2 text-xs text-primary-light">👟 Este modelo es de {fitInfo.label.toLowerCase()}: ya lo tuvimos en cuenta.</p>}
                 {onPickSize && recommendedAvailable && (

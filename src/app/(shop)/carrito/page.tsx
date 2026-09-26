@@ -48,6 +48,7 @@ export default function CarritoPage() {
                     <p className="font-bold text-ink">{item.title}</p>
                     <p className="text-sm text-muted">
                       Talla <strong className="text-ink">{item.size}</strong>
+                        {item.sizeUs && <span> (US {item.sizeUs})</span>}
                       {item.color && ` · ${item.color}`}
                     </p>
                   </div>

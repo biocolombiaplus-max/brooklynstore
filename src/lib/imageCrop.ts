@@ -27,6 +27,9 @@ export async function resizeForUpload(file: File, maxDimension = 2000): Promise<
     canvas.height = Math.round(image.height * scale);
     const ctx = canvas.getContext('2d');
     if (!ctx) return file;
+    // Fondo blanco: JPEG no tiene transparencia (un PNG sin fondo quedaría negro).
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     return await new Promise<Blob>((resolve, reject) => {
       canvas.toBlob(

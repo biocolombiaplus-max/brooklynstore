@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 interface NotifyOrderItem {
   title: string;
   size: string;
+  sizeUs?: string;
   color: string;
   quantity: number;
   price: number;
@@ -59,7 +60,7 @@ function buildEmailHtml(body: NotifyOrderBody): string {
         <tr>
           <td style="padding:12px 0;border-bottom:1px solid #EEE8DD;">
             <div style="font-weight:600;color:#1C1208;font-size:14px;">${esc(item.title)}</div>
-            <div style="color:#8A7660;font-size:12px;margin-top:2px;">Talla ${esc(item.size)} · ${esc(item.color)} · x${esc(item.quantity)}</div>
+            <div style="color:#8A7660;font-size:12px;margin-top:2px;">Talla ${esc(item.size)}${item.sizeUs ? ` (US ${esc(item.sizeUs)})` : ''} · ${esc(item.color)} · x${esc(item.quantity)}</div>
           </td>
           <td style="padding:12px 0;border-bottom:1px solid #EEE8DD;text-align:right;font-weight:600;color:#1C1208;font-size:14px;white-space:nowrap;">
             ${formatUSD(item.price * item.quantity)}

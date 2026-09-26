@@ -40,3 +40,16 @@ export function recommendSize<T extends { ec: string; cm: number }>(
   if (fit === 'grande' && index > 0 && footCm - table[index - 1].cm <= 0.3) index -= 1;
   return table[index];
 }
+
+// Talla US equivalente a una talla EC: la de hombre para modelos de hombre y
+// unisex, la de mujer para modelos de mujer. Tallas fuera de la tabla
+// (personalizadas, "Única"...) no tienen equivalencia.
+export function usSizeFor(ec: string, gender: 'hombre' | 'mujer' | 'unisex' = 'unisex'): string | undefined {
+  const row = ADULT_SIZES.find((r) => r.ec === String(ec).trim());
+  if (!row) return undefined;
+  return gender === 'mujer' ? row.usW : row.usM;
+}
+
+export function formatSize(size: string, sizeUs?: string): string {
+  return sizeUs ? `${size} EC (US ${sizeUs})` : size;
+}
