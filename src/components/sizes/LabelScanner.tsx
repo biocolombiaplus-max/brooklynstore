@@ -10,6 +10,8 @@ import { WhatsAppIcon } from '../icons';
 
 type Status = 'idle' | 'working' | 'done' | 'error';
 
+const US_OPTIONS = [5, 5.5, 6, 6.5, 7, 7.5, 8, 8.5, 9, 9.5, 10, 10.5, 11, 11.5, 12];
+
 function fmt(n: number): string {
   return String(Math.round(n * 100) / 100).replace('.', ',');
 }
@@ -61,6 +63,16 @@ export default function LabelScanner({
     } catch {
       setStatus('error');
     }
+  }
+
+  // Si la foto no se pudo leer, el cliente toca el número US que ve en su
+  // etiqueta y le damos la talla igual.
+  function pickUs(us: number) {
+    const manual: LabelSizes = { readable: true, us, usGender: 'desconocido', uk: null, eu: null, cm: null, brand: null };
+    setLabel(manual);
+    const rec = recommendFromLabel(manual, preferred, locked);
+    setResult(rec);
+    setStatus(rec ? 'done' : 'error');
   }
 
   function reset() {
@@ -218,22 +230,46 @@ export default function LabelScanner({
 
       {status === 'error' && (
         <div className="relative animate-slideUp">
-          <p className="text-sm font-black uppercase tracking-wide text-primary-light">No pudimos leer bien la etiqueta 😕</p>
-          <ul className="mt-2 space-y-1 text-xs text-white/70">
-            <li>• Acércate para que la etiqueta llene la foto.</li>
-            <li>• Usa buena luz y evita reflejos o sombras.</li>
-            <li>• Asegúrate de que se vean los números US, EUR o CM.</li>
-          </ul>
-          <button type="button" onClick={() => cameraRef.current?.click()} className="btn-primary mt-4 w-full py-3 text-sm">
-            📷 Intentar de nuevo
+          <div className="flex items-center gap-3">
+            {photo && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={photo} alt="Tu etiqueta" className="h-16 w-16 shrink-0 rounded-xl object-cover ring-2 ring-primary/50" />
+            )}
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-primary-light">No alcanzamos a leer los números</p>
+              <p className="mt-0.5 text-xs text-white/70">Tranqui, lo resolvemos en un toque 👇</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-white/[0.06] p-3 ring-1 ring-white/10">
+            <p className="text-center text-xs font-bold text-white/85">Mira tu etiqueta y toca la talla <span className="text-primary-light">US</span> que dice:</p>
+            <div className="mt-3 grid grid-cols-5 gap-1.5">
+              {US_OPTIONS.map((us) => (
+                <button
+                  key={us}
+                  type="button"
+                  onClick={() => pickUs(us)}
+                  className="rounded-lg bg-white/10 py-2 text-sm font-extrabold text-white ring-1 ring-white/15 transition-colors hover:bg-primary hover:text-ink active:scale-95"
+                >
+                  {String(us).replace('.', ',')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button type="button" onClick={() => cameraRef.current?.click()} className="btn-primary mt-3 w-full py-3 text-sm">
+            📷 Tomar otra foto
           </button>
+          <p className="mt-2 text-center text-[10px] leading-relaxed text-white/45">
+            Tip: acércate hasta que la etiqueta llene la foto, con buena luz y sin reflejos.
+          </p>
           <a
             href={whatsappLinkTo(whatsappNumber, helpMessage, whatsappCountryCode)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-whatsapp mt-2 w-full py-3 text-sm"
           >
-            <WhatsAppIcon /> Mándanos la foto y te ayudamos
+            <WhatsAppIcon /> Pedir ayuda por WhatsApp
           </a>
           <button type="button" onClick={reset} className="mt-2 w-full py-1 text-center text-[11px] font-bold text-white/50 underline underline-offset-4">
             Cancelar
