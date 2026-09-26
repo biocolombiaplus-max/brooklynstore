@@ -168,16 +168,15 @@ export default function ProductPage() {
                 </AccordionItem>
                 <AccordionItem title="🚚 Envíos y formas de pago">
                   <ul className="space-y-2">
-                    <li>• Enviamos a todo el Ecuador con courier (Servientrega, Tramaco, Laar y más).</li>
+                    <li>• Enviamos a todo el Ecuador con Servientrega, con número de guía para que sigas tu paquete.</li>
                     <li>• Tiempo de entrega: {shipping.deliveryTime}.</li>
                     <li>
-                      • <strong className="text-ink">Transferencia o depósito en Banco Pichincha:</strong> pagas el total y{' '}
-                      {shipping.defaultRate === 0 ? 'el envío es GRATIS' : `el envío cuesta ${formatPrice(shipping.defaultRate)}`}.
+                      • <strong className="text-ink">Transferencia o depósito en Banco Pichincha:</strong> pagas tu pedido y el envío en un solo pago.
                     </li>
                     {payments.codEnabled && (
                       <li>
-                        • <strong className="text-ink">Contra entrega:</strong> hoy pagas {formatPrice(payments.codAdvance)} para garantizar tu envío y el resto
-                        en efectivo al recibir.
+                        • <strong className="text-ink">Contra entrega:</strong> hoy pagas {formatPrice(payments.codAdvance)} del envío para garantizar tu pedido y
+                        tus zapatos los pagas en efectivo al recibir.
                       </li>
                     )}
                     <li>• Todos los pedidos se confirman por WhatsApp — te respondemos ya mismo.</li>

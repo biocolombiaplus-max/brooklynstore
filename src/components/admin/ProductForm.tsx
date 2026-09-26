@@ -342,8 +342,8 @@ export default function ProductForm({ product }: { product?: Product }) {
             </div>
           </div>
           <p className="mt-2 text-xs text-muted">
-            La horma se muestra al cliente en la ficha y ajusta la talla que recomienda la calculadora (ej: si calza pequeño,
-            recomienda una talla más).
+            La horma no se muestra al cliente: solo ajusta en silencio la talla que recomienda la calculadora (ej: si calza
+            pequeño, recomienda una talla más). Si no estás seguro, déjala en normal.
           </p>
         </div>
 
@@ -733,7 +733,7 @@ export default function ProductForm({ product }: { product?: Product }) {
             placeholder="Ej: 89.99"
           />
 
-          <label className="mb-1 block text-sm font-semibold text-ink">Precio contra entrega (opcional, envío incluido)</label>
+          <label className="mb-1 block text-sm font-semibold text-ink">Precio contra entrega (opcional: lo que paga en efectivo al recibir)</label>
           <input
             type="number"
             min="0"
@@ -744,7 +744,7 @@ export default function ProductForm({ product }: { product?: Product }) {
             placeholder={paySettings.codUnitPrice > 0 ? `Vacío = precio general ${paySettings.codUnitPrice}` : 'Ej: 68'}
           />
           <p className="mb-4 mt-1 text-xs text-muted">
-            El cliente paga hoy {paySettings.codAdvance} USD para garantizar el envío y el resto al recibir. Déjalo vacío para usar el precio
+            El cliente paga hoy {paySettings.codAdvance} USD del envío y este valor en efectivo al recibir. Déjalo vacío para usar el precio
             general de Configuración → Formas de pago.
           </p>
 

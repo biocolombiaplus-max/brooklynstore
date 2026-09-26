@@ -12,10 +12,10 @@ import { useSiteSettings } from '@/lib/settings-context';
 import SafeImage from '../SafeImage';
 import { CartIcon, RulerIcon, WhatsAppIcon } from '../icons';
 import { discountPercentOf } from '../ProductCard';
-import FitMeter from '../sizes/FitMeter';
 import SizeGuideModal from '../sizes/SizeGuideModal';
 import UrgencyTimer from './UrgencyTimer';
 import QuickBuyModal from './QuickBuyModal';
+import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 
 export default function BuyBox({
   product,
@@ -98,7 +98,6 @@ export default function BuyBox({
   }, [product, size, color, setWaContext]);
   useEffect(() => () => setWaContext(null), [setWaContext]);
 
-  const transferShipping = shipping.defaultRate;
   const lineTotal = product.price * quantity;
   const cod = computeOrderTotals(settings, [{ price: product.price, codPrice: product.codPrice ?? undefined, quantity }], 'contra_entrega', '');
 
@@ -228,8 +227,6 @@ export default function BuyBox({
         </div>
       )}
 
-      {needsSize && <FitMeter fit={product.fit} />}
-
       {/* Cantidad */}
       <div className="flex items-center justify-between">
         <p className="text-sm font-bold text-ink">Cantidad</p>
@@ -270,12 +267,12 @@ export default function BuyBox({
               <span className="flex flex-col gap-1">
                 <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">🏦 Pago por transferencia</span>
                 <span className="text-[12px] font-bold opacity-80">
-                  {transferShipping === 0 ? 'Envío GRATIS' : `+ envío ${formatPrice(transferShipping)}`} · Depósito o transferencia Pichincha
+                  Depósito o transferencia Banco Pichincha
                 </span>
               </span>
               <span className="shrink-0 text-right">
-                <span className="block text-2xl font-black leading-none">{formatPrice(lineTotal + transferShipping)}</span>
-                <span className="mt-1 block text-[10px] font-extrabold uppercase opacity-70">Total</span>
+                <span className="block text-2xl font-black leading-none">{formatPrice(lineTotal)}</span>
+                <span className="mt-1 block text-[10px] font-extrabold uppercase opacity-70">{quantity > 1 ? `${quantity} pares` : 'Precio'}</span>
               </span>
             </button>
 
@@ -289,8 +286,7 @@ export default function BuyBox({
                   <span className="flex flex-col gap-1">
                     <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">💵 Pago contra entrega</span>
                     <span className="text-[12px] font-semibold text-white/70">
-                      Total {formatPrice(cod.total)}
-                      {cod.shippingIncluded ? ' con envío incluido' : ' con envío'}
+                      Hoy {formatPrice(cod.payNow)} de envío · {formatPrice(cod.payOnDelivery)} al recibir
                     </span>
                   </span>
                   <span className="shrink-0 rounded-xl bg-gold-gradient px-3 py-2 text-center text-ink">
@@ -334,6 +330,13 @@ export default function BuyBox({
         >
           <WhatsAppIcon className="text-whatsapp" /> ¿Dudas? Pregúntanos por WhatsApp
         </a>
+
+        <div className="flex flex-col items-center gap-2 border-t border-border pt-3">
+          <p className="flex items-center gap-2 text-[11px] font-bold text-muted">
+            Envío seguro con <CourierLogo size="sm" />
+          </p>
+          <PaymentLogos size="sm" className="justify-center" />
+        </div>
       </div>
 
       {/* Mini explicación del pago contra entrega — genera confianza */}
@@ -348,7 +351,7 @@ export default function BuyBox({
               <strong className="text-ink">2.</strong> Adelantas solo {formatPrice(cod.payNow)} por transferencia o depósito en Banco Pichincha para garantizar tu envío.
             </li>
             <li>
-              <strong className="text-ink">3.</strong> Recibes tus zapatos en tu dirección y pagas los {formatPrice(cod.payOnDelivery)} restantes en efectivo. ¡Así de fácil!
+              <strong className="text-ink">3.</strong> Recibes tus zapatos en tu dirección y pagas {formatPrice(cod.payOnDelivery)} en efectivo al recibir. ¡Así de fácil!
             </li>
           </ol>
         </div>

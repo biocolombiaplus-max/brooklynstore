@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useSiteSettings } from '@/lib/settings-context';
 import { formatPrice, whatsappLinkTo } from '@/lib/utils';
 import PaymentBadges from '@/components/PaymentBadges';
+import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 import { WhatsAppIcon } from './icons';
 
 const SOCIALS: { key: 'instagram' | 'facebook' | 'tiktok'; label: string }[] = [
@@ -23,7 +24,7 @@ export default function Footer() {
       <div className="border-b border-white/10">
         <div className="container-page grid gap-6 py-8 text-center sm:grid-cols-3 sm:text-left">
           {[
-            { icon: '🚚', title: 'Envío a todo Ecuador', text: shipping.deliveryTime },
+            { icon: '🚚', title: 'Envío con Servientrega', text: `A todo Ecuador en ${shipping.deliveryTime}` },
             { icon: '💵', title: 'Contra entrega', text: `Adelantas solo ${formatPrice(payments.codAdvance)}` },
             { icon: '🛡️', title: 'Compra segura', text: 'Garantía Brooklyn' },
           ].map((item) => (
@@ -116,6 +117,9 @@ export default function Footer() {
           <div className="mt-6">
             <p className="mb-2 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/40">Formas de pago</p>
             <PaymentBadges dark />
+            <PaymentLogos size="sm" className="mt-3" />
+            <p className="mb-2 mt-5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/40">Enviamos con</p>
+            <CourierLogo />
           </div>
         </div>
       </div>

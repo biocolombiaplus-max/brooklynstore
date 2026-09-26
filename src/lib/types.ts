@@ -102,15 +102,8 @@ export interface OrderCustomer {
   locationUrl?: string;
 }
 
-export const CARRIERS = [
-  'Servientrega',
-  'Tramaco Express',
-  'Laar Courier',
-  'Urbano Express',
-  'Gintracom',
-  'Motorizado propio',
-  'Otra',
-] as const;
+// Trabajamos solo con Servientrega.
+export const CARRIERS = ['Servientrega'] as const;
 
 export type Carrier = (typeof CARRIERS)[number];
 
@@ -166,7 +159,7 @@ export interface ProvinceRate {
 }
 
 export interface ShippingSettings {
-  // Costo de envío cuando el cliente paga por transferencia. En 0 = gratis.
+  // Costo de envío (Servientrega) cuando el cliente paga por transferencia.
   defaultRate: number;
   rates: ProvinceRate[];
   deliveryTime: string;
@@ -225,6 +218,23 @@ export interface CollectionMenuItem {
   value: string;
 }
 
+// Transportadora con la que se despachan los pedidos (solo Servientrega).
+// Si logoUrl está vacío se muestra el logotipo incluido en la tienda.
+export interface CourierSettings {
+  name: string;
+  logoUrl: string;
+}
+
+// Logo de un medio de pago. Los id conocidos (visa, mastercard, pichincha,
+// deuna…) tienen un diseño incluido; imageUrl lo reemplaza por el logo
+// oficial subido desde el panel.
+export interface PaymentLogo {
+  id: string;
+  name: string;
+  imageUrl: string;
+  enabled: boolean;
+}
+
 export interface SiteSettings {
   storeName: string;
   logoUrl: string;
@@ -257,7 +267,9 @@ export interface SiteSettings {
     subtextSize: 'sm' | 'md' | 'lg';
   };
   shipping: ShippingSettings;
+  courier: CourierSettings;
   payments: PaymentSettings;
+  paymentLogos: PaymentLogo[];
   // Plazo (en horas desde que recibe el pedido) para pedir cambio de talla.
   exchangeWindowHours: number;
   trustItems: TrustItem[];

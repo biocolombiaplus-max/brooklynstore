@@ -205,7 +205,7 @@ export default function OrderConfirmationPage() {
             )}
             <div className="flex justify-between">
               <span>Envío</span>
-              <span>{order.shipping === 0 ? (isCod ? 'Incluido' : 'GRATIS') : formatPrice(order.shipping)}</span>
+              <span>{order.shipping === 0 ? 'Sin costo' : formatPrice(order.shipping)}</span>
             </div>
             <div className="flex justify-between pt-1 text-base font-black text-ink">
               <span>Total</span>

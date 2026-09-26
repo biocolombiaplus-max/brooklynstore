@@ -15,7 +15,9 @@ import type {
   BankAccount,
   FaqItem,
   CollectionMenuItem,
+  PaymentLogo,
 } from '@/lib/types';
+import { PaymentLogoChip, CourierLogo } from '@/components/brand/PaymentLogos';
 
 const PROVINCES = getProvinces();
 
@@ -151,6 +153,39 @@ function FontPicker({
         {value || 'Elige una fuente'} — Aa Bb Cc 123
       </p>
     </div>
+  );
+}
+
+// Botón compacto para subir un logo (se guarda sin recortar).
+function LogoUploadButton({ folder, hasImage, onChange }: { folder: string; hasImage: boolean; onChange: (url: string) => void }) {
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      onChange(await uploadProductImage(file, folder, 'original'));
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'No se pudo subir el logo.');
+    } finally {
+      setUploading(false);
+      e.target.value = '';
+    }
+  }
+
+  return (
+    <span className="flex items-center gap-2">
+      <label className="cursor-pointer whitespace-nowrap rounded-lg border border-border px-3 py-2 text-xs font-semibold text-ink hover:border-primary">
+        {uploading ? 'Subiendo...' : hasImage ? 'Cambiar logo' : 'Subir logo oficial'}
+        <input type="file" accept="image/*" className="hidden" onChange={handleFile} disabled={uploading} />
+      </label>
+      {hasImage && (
+        <button type="button" onClick={() => onChange('')} className="whitespace-nowrap text-xs text-urgent">
+          Usar diseño incluido
+        </button>
+      )}
+    </span>
   );
 }
 
@@ -499,7 +534,7 @@ export default function ConfiguracionPage() {
               className={inputClass}
             />
           </Field>
-          <Field label="Precio general contra entrega por par (USD, envío incluido; 0 = precio + envío)">
+          <Field label="Precio contra entrega por par: lo que paga en efectivo al recibir (USD; 0 = precio normal)">
             <input
               type="number"
               min={0}
@@ -567,10 +602,10 @@ export default function ConfiguracionPage() {
 
       <Section
         title="Envíos"
-        description="Pagando por transferencia, el envío cuesta el valor por defecto (0 = GRATIS) salvo en las provincias con tarifa propia. En contra entrega el envío siempre es el adelanto configurado arriba."
+        description="Pagando por transferencia, el envío (Servientrega) se suma recién en el checkout: el valor por defecto, salvo en las provincias con tarifa propia. En contra entrega el envío es el adelanto configurado arriba."
       >
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Envío por defecto pagando por transferencia (USD, 0 = gratis)">
+          <Field label="Envío por defecto pagando por transferencia (USD, ej: 5)">
             <input
               type="number"
               min={0}
@@ -631,6 +666,83 @@ export default function ConfiguracionPage() {
               </>
             )}
           />
+        </div>
+      </Section>
+
+      <Section
+        title="🚚 Transportadora y logos de pago"
+        description="Trabajamos solo con Servientrega. Su logo aparece en la ficha de producto, el checkout, la sección de formas de pago y el footer. Los logos de pago activos se muestran en esos mismos lugares."
+      >
+        <div className="flex flex-col gap-3 rounded-xl border border-border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <CourierLogo courier={settings.courier} />
+            <span className="text-xs text-muted">
+              {settings.courier.logoUrl ? 'Logo subido' : 'Diseño incluido'} · sube el logo oficial en PNG (mejor con fondo transparente)
+            </span>
+          </div>
+          <LogoUploadButton
+            folder="branding"
+            hasImage={!!settings.courier.logoUrl}
+            onChange={(url) => update('courier', { ...settings.courier, logoUrl: url })}
+          />
+        </div>
+
+        <div>
+          <p className="mb-2 text-sm font-semibold text-ink">Logos de medios de pago</p>
+          <p className="mb-3 text-xs text-muted">
+            Marca los que quieres mostrar. Cada uno trae un diseño incluido; puedes reemplazarlo por el logo oficial. Ojo: activa Visa,
+            Mastercard o Diners solo si tus clientes pueden pagar con esas tarjetas (por ejemplo, transfiriendo desde su tarjeta de débito o con
+            un link de pago).
+          </p>
+          <div className="space-y-2">
+            {settings.paymentLogos.map((logo, i) => {
+              const edit = (patch: Partial<PaymentLogo>) =>
+                update(
+                  'paymentLogos',
+                  settings.paymentLogos.map((l, j) => (j === i ? { ...l, ...patch } : l)),
+                );
+              return (
+                <div key={logo.id} className="flex flex-wrap items-center gap-3 rounded-xl border border-border p-3">
+                  <input
+                    type="checkbox"
+                    checked={logo.enabled}
+                    onChange={(e) => edit({ enabled: e.target.checked })}
+                    className="h-4 w-4 accent-[rgb(var(--color-primary))]"
+                    aria-label={`Mostrar ${logo.name}`}
+                  />
+                  <PaymentLogoChip logo={logo} />
+                  <input
+                    value={logo.name}
+                    onChange={(e) => edit({ name: e.target.value })}
+                    className={`${inputClass} w-44 py-2`}
+                  />
+                  <LogoUploadButton folder="branding" hasImage={!!logo.imageUrl} onChange={(url) => edit({ imageUrl: url })} />
+                  {logo.id.startsWith('custom-') && (
+                    <button
+                      type="button"
+                      onClick={() => update('paymentLogos', settings.paymentLogos.filter((_, j) => j !== i))}
+                      className="ml-auto text-lg text-urgent"
+                      aria-label="Eliminar"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <button
+            type="button"
+            onClick={() =>
+              update('paymentLogos', [
+                ...settings.paymentLogos,
+                { id: `custom-${Date.now()}`, name: 'Nuevo medio de pago', imageUrl: '', enabled: true },
+              ])
+            }
+            className="mt-2 text-sm font-semibold text-primary hover:underline"
+          >
+            + Agregar otro (ej: Banco Internacional, JEP, Payphone)
+          </button>
         </div>
       </Section>
 

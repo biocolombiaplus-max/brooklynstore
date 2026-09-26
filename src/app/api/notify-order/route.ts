@@ -100,7 +100,7 @@ function buildEmailHtml(body: NotifyOrderBody): string {
           </tr>
           <tr>
             <td style="padding:4px 0;color:#8A7660;font-size:13px;">Envío</td>
-            <td style="padding:4px 0;text-align:right;color:#1C1208;font-size:13px;">${body.shipping === 0 ? 'GRATIS' : formatUSD(body.shipping)}</td>
+            <td style="padding:4px 0;text-align:right;color:#1C1208;font-size:13px;">${body.shipping === 0 ? 'Sin costo' : formatUSD(body.shipping)}</td>
           </tr>
           <tr>
             <td style="padding:10px 0 0;color:#1C1208;font-size:16px;font-weight:700;border-top:2px solid #1C1208;">Total</td>

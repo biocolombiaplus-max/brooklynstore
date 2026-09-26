@@ -1,5 +1,6 @@
 'use client';
 
+import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 import { useEffect, useMemo, useState } from 'react';
 import { createOrder, notifyOrderByEmail, notifyOrderByPush } from '@/lib/orders';
 import { getCantons, getProvinces } from '@/lib/ecuador';
@@ -234,9 +235,8 @@ export default function CheckoutForm({
             onSelect={() => setMethod('transferencia')}
             icon="🏦"
             title="Transferencia o depósito Pichincha"
-            badge={transferTotals.shipping === 0 ? 'Envío GRATIS' : undefined}
             lines={[
-              `Pagas ${formatPrice(transferTotals.total)} por transferencia o depósito en Banco Pichincha`,
+              `${formatPrice(transferTotals.subtotal)} por transferencia o depósito en Banco Pichincha`,
               'Te damos los datos bancarios al confirmar · Despacho el mismo día',
             ]}
           />
@@ -248,8 +248,8 @@ export default function CheckoutForm({
               title="Pago contra entrega"
               badge={`Hoy solo ${formatPrice(codTotals.payNow)}`}
               lines={[
-                `Total ${formatPrice(codTotals.total)}${codTotals.shippingIncluded ? ' con envío incluido' : ''}`,
-                `Hoy ${formatPrice(codTotals.payNow)} para garantizar tu envío · ${formatPrice(codTotals.payOnDelivery)} al recibir`,
+                `Hoy ${formatPrice(codTotals.payNow)} de envío · ${formatPrice(codTotals.payOnDelivery)} en efectivo al recibir`,
+                'El envío garantiza tu pedido; lo demás lo pagas con tus zapatos en la mano',
               ]}
             />
           )}
@@ -262,13 +262,13 @@ export default function CheckoutForm({
                 {[
                   {
                     amount: formatPrice(codTotals.payNow),
-                    title: 'Hoy: reservas y garantizas tu envío',
+                    title: 'Hoy: pagas el envío y garantizas tu pedido',
                     text: 'Transferencia o depósito en Banco Pichincha. Te pasamos la cuenta por WhatsApp.',
                   },
                   { amount: '🚚', title: 'Despachamos tu pedido', text: `Llega a la dirección que nos indiques en ${settings.shipping.deliveryTime}.` },
                   {
                     amount: formatPrice(codTotals.payOnDelivery),
-                    title: 'Al recibir: pagas el resto',
+                    title: 'Al recibir: pagas tus zapatos',
                     text: 'En efectivo, cuando tienes tus zapatos en la mano.',
                   },
                 ].map((step, i) => (
@@ -399,7 +399,7 @@ export default function CheckoutForm({
         </legend>
 
         <div className="rounded-2xl border border-border bg-cream-alt/60 p-4 text-sm sm:p-5">
-          <Row label={method === 'contra_entrega' ? 'Productos (precio contra entrega)' : 'Productos'} value={formatPrice(totals.subtotal)} />
+          <Row label={method === 'contra_entrega' ? 'Productos (pagas al recibir)' : 'Productos'} value={formatPrice(totals.subtotal)} />
           {coupon ? (
             <div className="flex items-center justify-between py-1 font-bold text-primary">
               <span>🎟️ Cupón {coupon.code} (-{coupon.percent}%)</span>
@@ -444,9 +444,8 @@ export default function CheckoutForm({
             </button>
           )}
           <Row
-            label="Envío"
-            value={totals.shippingIncluded ? 'Incluido' : totals.shipping === 0 ? 'GRATIS 🎉' : formatPrice(totals.shipping)}
-            highlight={totals.shipping === 0}
+            label={method === 'contra_entrega' ? 'Envío Servientrega (se paga hoy)' : 'Envío Servientrega'}
+            value={totals.shipping === 0 ? 'Sin costo' : formatPrice(totals.shipping)}
           />
           <div className="mt-2 flex items-center justify-between border-t border-border pt-3 text-base font-black text-ink">
             <span>Total</span>
@@ -478,6 +477,12 @@ export default function CheckoutForm({
             ? `Se abre WhatsApp con tu pedido listo. Te pasamos la cuenta para adelantar los ${formatPrice(totals.payNow)} del envío.`
             : 'Se abre WhatsApp con tu pedido listo. Te pasamos la cuenta de Banco Pichincha para tu transferencia o depósito.'}
         </p>
+        <div className="mt-4 flex flex-col items-center gap-2 border-t border-border pt-4">
+          <PaymentLogos size="sm" className="justify-center" />
+          <p className="flex items-center gap-2 text-[11px] font-bold text-muted">
+            Tu pedido viaja con <CourierLogo size="sm" />
+          </p>
+        </div>
         <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] font-semibold text-muted">
           <span>🔒 Datos protegidos</span>
           <span>🛡️ Garantía Brooklyn</span>

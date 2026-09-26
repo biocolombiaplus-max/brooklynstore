@@ -3,14 +3,14 @@
 import Link from 'next/link';
 import { useSiteSettings } from '@/lib/settings-context';
 import { formatPrice } from '@/lib/utils';
+import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 
 // Explica los dos únicos métodos de pago con números claros — es lo que más
 // dudas genera antes de comprar en línea en Ecuador, así que va bien visible.
 export default function PaymentMethods() {
   const { payments, shipping } = useSiteSettings();
   // Montos de ejemplo con el precio general (un par).
-  const unitCod = payments.codUnitPrice > 0 ? payments.codUnitPrice : payments.defaultPrice + payments.codAdvance;
-  const restCod = Math.max(0, Math.round((unitCod - payments.codAdvance) * 100) / 100);
+  const restCod = payments.codUnitPrice > 0 ? payments.codUnitPrice : payments.defaultPrice;
   const banks = Array.from(new Set(payments.bankAccounts.map((b) => b.bank).filter(Boolean)));
 
   return (
@@ -22,14 +22,14 @@ export default function PaymentMethods() {
             Paga como <span className="text-gold-gradient">te quede mejor</span>
           </h2>
           <p className="mt-4 text-sm text-white/70 sm:text-base">
-            Sin tarjetas, sin complicaciones. Tú eliges y confirmamos todo contigo por WhatsApp.
+            Sin complicaciones. Tú eliges y confirmamos todo contigo por WhatsApp.
           </p>
         </div>
 
         <div className="mx-auto mt-10 grid max-w-5xl gap-5 md:grid-cols-2">
           <div className="relative overflow-hidden rounded-3xl border border-primary/50 bg-gradient-to-br from-white/10 to-white/[0.02] p-7 sm:p-9">
             <span className="absolute right-5 top-5 rounded-full bg-gold-gradient px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink">
-              {shipping.defaultRate === 0 ? 'Envío gratis' : 'Recomendado'}
+              Mejor precio
             </span>
             <span className="text-4xl">🏦</span>
             <h3 className="mt-4 text-2xl font-black uppercase">Transferencia o depósito</h3>
@@ -40,7 +40,7 @@ export default function PaymentMethods() {
             </p>
             <ul className="mt-5 space-y-2 text-sm">
               <li>✅ Precio por par: {formatPrice(payments.defaultPrice)}</li>
-              <li>✅ {shipping.defaultRate === 0 ? 'Envío GRATIS a todo el Ecuador' : `Envío desde ${formatPrice(shipping.defaultRate)}`}</li>
+              <li>✅ Envío seguro con Servientrega a todo el Ecuador</li>
               <li>✅ Despacho el mismo día</li>
               <li>✅ Pagas una sola vez y listo</li>
             </ul>
@@ -63,15 +63,15 @@ export default function PaymentMethods() {
               <span className="text-4xl">💵</span>
               <h3 className="mt-4 text-2xl font-black uppercase">Pago contra entrega</h3>
               <p className="mt-3 text-sm font-medium leading-relaxed text-ink/80">
-                Hoy pagas solo <strong>{formatPrice(payments.codAdvance)}</strong> por transferencia o depósito en Banco Pichincha para
-                garantizar tu envío. <strong>El resto lo pagas en efectivo cuando recibes tus zapatos</strong> en la dirección que nos indiques.
-                Precio por par contra entrega: <strong>{formatPrice(unitCod)}</strong> con envío incluido.
+                Hoy pagas solo <strong>{formatPrice(payments.codAdvance)}</strong> del envío por transferencia o depósito en Banco Pichincha
+                para garantizar tu pedido. <strong>Tus zapatos los pagas en efectivo cuando los recibes</strong> en la dirección que nos indiques:{' '}
+                <strong>{formatPrice(restCod)}</strong> por par.
               </p>
               <div className="mt-6 grid grid-cols-2 gap-3 text-center">
                 <div className="rounded-2xl bg-ink/90 p-4 text-white">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-primary-light">Hoy pagas</p>
                   <p className="mt-1 text-3xl font-black">{formatPrice(payments.codAdvance)}</p>
-                  <p className="text-[11px] text-white/70">garantiza tu envío</p>
+                  <p className="text-[11px] text-white/70">envío · garantiza tu pedido</p>
                 </div>
                 <div className="rounded-2xl bg-white/70 p-4">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-ink/70">Al recibir pagas</p>
@@ -81,6 +81,17 @@ export default function PaymentMethods() {
               </div>
             </div>
           )}
+        </div>
+
+        <div className="mx-auto mt-8 flex max-w-5xl flex-col items-center gap-6 rounded-3xl border border-white/10 bg-white/[0.03] px-5 py-6 sm:flex-row sm:justify-between sm:px-8">
+          <div className="text-center sm:text-left">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/50">Paga desde tu banco o app favorita</p>
+            <PaymentLogos className="mt-3 justify-center sm:justify-start" />
+          </div>
+          <div className="shrink-0 text-center sm:text-right">
+            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-white/50">Enviamos con</p>
+            <CourierLogo className="mt-3" />
+          </div>
         </div>
 
         <div className="mt-10 text-center">

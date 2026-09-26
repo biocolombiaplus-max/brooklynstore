@@ -82,11 +82,11 @@ export default function CarritoPage() {
           <div className="mt-3 space-y-2 rounded-xl bg-white p-3 text-xs text-muted">
             <p>
               🏦 <strong className="text-ink">Transferencia o depósito Pichincha:</strong>{' '}
-              {settings.shipping.defaultRate === 0 ? 'envío GRATIS' : `envío ${formatPrice(settings.shipping.defaultRate)}`}
+              pagas todo en un solo pago · envío con Servientrega
             </p>
             {settings.payments.codEnabled && (
               <p>
-                💵 <strong className="text-ink">Contra entrega:</strong> adelantas {formatPrice(settings.payments.codAdvance)} y el resto al recibir
+                💵 <strong className="text-ink">Contra entrega:</strong> adelantas {formatPrice(settings.payments.codAdvance)} del envío y tus zapatos los pagas al recibir
               </p>
             )}
           </div>

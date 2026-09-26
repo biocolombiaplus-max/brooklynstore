@@ -125,7 +125,7 @@ ${itemsList}
 Subtotal: ${formatPrice(order.subtotal)}${
     order.discount ? `\nDescuento${order.couponCode ? ` (${order.couponCode})` : ''}: -${formatPrice(order.discount)}` : ''
   }
-Envío: ${order.shipping === 0 ? (order.paymentMethod === 'contra_entrega' ? 'Incluido' : 'GRATIS') : formatPrice(order.shipping)}
+Envío Servientrega: ${order.shipping === 0 ? 'Sin costo' : formatPrice(order.shipping)}
 *TOTAL: ${formatPrice(order.total)}*
 
 ${paymentBlock}

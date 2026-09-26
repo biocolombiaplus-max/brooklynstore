@@ -104,7 +104,7 @@ export default function CartDrawer() {
               <span>{formatPrice(subtotal)}</span>
             </div>
             <p className="mb-4 mt-1 text-xs text-muted">
-              {settings.shipping.defaultRate === 0 ? '🚚 Envío GRATIS pagando por transferencia' : 'Envío calculado según tu provincia'}
+              🚚 Envío con Servientrega a todo el Ecuador · se calcula al pagar
               {settings.payments.codEnabled && ` · 💵 Contra entrega: adelantas ${formatPrice(settings.payments.codAdvance)}`}
             </p>
             <Link href="/checkout" onClick={close} className="btn-primary btn-shine w-full py-4 text-base">

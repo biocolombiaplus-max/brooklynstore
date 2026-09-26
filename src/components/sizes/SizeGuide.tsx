@@ -3,7 +3,7 @@
 import ExchangePolicy from '../ExchangePolicy';
 import { useMemo, useState } from 'react';
 import { ADULT_SIZES, recommendSize } from '@/lib/sizes';
-import { FITS, type Fit } from '@/lib/types';
+import type { Fit } from '@/lib/types';
 import { classNames } from '@/lib/utils';
 import FootMeasureIllustration from './FootMeasureIllustration';
 
@@ -21,7 +21,6 @@ export default function SizeGuide({
 }) {
   const [cmInput, setCmInput] = useState('');
   const footCm = Number(cmInput.replace(',', '.'));
-  const fitInfo = FITS.find((f) => f.value === fit) ?? FITS[1];
 
   const recommended = useMemo(() => recommendSize(ADULT_SIZES, footCm, fit), [footCm, fit]);
   const recommendedAvailable = !availableSizes || (recommended && availableSizes.includes(recommended.ec));
@@ -58,7 +57,6 @@ export default function SizeGuide({
                     (US {recommended.usM} hombre · US {recommended.usW} mujer · EU {recommended.eu})
                   </span>
                 </p>
-                {fit !== 'normal' && <p className="mt-2 text-xs text-primary-light">👟 Este modelo es de {fitInfo.label.toLowerCase()}: ya lo tuvimos en cuenta.</p>}
                 {onPickSize && recommendedAvailable && (
                   <button onClick={() => onPickSize(recommended.ec)} className="btn-primary mt-4 w-full py-3 text-xs">
                     ✓ Elegir talla {recommended.ec}

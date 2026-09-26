@@ -75,12 +75,24 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     subtextSize: 'md',
   },
   shipping: {
-    // Pagando por transferencia el envío es GRATIS por defecto en todo el
-    // país; solo se cobra en las provincias que se agreguen en el panel.
-    defaultRate: 0,
+    // Envío con Servientrega pagando por transferencia; se suma recién en el
+    // checkout. Las provincias con tarifa propia se agregan en el panel.
+    defaultRate: 5,
     rates: [{ province: 'Galápagos', rate: 15 }],
     deliveryTime: '24 a 72 horas hábiles',
   },
+  courier: { name: 'Servientrega', logoUrl: '' },
+  paymentLogos: [
+    { id: 'pichincha', name: 'Banco Pichincha', imageUrl: '', enabled: true },
+    { id: 'deuna', name: 'Deuna!', imageUrl: '', enabled: true },
+    { id: 'guayaquil', name: 'Banco Guayaquil', imageUrl: '', enabled: true },
+    { id: 'pacifico', name: 'Banco del Pacífico', imageUrl: '', enabled: true },
+    { id: 'produbanco', name: 'Produbanco', imageUrl: '', enabled: true },
+    { id: 'bolivariano', name: 'Banco Bolivariano', imageUrl: '', enabled: true },
+    { id: 'visa', name: 'Visa', imageUrl: '', enabled: true },
+    { id: 'mastercard', name: 'Mastercard', imageUrl: '', enabled: true },
+    { id: 'diners', name: 'Diners Club', imageUrl: '', enabled: false },
+  ],
   exchangeWindowHours: 48,
   payments: {
     codAdvance: 5,
@@ -99,9 +111,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     transferNote: 'Envíanos la foto del comprobante por WhatsApp y despachamos tu pedido ese mismo día.',
   },
   trustItems: [
-    { icon: '🚚', title: 'Envío a todo Ecuador', sub: 'De Tulcán a Zamora' },
+    { icon: '🚚', title: 'Envío Servientrega', sub: 'A todo el Ecuador' },
     { icon: '💵', title: 'Contra entrega', sub: 'Hoy solo $5' },
-    { icon: '🏦', title: 'Transferencia', sub: 'Envío gratis' },
+    { icon: '🏦', title: 'Transferencia', sub: 'Banco Pichincha' },
     { icon: '🛡️', title: 'Compra segura', sub: 'Garantía Brooklyn' },
     { icon: '🔄', title: 'Cambio de talla', sub: 'Hasta 48 h tras recibir' },
   ],
@@ -141,7 +153,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
       name: 'Gabriela V.',
       city: 'Guayaquil',
       review:
-        'Súper bacán la atención por WhatsApp. Me ayudaron con la talla y me quedaron perfectas. Pagué por transferencia y el envío fue gratis.',
+        'Súper bacán la atención por WhatsApp. Me ayudaron con la talla y me quedaron perfectas. Pagué por transferencia y al otro día ya las tenía.',
     },
     {
       name: 'Daniel C.',
@@ -159,12 +171,12 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       question: '¿Cómo funciona el pago contra entrega?',
       answer:
-        'Hoy pagas solo $5 por transferencia o depósito en Banco Pichincha para garantizar tu envío. El resto lo pagas en efectivo cuando el courier te entrega tus zapatos en la dirección que nos diste. Así los dos quedamos tranquilos.',
+        'Hoy pagas solo $5 del envío por transferencia o depósito en Banco Pichincha para garantizar tu pedido. Tus zapatos los pagas en efectivo cuando Servientrega te los entrega en la dirección que nos diste. Así los dos quedamos tranquilos.',
     },
     {
       question: '¿Cómo pago por transferencia o depósito?',
       answer:
-        'Al confirmar tu pedido te mostramos nuestra cuenta de Banco Pichincha. Haces la transferencia desde tu banco o el depósito en Banco Pichincha (ventanilla o agente Pichincha Mi Vecino), nos mandas la foto del comprobante por WhatsApp y despachamos ese mismo día. ¡Y el envío te sale gratis!',
+        'Al confirmar tu pedido te mostramos nuestra cuenta de Banco Pichincha. Haces la transferencia desde tu banco o el depósito en Banco Pichincha (ventanilla o agente Pichincha Mi Vecino), nos mandas la foto del comprobante por WhatsApp y despachamos ese mismo día.',
     },
     {
       question: '¿Qué garantía tengo?',
@@ -241,6 +253,8 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
         ? data.payments.bankAccounts
         : DEFAULT_SETTINGS.payments.bankAccounts,
     },
+    courier: { ...DEFAULT_SETTINGS.courier, ...data.courier, name: data.courier?.name || DEFAULT_SETTINGS.courier.name },
+    paymentLogos: data.paymentLogos ?? DEFAULT_SETTINGS.paymentLogos,
     logoUrl: data.logoUrl || DEFAULT_SETTINGS.logoUrl,
     whatsappNumber: data.whatsappNumber || DEFAULT_SETTINGS.whatsappNumber,
     whatsappCountryCode: data.whatsappCountryCode || DEFAULT_SETTINGS.whatsappCountryCode,
