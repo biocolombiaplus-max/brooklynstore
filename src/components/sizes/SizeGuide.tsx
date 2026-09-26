@@ -2,32 +2,62 @@
 
 import ExchangePolicy from '../ExchangePolicy';
 import { useMemo, useState } from 'react';
-import { ADULT_SIZES, recommendSize } from '@/lib/sizes';
-import type { Fit } from '@/lib/types';
+import { recommendSize, sizeTableFor, type SizeGender } from '@/lib/sizes';
+import type { Fit, Gender } from '@/lib/types';
 import { classNames } from '@/lib/utils';
 import FootMeasureIllustration from './FootMeasureIllustration';
 
 // Guía de tallas completa: calculadora por centímetros, cómo medir el pie y
-// tabla de equivalencias EC / EU / US. Se usa dentro de la ficha del
-// producto (en una ventana) y en la página /guia-de-tallas.
+// tabla de equivalencias. Hombre y mujer tienen tablas distintas: en la ficha
+// de un modelo de hombre o mujer se muestra solo la suya; en la guía general
+// y en modelos unisex el cliente elige con las pestañas.
 export default function SizeGuide({
   fit = 'normal',
+  gender,
   availableSizes,
   onPickSize,
 }: {
   fit?: Fit;
+  gender?: Gender;
   availableSizes?: string[];
   onPickSize?: (size: string) => void;
 }) {
+  const locked = gender === 'hombre' || gender === 'mujer';
+  const [tab, setTab] = useState<SizeGender>(gender === 'mujer' ? 'mujer' : 'hombre');
+  const current: SizeGender = locked ? (gender as SizeGender) : tab;
+  const table = sizeTableFor(current);
+  const isMen = current === 'hombre';
   const [cmInput, setCmInput] = useState('');
   const footCm = Number(cmInput.replace(',', '.'));
 
-  const recommended = useMemo(() => recommendSize(ADULT_SIZES, footCm, fit), [footCm, fit]);
+  const recommended = useMemo(() => recommendSize(table, footCm, fit), [table, footCm, fit]);
   const recommendedAvailable = !availableSizes || (recommended && availableSizes.includes(recommended.ec));
 
   return (
     <div className="space-y-6">
-      <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">Tallas para hombre y mujer</p>
+      {locked ? (
+        <p className="text-center text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">
+          Tabla de tallas para {isMen ? 'hombre' : 'mujer'}
+        </p>
+      ) : (
+        <div className="mx-auto grid max-w-xs grid-cols-2 gap-1 rounded-full bg-cream-alt p-1" role="tablist">
+          {(['hombre', 'mujer'] as SizeGender[]).map((g) => (
+            <button
+              key={g}
+              type="button"
+              role="tab"
+              aria-selected={current === g}
+              onClick={() => setTab(g)}
+              className={classNames(
+                'rounded-full py-2.5 text-xs font-extrabold uppercase tracking-wider transition-all',
+                current === g ? 'bg-ink text-white shadow-dark' : 'text-muted hover:text-ink',
+              )}
+            >
+              {g === 'hombre' ? 'Hombre' : 'Mujer'}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Calculadora */}
       <div className="rounded-2xl bg-ink p-5 text-white sm:p-6">
@@ -53,8 +83,9 @@ export default function SizeGuide({
                 <p className="text-sm text-white/80">Tu talla recomendada es:</p>
                 <p className="mt-1 flex flex-wrap items-baseline gap-x-3">
                   <span className="text-4xl font-black text-gold-gradient">EC {recommended.ec}</span>
-                  <span className="text-xs text-white/70">
-                    (US {recommended.usM} hombre · US {recommended.usW} mujer · EU {recommended.eu})
+                  <span className="text-sm font-bold text-white/80">
+                    US {recommended.us}
+                    {!isMen && ` · EU ${recommended.eu}`} · {isMen ? 'hombre' : 'mujer'}
                   </span>
                 </p>
                 {onPickSize && recommendedAvailable && (
@@ -95,18 +126,17 @@ export default function SizeGuide({
       {/* Tabla */}
       <div className="overflow-hidden rounded-2xl border border-border">
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[360px] text-center text-sm">
-            <thead className="bg-cream-alt text-[11px] uppercase tracking-wider text-ink">
+          <table className="w-full text-center text-sm">
+            <thead className="bg-ink text-[11px] uppercase tracking-wider text-white">
               <tr>
-                <th className="px-3 py-3 font-extrabold">Talla EC</th>
+                <th className="px-3 py-3 font-extrabold text-primary-light">{isMen ? 'Talla EC / EUR' : 'Talla EC'}</th>
+                <th className="px-3 py-3 font-extrabold">US {isMen ? 'Hombre' : 'Mujer'}</th>
+                {!isMen && <th className="px-3 py-3 font-extrabold">EU</th>}
                 <th className="px-3 py-3 font-extrabold">Pie (cm)</th>
-                <th className="px-3 py-3 font-extrabold">EU</th>
-                <th className="px-3 py-3 font-extrabold">US Hombre</th>
-                <th className="px-3 py-3 font-extrabold">US Mujer</th>
               </tr>
             </thead>
             <tbody>
-              {ADULT_SIZES.map((row) => (
+              {table.map((row) => (
                 <tr
                   key={row.ec}
                   className={classNames(
@@ -115,17 +145,23 @@ export default function SizeGuide({
                     availableSizes && !availableSizes.includes(row.ec) && 'text-muted/60',
                   )}
                 >
-                  <td className="px-3 py-2.5 font-black text-ink">{row.ec}</td>
-                  <td className="px-3 py-2.5">{row.cm.toFixed(1)}</td>
-                  <td className="px-3 py-2.5">{row.eu}</td>
-                  <td className="px-3 py-2.5">{row.usM}</td>
-                  <td className="px-3 py-2.5">{row.usW}</td>
+                  <td className="px-3 py-3 text-base font-black text-ink">{row.ec}</td>
+                  <td className="px-3 py-3 font-bold text-ink">{row.us}</td>
+                  {!isMen && <td className="px-3 py-3">{row.eu}</td>}
+                  <td className="px-3 py-3">{row.cm.toFixed(1).replace('.', ',')} cm</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
+
+      {isMen && (
+        <p className="-mt-3 text-center text-xs text-muted">
+          Ej: talla <strong className="text-ink">40</strong> = US <strong className="text-ink">7</strong> = pie de{' '}
+          <strong className="text-ink">25,5 cm</strong>
+        </p>
+      )}
 
       <p className="rounded-2xl bg-cream-alt p-4 text-sm text-muted">
         <strong className="text-ink">¿Entre dos tallas?</strong> Elige la mayor. Si tienes el pie ancho o el empeine alto, también sube

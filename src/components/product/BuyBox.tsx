@@ -222,7 +222,11 @@ export default function BuyBox({
             ))}
           </div>
           <p className="mt-2 text-[11px] text-muted">
-            Número grande: talla Ecuador · debajo: talla US {product.gender === 'mujer' ? 'mujer' : 'hombre'}. ¿Necesitas la EU? <button type="button" onClick={() => setGuideOpen(true)} className="font-bold text-ink underline">Mira la equivalencia</button>
+            Número grande: talla Ecuador{product.gender === 'hombre' ? ' (igual a la europea, EUR)' : ''} · debajo: talla US
+            {product.gender === 'mujer' ? ' mujer' : product.gender === 'hombre' ? ' hombre' : ''}.{' '}
+            <button type="button" onClick={() => setGuideOpen(true)} className="font-bold text-ink underline">
+              Ver tabla con centímetros
+            </button>
           </p>
         </div>
       )}
@@ -374,6 +378,7 @@ export default function BuyBox({
         open={guideOpen}
         onClose={() => setGuideOpen(false)}
         fit={product.fit}
+        gender={product.gender}
         availableSizes={product.sizes}
         productTitle={product.title}
         onPickSize={(s) => {

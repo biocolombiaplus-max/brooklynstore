@@ -164,7 +164,7 @@ export default function ProductPage() {
                   </AccordionItem>
                 )}
                 <AccordionItem title="📏 Guía de tallas">
-                  <SizeGuide fit={product.fit} availableSizes={product.sizes} />
+                  <SizeGuide fit={product.fit} gender={product.gender} availableSizes={product.sizes} />
                 </AccordionItem>
                 <AccordionItem title="🚚 Envíos y formas de pago">
                   <ul className="space-y-2">

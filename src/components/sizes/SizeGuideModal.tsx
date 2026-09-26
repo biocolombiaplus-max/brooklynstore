@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import type { Fit } from '@/lib/types';
+import type { Fit, Gender } from '@/lib/types';
 import { CloseIcon } from '../icons';
 import SizeGuide from './SizeGuide';
 
@@ -9,6 +9,7 @@ export default function SizeGuideModal({
   open,
   onClose,
   fit,
+  gender,
   availableSizes,
   onPickSize,
   productTitle,
@@ -16,6 +17,7 @@ export default function SizeGuideModal({
   open: boolean;
   onClose: () => void;
   fit?: Fit;
+  gender?: Gender;
   availableSizes?: string[];
   onPickSize?: (size: string) => void;
   productTitle?: string;
@@ -54,6 +56,7 @@ export default function SizeGuideModal({
         </div>
         <SizeGuide
           fit={fit}
+          gender={gender}
           availableSizes={availableSizes}
           onPickSize={
             onPickSize
