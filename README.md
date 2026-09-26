@@ -70,7 +70,14 @@ pedido y para los avisos de pedidos nuevos. Se pueden cambiar en
 3. Ve a **Configuración del proyecto → Tus apps → Agregar app Web (`</>`)**.
    Copia los valores del objeto `firebaseConfig`.
 
-## 1.b. Crear cuenta en Cloudinary (fotos de producto, gratis, sin tarjeta)
+## 1.b. Fotos de producto: Cloudinary (opcional)
+
+Sin Cloudinary las fotos igual se suben: se comprimen en el navegador (WebP,
+menos de 900 KB) y se guardan en Firestore, en la colección `images`; la
+tienda las sirve desde `/api/img/<id>` con caché de un año. Cloudinary es
+opcional y agrega recorte inteligente con IA.
+
+### Crear cuenta en Cloudinary (gratis, sin tarjeta)
 
 1. Ve a [cloudinary.com](https://cloudinary.com) → **Sign up free** (con correo o Google, no pide tarjeta).
 2. En el dashboard, copia tu **Cloud name** (aparece arriba, ej. `dxxxx1234`).

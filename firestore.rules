@@ -32,6 +32,13 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Fotos de productos guardadas en Firestore (cuando no se usa
+    // Cloudinary): cualquiera puede verlas, solo un admin puede subir o borrar.
+    match /images/{imageId} {
+      allow read: if true;
+      allow create, delete: if isAdmin();
+    }
+
     // Configuración del sitio (textos, colores, WhatsApp, etc.): lectura
     // pública, escritura solo administradores.
     match /settings/{docId} {

@@ -3,6 +3,8 @@
 // incluso para uso gratuito. Mantiene la misma firma de funciones que antes
 // para no tener que tocar el formulario de productos.
 
+import { deleteFirestoreImage, FIRESTORE_IMAGE_PREFIX, uploadImageToFirestore } from './firestoreImages';
+
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
@@ -41,10 +43,10 @@ export async function uploadProductImage(
   _productSlug: string,
   cropMode: ImageCropMode = 'fill',
 ): Promise<string> {
+  // Sin Cloudinary la foto se guarda en Firestore (ver firestoreImages.ts):
+  // así subir fotos nunca falla, aunque Cloudinary no esté configurado.
   if (!CLOUD_NAME || !UPLOAD_PRESET) {
-    throw new Error(
-      'Cloudinary no está configurado. Agrega NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME y NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET (ver README.md).',
-    );
+    return uploadImageToFirestore(file, cropMode);
   }
 
   // Deliberadamente solo se envían "file" y "upload_preset": son los dos
@@ -76,7 +78,15 @@ export async function uploadProductImage(
   return withAutoOptimization(data.secure_url as string, cropMode);
 }
 
-export async function deleteProductImage(_url: string): Promise<void> {
+export function isCloudinaryConfigured(): boolean {
+  return !!CLOUD_NAME && !!UPLOAD_PRESET;
+}
+
+export async function deleteProductImage(url: string): Promise<void> {
+  if (url.startsWith(FIRESTORE_IMAGE_PREFIX)) {
+    await deleteFirestoreImage(url);
+    return;
+  }
   // Borrar un archivo en Cloudinary requiere firmar la petición con la API
   // secret, que nunca debe exponerse en el navegador (necesitaría una
   // función de servidor). Por ahora solo se quita de la lista de fotos del
