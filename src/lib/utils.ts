@@ -1,4 +1,4 @@
-import type { OrderCustomer, PaymentMethod } from './types';
+import type { BankAccount, Order, OrderCustomer, PaymentMethod } from './types';
 
 // Determina qué foto mostrar para el color elegido: si el admin le asignó
 // una foto específica a ese color, se usa esa. Si no, se muestra la foto
@@ -185,4 +185,43 @@ export function hexToRgbChannels(hex: string): string {
   const g = (bigint >> 8) & 255;
   const b = bigint & 255;
   return `${r} ${g} ${b}`;
+}
+
+// Datos de una cuenta en texto, listos para copiar o mandar por WhatsApp.
+export function bankAccountText(account: BankAccount, amount?: number): string {
+  return [
+    `🏦 ${account.bank}`,
+    `${account.type}`,
+    `N.º ${account.number}`,
+    `Titular: ${account.holder}`,
+    account.idNumber ? `Cédula/RUC: ${account.idNumber}` : '',
+    amount !== undefined ? `Valor: ${formatPrice(amount)}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+// Mensaje del cliente a la tienda cuando ya pagó: la foto la adjunta él.
+export function buildReceiptMessage(order: Order): string {
+  const cod = order.paymentMethod === 'contra_entrega';
+  return `🧾 *COMPROBANTE DE PAGO*
+Pedido: *${order.orderNumber}*
+Nombre: ${order.customer.name}
+Valor pagado: *${formatPrice(order.payNow)}*${cod ? ' (envío — el resto lo pago al recibir)' : ''}
+Banco: Pichincha
+
+Les adjunto la foto del comprobante 📎 ¡Quedo atento/a a la guía de Servientrega! 🙌`;
+}
+
+// Mensaje de la tienda al cliente con los datos para pagar (desde el panel).
+export function buildPaymentDataMessage(order: Order, accounts: BankAccount[]): string {
+  const firstName = order.customer.name.split(' ')[0];
+  const cod = order.paymentMethod === 'contra_entrega';
+  return `¡Hola ${firstName}! 👋 Gracias por tu pedido *${order.orderNumber}* en Brooklyn Store.
+
+${cod ? `Para garantizar tu envío, transfiere o deposita *${formatPrice(order.payNow)}*. Los *${formatPrice(order.payOnDelivery)}* restantes los pagas en efectivo al recibir.` : `Para despachar tu pedido, transfiere o deposita *${formatPrice(order.payNow)}*.`}
+
+${accounts.map((a) => bankAccountText(a)).join('\n\n')}
+
+📸 Cuando pagues, mándanos por aquí la foto del comprobante y despachamos ese mismo día con Servientrega. 🚚`;
 }

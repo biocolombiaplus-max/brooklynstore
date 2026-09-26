@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { getAllOrders, updateOrderStatus, updateOrderShipping, deleteOrder } from '@/lib/orders';
 import { getSiteSettings } from '@/lib/settings';
-import { CARRIERS, type Order, type OrderStatus, type Carrier } from '@/lib/types';
-import { formatPrice, whatsappLinkTo } from '@/lib/utils';
+import { CARRIERS, type Order, type OrderStatus, type Carrier, type BankAccount } from '@/lib/types';
+import { buildPaymentDataMessage, formatPrice, whatsappLinkTo } from '@/lib/utils';
 
 const STATUSES: { value: OrderStatus; label: string }[] = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -52,6 +52,7 @@ function buildStatusMessage(order: Order, storeName: string): string {
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
   const [storeName, setStoreName] = useState('la tienda');
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [savingShipping, setSavingShipping] = useState<string | null>(null);
 
   useEffect(() => {
@@ -59,7 +60,10 @@ export default function AdminOrdersPage() {
       .then(setOrders)
       .catch(() => setOrders([]));
     getSiteSettings()
-      .then((s) => setStoreName(s.storeName))
+      .then((s) => {
+        setStoreName(s.storeName);
+        setBankAccounts(s.payments.bankAccounts);
+      })
       .catch(() => {});
   }, []);
 
@@ -111,6 +115,7 @@ export default function AdminOrdersPage() {
               key={order.id}
               order={order}
               storeName={storeName}
+              bankAccounts={bankAccounts}
               saving={savingShipping === order.id}
               onStatusChange={(status) => handleStatusChange(order.id, status)}
               onShippingSave={(carrier, trackingNumber) => handleShippingSave(order, carrier, trackingNumber)}
@@ -126,6 +131,7 @@ export default function AdminOrdersPage() {
 function OrderCard({
   order,
   storeName,
+  bankAccounts,
   saving,
   onStatusChange,
   onShippingSave,
@@ -133,6 +139,7 @@ function OrderCard({
 }: {
   order: Order;
   storeName: string;
+  bankAccounts: BankAccount[];
   saving: boolean;
   onStatusChange: (status: OrderStatus) => void;
   onShippingSave: (carrier: Carrier | '', trackingNumber: string) => void;
@@ -268,14 +275,26 @@ function OrderCard({
             <span className="ml-3 text-xs font-semibold text-primary">🎟️ Cupón: {order.couponCode}</span>
           )}
         </div>
-        <a
-          href={whatsappLinkTo(order.customer.phone, buildStatusMessage(order, storeName))}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-2 rounded-lg bg-whatsapp px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.03] active:scale-[0.98]"
-        >
-          💬 Avisar por WhatsApp ({STATUSES.find((s) => s.value === order.status)?.label})
-        </a>
+        <div className="flex flex-wrap gap-2">
+          {order.status === 'pendiente' && bankAccounts.length > 0 && (
+            <a
+              href={whatsappLinkTo(order.customer.phone, buildPaymentDataMessage(order, bankAccounts))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-lg bg-ink px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.03] active:scale-[0.98]"
+            >
+              💳 Enviar datos de pago
+            </a>
+          )}
+          <a
+            href={whatsappLinkTo(order.customer.phone, buildStatusMessage(order, storeName))}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 rounded-lg bg-whatsapp px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.03] active:scale-[0.98]"
+          >
+            💬 Avisar por WhatsApp ({STATUSES.find((s) => s.value === order.status)?.label})
+          </a>
+        </div>
       </div>
     </div>
   );

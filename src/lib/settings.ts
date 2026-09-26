@@ -102,10 +102,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     bankAccounts: [
       {
         bank: 'Banco Pichincha',
-        type: 'Cuenta de ahorros',
-        number: '0000000000',
-        holder: 'Brooklyn Store',
-        idNumber: '0000000000',
+        type: 'Cuenta de ahorro transaccional',
+        number: '2214514559',
+        holder: 'Pablo Bustamante',
+        idNumber: '0964720361',
       },
     ],
     transferNote: 'Envíanos la foto del comprobante por WhatsApp y despachamos tu pedido ese mismo día.',
@@ -249,8 +249,9 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
     payments: {
       ...DEFAULT_SETTINGS.payments,
       ...data.payments,
-      bankAccounts: data.payments?.bankAccounts?.length
-        ? data.payments.bankAccounts
+      // Las cuentas de ejemplo (número vacío o solo ceros) no se muestran.
+      bankAccounts: data.payments?.bankAccounts?.some((b) => !/^0*$/.test(b.number.replace(/\D/g, '')))
+        ? data.payments.bankAccounts.filter((b) => !/^0*$/.test(b.number.replace(/\D/g, '')))
         : DEFAULT_SETTINGS.payments.bankAccounts,
     },
     courier: { ...DEFAULT_SETTINGS.courier, ...data.courier, name: data.courier?.name || DEFAULT_SETTINGS.courier.name },
