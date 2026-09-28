@@ -67,7 +67,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     badge1: '🚚 Envío a todo Ecuador',
     badge2: '💵 Contra entrega',
     badge3: '🛡️ Compra segura',
-    button1Text: 'Comprar ahora',
+    button1Text: 'Ver catálogo',
     button1Url: '/catalogo',
     button2Text: 'Ver ofertas',
     button2Url: '/catalogo?ofertas=1',
@@ -237,6 +237,11 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
     hero: {
       ...DEFAULT_SETTINGS.hero,
       ...data.hero,
+      // El texto viejo por defecto del botón principal pasa a "Ver catálogo".
+      button1Text:
+        !data.hero?.button1Text || data.hero.button1Text.trim().toLowerCase() === 'comprar ahora'
+          ? DEFAULT_SETTINGS.hero.button1Text
+          : data.hero.button1Text,
       images: data.hero?.images?.length ? data.hero.images : DEFAULT_SETTINGS.hero.images,
     },
     cta: { ...DEFAULT_SETTINGS.cta, ...data.cta },
