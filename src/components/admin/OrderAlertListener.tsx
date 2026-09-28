@@ -120,42 +120,45 @@ export default function OrderAlertListener() {
 
   return (
     <>
-      {!fullyActive && (
-        <button
-          type="button"
-          onClick={handleActivate}
-          disabled={activating}
-          title="Activa el sonido y las notificaciones push de pedidos nuevos (solo se hace una vez)"
-          className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-urgent px-4 py-2.5 text-sm font-bold text-white shadow-lift transition-transform hover:scale-105 disabled:opacity-70 animate-pulseSoft"
-        >
-          {activating ? 'Activando...' : '🔔 Activar notificaciones de pedidos'}
-        </button>
-      )}
-      {fullyActive && (
-        <div
-          title="Sonido y notificaciones push activos en este dispositivo"
-          className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-lift"
-        >
-          🔔 Notificaciones activas
-        </div>
-      )}
-
-      <div className="fixed bottom-20 left-5 z-40 flex flex-col items-start gap-2">
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
+        {!fullyActive ? (
+          <button
+            type="button"
+            onClick={handleActivate}
+            disabled={activating}
+            title="Activa el sonido y las notificaciones push de pedidos nuevos (solo se hace una vez)"
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-urgent px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.01] disabled:opacity-70 sm:w-auto sm:rounded-full"
+          >
+            {activating ? 'Activando...' : '🔔 Activar notificaciones de pedidos'}
+          </button>
+        ) : (
+          <span
+            title="Sonido y notificaciones push activos en este dispositivo"
+            className="flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-bold text-primary-hover ring-1 ring-primary/30"
+          >
+            <span className="h-2 w-2 rounded-full bg-whatsapp" /> Notificaciones activas
+          </span>
+        )}
         <button
           type="button"
           onClick={handleTestNotification}
           disabled={testing}
-          className="rounded-full border border-border bg-white px-3.5 py-2 text-xs font-bold text-ink shadow-soft transition-transform hover:scale-105 disabled:opacity-60"
+          className="rounded-full border border-border bg-white px-3 py-1.5 text-xs font-bold text-ink shadow-soft transition-colors hover:border-primary disabled:opacity-60"
         >
-          {testing ? 'Enviando...' : '🔔 Probar notificación push'}
+          {testing ? 'Enviando...' : 'Probar notificación'}
         </button>
         {testResult && (
-          <p className="max-w-xs rounded-card bg-white p-3 text-xs font-semibold text-ink shadow-soft">{testResult}</p>
+          <p className="w-full rounded-xl bg-white p-3 text-xs font-semibold text-ink shadow-soft ring-1 ring-border sm:text-right">
+            {testResult}
+            <button type="button" onClick={() => setTestResult(null)} className="ml-2 text-muted hover:text-ink" aria-label="Cerrar">
+              ✕
+            </button>
+          </p>
         )}
       </div>
 
       {toastOrder && (
-        <div className="fixed bottom-20 right-5 z-40 w-80 max-w-[calc(100vw-2.5rem)] animate-popIn rounded-card border-2 border-primary bg-white p-4 shadow-lift relative">
+        <div className="fixed right-4 top-4 z-50 w-80 max-w-[calc(100vw-2rem)] animate-popIn rounded-card border-2 border-primary bg-white p-4 shadow-lift">
           <p className="text-sm font-bold text-ink">🛎️ ¡Nuevo pedido recibido!</p>
           <p className="mt-1 text-sm text-ink">
             {toastOrder.orderNumber} · <span className="font-bold text-primary">{formatPrice(toastOrder.total)}</span>

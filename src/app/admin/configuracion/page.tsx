@@ -416,7 +416,7 @@ export default function ConfiguracionPage() {
   }
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-32">
       <div>
         <h1 className="font-heading text-2xl font-bold text-ink">Configuración del sitio</h1>
         <p className="text-sm text-muted">Edita textos, imágenes, colores y contacto sin tocar código</p>
@@ -1300,11 +1300,12 @@ export default function ConfiguracionPage() {
         </Field>
       </Section>
 
-      <div className="fixed inset-x-0 bottom-0 z-10 border-t border-border bg-white/95 p-4 backdrop-blur sm:pl-56">
-        <div className="mx-auto flex max-w-4xl items-center justify-end gap-4">
-          {saved && <span className="text-sm font-semibold text-primary">✓ Guardado</span>}
-          <button onClick={handleSave} disabled={saving} className="btn-primary disabled:opacity-60">
-            {saving ? 'Guardando...' : 'Guardar cambios'}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-white/95 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-3 shadow-[0_-8px_24px_rgba(0,0,0,0.06)] backdrop-blur sm:pl-60">
+        <div className="mx-auto flex max-w-4xl items-center gap-3">
+          <p className="hidden flex-1 text-xs text-muted sm:block">Los cambios se aplican en toda la tienda al guardar.</p>
+          {saved && <span className="shrink-0 text-sm font-semibold text-whatsapp">✓ Guardado</span>}
+          <button onClick={handleSave} disabled={saving} className="btn-primary btn-shine flex-1 py-3.5 disabled:opacity-60 sm:flex-none sm:px-10">
+            {saving ? 'Guardando...' : '💾 Guardar cambios'}
           </button>
         </div>
       </div>
