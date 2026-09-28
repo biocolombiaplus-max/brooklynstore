@@ -142,16 +142,22 @@ export default function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10 py-6 text-center text-xs text-white/40">
-        <div className="container-page flex flex-col items-center gap-3 sm:flex-row sm:justify-between">
-          <p>{footer.copyrightText || `© ${new Date().getFullYear()} ${storeName} · Ecuador. Todos los derechos reservados.`}</p>
-          <nav className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+      <div className="border-t border-white/10 pb-28 pt-6 text-center sm:pb-24 text-xs text-white/40">
+        <div className="container-page flex flex-col items-center gap-3 text-center">
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1">
             <Link href="/ayuda/politica-de-privacidad" className="hover:text-white/80">Privacidad</Link>
             <Link href="/ayuda/terminos-y-condiciones" className="hover:text-white/80">Términos</Link>
             <Link href="/ayuda/rastrear-pedido" className="hover:text-white/80">Rastrear pedido</Link>
             <Link href="/ayuda" className="hover:text-white/80">Ayuda</Link>
-            <Link href="/admin/login" className="text-white/25 transition-colors hover:text-white/60">Iniciar sesión</Link>
           </nav>
+          <p>{footer.copyrightText || `© ${new Date().getFullYear()} ${storeName} · Ecuador. Todos los derechos reservados.`}</p>
+          {/* Centrado y con espacio debajo para que el botón flotante de WhatsApp no lo tape */}
+          <Link
+            href="/admin/login"
+            className="rounded-full border border-white/10 px-4 py-1.5 text-white/35 transition-colors hover:border-white/30 hover:text-white/70"
+          >
+            Iniciar sesión
+          </Link>
         </div>
       </div>
     </footer>
