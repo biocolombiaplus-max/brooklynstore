@@ -196,7 +196,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       question: '¿Cómo sé cuál es mi talla?',
       answer:
-        'En cada producto tienes el botón "¿Cuál es mi talla?": mides tu pie en centímetros y te decimos la talla exacta. Además te indicamos si el modelo calza pequeño, normal o grande.',
+        'En cada producto tienes el botón "¿Cuál es mi talla?": mides tu pie en centímetros y te decimos la talla exacta. También puedes tomarle foto a la etiqueta de tus zapatos y te la calculamos al instante.',
     },
   ],
   cta: {
