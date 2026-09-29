@@ -9,6 +9,7 @@ import { classNames } from '@/lib/utils';
 const LINKS = [
   { href: '/admin', label: '📊 Panel', exact: true },
   { href: '/admin/productos', label: '👡 Productos' },
+  { href: '/admin/productos/carga-rapida', label: '⚡ Carga rápida' },
   { href: '/admin/pedidos', label: '📦 Pedidos' },
   { href: '/admin/configuracion', label: '⚙️ Configuración' },
 ];
@@ -31,7 +32,11 @@ export default function AdminSidebar() {
       </div>
       <nav className="flex flex-1 gap-2 sm:flex-col">
         {LINKS.map((link) => {
-          const active = link.exact ? pathname === link.href : pathname.startsWith(link.href);
+          const active = link.exact
+            ? pathname === link.href
+            : pathname.startsWith(link.href) &&
+              // "Productos" no se marca cuando estás en "Carga rápida" (tiene su propio enlace).
+              !(link.href === '/admin/productos' && pathname.startsWith('/admin/productos/carga-rapida'));
           return (
             <Link
               key={link.href}

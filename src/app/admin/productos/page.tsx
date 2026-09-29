@@ -24,14 +24,19 @@ export default function AdminProductsPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-heading text-2xl font-bold text-ink">Productos</h1>
           <p className="text-sm text-muted">Gestiona el catálogo de tu tienda</p>
         </div>
-        <Link href="/admin/productos/nuevo" className="btn-primary">
-          + Agregar producto
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/productos/carga-rapida" className="btn-dark">
+            ⚡ Carga rápida
+          </Link>
+          <Link href="/admin/productos/nuevo" className="btn-primary">
+            + Agregar producto
+          </Link>
+        </div>
       </div>
 
       <div className="overflow-x-auto rounded-card bg-white shadow-soft">
