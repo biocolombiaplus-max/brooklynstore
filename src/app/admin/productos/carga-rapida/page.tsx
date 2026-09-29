@@ -5,53 +5,38 @@ import { useEffect, useRef, useState } from 'react';
 import { useAdminUser } from '@/lib/admin-context';
 import { detectShoeColors } from '@/lib/colorDetect';
 import { resizeForUpload } from '@/lib/imageCrop';
-import { createProduct } from '@/lib/products';
+import { createProduct, deleteProduct, updateProduct } from '@/lib/products';
 import { useSiteSettings } from '@/lib/settings-context';
-import { uploadProductImage } from '@/lib/storage';
+import { deleteProductImage, uploadProductImage } from '@/lib/storage';
 import type { Gender, ProductColor, ProductInput } from '@/lib/types';
+import QuickDraftCard, { COLLECTIONS, SIZE_PRESETS, type QuickDraft as Draft, type QuickPhoto as Photo } from '@/components/admin/QuickDraftCard';
 import { classNames, slugify } from '@/lib/utils';
 
 // Carga rápida: subir muchos productos de una sola vez con las fotos que
 // ya tienes (por ejemplo, las que te llegan por WhatsApp). Eliges las fotos,
 // las agrupas por modelo, completas lo mínimo (o con IA) y publicas todo.
 
-interface Photo {
-  id: string;
-  file: File;
-  preview: string;
-  color?: { name: string; hex: string; hex2?: string } | null;
-}
-
-interface Draft {
-  id: string;
-  photoIds: string[];
-  title: string;
-  brand: string;
-  gender: Gender;
-  collection: string;
-  price: string;
-  sizes: string[];
-  description: string;
-  status: 'draft' | 'saving' | 'done' | 'error';
-  error?: string;
-  ai?: 'loading' | 'done' | 'error';
-  aiNote?: string;
-}
-
-const SIZE_PRESETS: Record<Gender, string[]> = {
-  hombre: ['38', '39', '40', '41', '42', '43', '44'],
-  mujer: ['35', '36', '37', '38', '39', '40'],
-  unisex: ['36', '37', '38', '39', '40', '41', '42', '43'],
-};
-const ALL_SIZES = ['34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
-const COLLECTIONS = ['deportivos', 'urbanos', 'running', 'basket', 'sandalias', 'botas'];
-
 let counter = 0;
 const uid = () => `${Date.now().toString(36)}-${(counter++).toString(36)}`;
 
 function defaultDescription(d: Draft, colorNames: string[]): string {
+  const name = d.title.trim() || 'Zapatos';
   const color = colorNames.length ? ` en ${colorNames.join(', ').toLowerCase()}` : '';
-  return `${d.title}${color}. Comodidad y estilo para tu día a día, con envío a todo el Ecuador y pago contra entrega.`;
+  return `${name}${color}. Comodidad, estilo y ligereza para tu día a día. Tallas para ${
+    d.gender === 'mujer' ? 'mujer' : d.gender === 'hombre' ? 'hombre' : 'hombre y mujer'
+  }, envío a todo el Ecuador con Servientrega y pago contra entrega.`;
+}
+
+// Colores del borrador: uno por color distinto (según el nombre).
+function draftColorList(d: Draft, photo: (id: string) => Photo | undefined): { pid: string; name: string; hex: string; hex2?: string }[] {
+  const list: { pid: string; name: string; hex: string; hex2?: string }[] = [];
+  for (const pid of d.photoIds) {
+    const c = photo(pid)?.color;
+    if (!c) continue;
+    const name = (d.colorNames[pid] ?? c.name).trim() || c.name;
+    if (!list.some((x) => x.name.toLowerCase() === name.toLowerCase())) list.push({ pid, name, hex: c.hex, hex2: c.hex2 });
+  }
+  return list;
 }
 
 async function toBase64Jpeg(file: File, max = 1200): Promise<string> {
@@ -123,8 +108,14 @@ export default function CargaRapidaPage() {
       gender: defaults.gender,
       collection: 'urbanos',
       price: defaults.price,
+      compareAtPrice: '',
+      stock: '20',
       sizes: SIZE_PRESETS[defaults.gender],
       description: '',
+      isNew: true,
+      featured: false,
+      active: true,
+      colorNames: {},
       status: 'draft',
     };
   }
@@ -222,18 +213,20 @@ export default function CargaRapidaPage() {
     try {
       const base = slugify(draft.title) || `producto-${Date.now()}`;
       const images: string[] = [];
-      const colors: ProductColor[] = [];
+      const urlByPhoto: Record<string, string> = {};
       for (const pid of draft.photoIds) {
         const photo = photoById(pid);
         if (!photo) continue;
         const resized = await resizeForUpload(photo.file);
         const url = await uploadProductImage(new File([resized], photo.file.name || `${base}.jpg`, { type: 'image/jpeg' }), base, 'fill');
         images.push(url);
-        const c = photo.color;
-        if (c && !colors.some((x) => x.name.toLowerCase() === c.name.toLowerCase())) {
-          colors.push(c.hex2 && c.hex2.toLowerCase() !== c.hex.toLowerCase() ? { name: c.name, hex: c.hex, hex2: c.hex2, image: url } : { name: c.name, hex: c.hex, image: url });
-        }
+        urlByPhoto[pid] = url;
       }
+      const colors: ProductColor[] = draftColorList(draft, photoById).map((c) =>
+        c.hex2 && c.hex2.toLowerCase() !== c.hex.toLowerCase()
+          ? { name: c.name, hex: c.hex, hex2: c.hex2, image: urlByPhoto[c.pid] }
+          : { name: c.name, hex: c.hex, image: urlByPhoto[c.pid] },
+      );
 
       const input: ProductInput = {
         slug: base,
@@ -241,39 +234,92 @@ export default function CargaRapidaPage() {
         brand: draft.brand.trim(),
         gender: draft.gender,
         fit: 'normal',
-        isNew: true,
+        isNew: draft.isNew,
         description: draft.description.trim() || defaultDescription(draft, colors.map((c) => c.name)),
         price: Number(draft.price) || payments.defaultPrice,
-        compareAtPrice: null,
+        compareAtPrice: Number(draft.compareAtPrice) > 0 ? Number(draft.compareAtPrice) : null,
         codPrice: null,
         images,
         sizes: draft.sizes,
         colors,
         collection: draft.collection,
-        stock: 20,
-        featured: false,
-        active: true,
+        stock: Number(draft.stock) || 0,
+        featured: draft.featured,
+        active: draft.active,
         soldCount: 0,
         reviewsCount: 0,
         reviews: [],
       };
 
       // Si la URL ya existe (mismo modelo en otro color), se le agrega un número.
+      let created: { id: string; slug: string } | null = null;
       let lastError: unknown = null;
-      for (let n = 1; n <= 20; n++) {
+      for (let n = 1; n <= 20 && !created; n++) {
+        const slug = n === 1 ? base : `${base}-${n}`;
         try {
-          await createProduct({ ...input, slug: n === 1 ? base : `${base}-${n}` });
-          lastError = null;
-          break;
+          created = { id: await createProduct({ ...input, slug }), slug };
         } catch (err) {
           lastError = err;
           if (!(err instanceof Error && err.message.includes('Ya existe'))) break;
         }
       }
-      if (lastError) throw lastError;
-      updateDraft(draft.id, { status: 'done' });
+      if (!created) throw lastError;
+      updateDraft(draft.id, {
+        status: 'done',
+        productId: created.id,
+        slug: created.slug,
+        images,
+        colors,
+        description: input.description,
+        expanded: false,
+      });
     } catch (err) {
       updateDraft(draft.id, { status: 'error', error: err instanceof Error ? err.message : 'No se pudo publicar. Intenta de nuevo.' });
+    }
+  }
+
+  // Guarda los cambios de un producto ya publicado.
+  async function saveEdit(draft: Draft) {
+    if (!draft.productId) return;
+    if (!draft.title.trim()) {
+      updateDraft(draft.id, { error: 'El nombre no puede quedar vacío.' });
+      return;
+    }
+    updateDraft(draft.id, { savingEdit: true, error: undefined });
+    try {
+      await updateProduct(draft.productId, {
+        title: draft.title.trim(),
+        brand: draft.brand.trim(),
+        gender: draft.gender,
+        collection: draft.collection,
+        price: Number(draft.price) || payments.defaultPrice,
+        compareAtPrice: Number(draft.compareAtPrice) > 0 ? Number(draft.compareAtPrice) : null,
+        stock: Number(draft.stock) || 0,
+        sizes: draft.sizes,
+        colors: (draft.colors ?? []).map((c) => ({ ...c, name: c.name.trim() || 'Color' })),
+        description: draft.description.trim() || defaultDescription(draft, (draft.colors ?? []).map((c) => c.name)),
+        isNew: draft.isNew,
+        featured: draft.featured,
+        active: draft.active,
+      });
+      updateDraft(draft.id, { savingEdit: false, editing: false, note: '✓ Cambios guardados en la tienda.' });
+    } catch (err) {
+      updateDraft(draft.id, { savingEdit: false, error: err instanceof Error ? err.message : 'No se pudieron guardar los cambios.' });
+    }
+  }
+
+  // Elimina de la tienda un producto recién publicado (y sus fotos).
+  async function deletePublished(draft: Draft) {
+    if (!draft.productId) return;
+    if (!confirm(`¿Eliminar "${draft.title}" de la tienda? Esta acción no se puede deshacer.`)) return;
+    updateDraft(draft.id, { deleting: true });
+    try {
+      await deleteProduct(draft.productId);
+      (draft.images ?? []).forEach((url) => deleteProductImage(url).catch(() => {}));
+      setDrafts((ds) => ds.filter((x) => x.id !== draft.id));
+      setPhotos((ps) => ps.filter((p) => !draft.photoIds.includes(p.id)));
+    } catch {
+      updateDraft(draft.id, { deleting: false, note: undefined, error: 'No se pudo eliminar. Intenta de nuevo.' });
     }
   }
 
@@ -422,7 +468,7 @@ export default function CargaRapidaPage() {
         </datalist>
       </section>
 
-      {/* Borradores */}
+      {/* Borradores y publicados */}
       {drafts.length > 0 && (
         <section className="mt-5">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
@@ -436,113 +482,26 @@ export default function CargaRapidaPage() {
             )}
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid items-start gap-4 lg:grid-cols-2">
             {drafts.map((d) => (
-              <article
+              <QuickDraftCard
                 key={d.id}
-                className={classNames(
-                  'rounded-card bg-white p-4 shadow-soft ring-1 sm:p-5',
-                  d.status === 'done' ? 'ring-whatsapp/50' : d.status === 'error' ? 'ring-urgent/50' : 'ring-border',
-                )}
-              >
-                <div className="flex gap-2 overflow-x-auto pb-1">
-                  {d.photoIds.map((pid, i) => {
-                    const p = photoById(pid);
-                    if (!p) return null;
-                    return (
-                      <div key={pid} className="relative shrink-0">
-                        <button type="button" onClick={() => makeCover(d.id, pid)} title="Usar como portada" className={classNames('block h-20 w-20 overflow-hidden rounded-xl ring-2', i === 0 ? 'ring-primary' : 'ring-border')}>
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img src={p.preview} alt="" className="h-full w-full object-cover" />
-                        </button>
-                        {i === 0 && <span className="absolute inset-x-0 bottom-0 rounded-b-xl bg-ink/70 py-0.5 text-center text-[9px] font-bold text-white">Portada</span>}
-                        {p.color && <span className="absolute right-1 top-1 h-3.5 w-3.5 rounded-full ring-2 ring-white" style={{ background: p.color.hex }} title={p.color.name} />}
-                        {d.status === 'draft' && (
-                          <button type="button" onClick={() => removePhotoFromDraft(d.id, pid)} className="absolute -left-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-[10px] text-white" aria-label="Quitar foto">
-                            ✕
-                          </button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {d.status === 'done' ? (
-                  <p className="mt-3 rounded-xl bg-whatsapp/10 p-3 text-sm font-bold text-ink">✅ Publicado: {d.title}</p>
-                ) : (
-                  <>
-                    <div className="mt-3 flex gap-2">
-                      <input
-                        value={d.title}
-                        onChange={(e) => updateDraft(d.id, { title: e.target.value, status: d.status === 'error' ? 'draft' : d.status })}
-                        placeholder="Nombre: ej. Nike Air Force 1 Low"
-                        className={classNames('input flex-1', d.status === 'error' && !d.title.trim() && 'border-urgent')}
-                        disabled={d.status === 'saving'}
-                      />
-                      {aiAvailable && (
-                        <button
-                          type="button"
-                          onClick={() => aiFill(d)}
-                          disabled={d.ai === 'loading' || d.status === 'saving'}
-                          title="Autocompletar con IA desde la foto"
-                          className="shrink-0 rounded-xl bg-ink px-3 text-sm font-bold text-white disabled:opacity-50"
-                        >
-                          {d.ai === 'loading' ? '⏳' : '✨ IA'}
-                        </button>
-                      )}
-                    </div>
-                    {d.aiNote && <p className={classNames('mt-1.5 text-[11px] font-semibold', d.ai === 'error' ? 'text-urgent' : 'text-primary-hover')}>{d.aiNote}</p>}
-
-                    <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                      <input list="qb-brands" value={d.brand} onChange={(e) => updateDraft(d.id, { brand: e.target.value })} placeholder="Marca" className="input" />
-                      <select
-                        value={d.gender}
-                        onChange={(e) => {
-                          const g = e.target.value as Gender;
-                          updateDraft(d.id, { gender: g, sizes: SIZE_PRESETS[g] });
-                        }}
-                        className="input bg-white"
-                      >
-                        <option value="hombre">Hombre</option>
-                        <option value="mujer">Mujer</option>
-                        <option value="unisex">Unisex</option>
-                      </select>
-                      <select value={d.collection} onChange={(e) => updateDraft(d.id, { collection: e.target.value })} className="input bg-white capitalize">
-                        {COLLECTIONS.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                      <input inputMode="decimal" value={d.price} onChange={(e) => updateDraft(d.id, { price: e.target.value })} placeholder="Precio" className="input" />
-                    </div>
-
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {ALL_SIZES.map((s) => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => updateDraft(d.id, { sizes: d.sizes.includes(s) ? d.sizes.filter((x) => x !== s) : [...d.sizes, s].sort((a, b) => Number(a) - Number(b)) })}
-                          className={classNames('h-8 w-9 rounded-lg text-xs font-bold', d.sizes.includes(s) ? 'bg-ink text-white' : 'bg-cream-alt text-muted')}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-
-                    {d.error && <p className="mt-2 text-xs font-semibold text-urgent">{d.error}</p>}
-
-                    <div className="mt-3 flex items-center justify-between gap-2">
-                      <button type="button" onClick={() => removeDraft(d.id)} disabled={d.status === 'saving'} className="text-xs font-bold text-muted hover:text-urgent">
-                        Deshacer (las fotos vuelven arriba)
-                      </button>
-                      <button type="button" onClick={() => publishOne(d)} disabled={d.status === 'saving' || publishing} className="rounded-full bg-primary px-4 py-2 text-xs font-extrabold text-white disabled:opacity-50">
-                        {d.status === 'saving' ? 'Publicando...' : 'Publicar este'}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </article>
+                draft={d}
+                photo={photoById}
+                aiAvailable={aiAvailable}
+                busy={publishing}
+                onChange={(patch) => updateDraft(d.id, patch)}
+                onAi={() => aiFill(d)}
+                onPublish={() => publishOne(d)}
+                onRemovePhoto={(pid) => removePhotoFromDraft(d.id, pid)}
+                onMakeCover={(pid) => makeCover(d.id, pid)}
+                onDiscard={() => removeDraft(d.id)}
+                onSaveEdit={() => saveEdit(d)}
+                onDelete={() => deletePublished(d)}
+                onDefaultDescription={() =>
+                  defaultDescription(d, d.status === 'done' ? (d.colors ?? []).map((c) => c.name) : draftColorList(d, photoById).map((c) => c.name))
+                }
+              />
             ))}
           </div>
         </section>
