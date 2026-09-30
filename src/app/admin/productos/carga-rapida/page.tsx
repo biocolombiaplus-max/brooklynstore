@@ -31,9 +31,10 @@ function defaultDescription(d: Draft, colorNames: string[]): string {
 function draftColorList(d: Draft, photo: (id: string) => Photo | undefined): { pid: string; name: string; hex: string; hex2?: string }[] {
   const list: { pid: string; name: string; hex: string; hex2?: string }[] = [];
   for (const pid of d.photoIds) {
-    const c = photo(pid)?.color;
+    const detected = photo(pid)?.color ?? null;
+    const c = pid in d.colorEdits ? d.colorEdits[pid] : detected;
     if (!c) continue;
-    const name = (d.colorNames[pid] ?? c.name).trim() || c.name;
+    const name = c.name.trim() || 'Color';
     if (!list.some((x) => x.name.toLowerCase() === name.toLowerCase())) list.push({ pid, name, hex: c.hex, hex2: c.hex2 });
   }
   return list;
@@ -115,7 +116,7 @@ export default function CargaRapidaPage() {
       isNew: true,
       featured: false,
       active: true,
-      colorNames: {},
+      colorEdits: {},
       status: 'draft',
     };
   }

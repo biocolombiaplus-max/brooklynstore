@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { swatchBackground } from '@/components/ColorSwatch';
+import { useState } from 'react';
+import ColorEditor, { ColorChipButton, type ColorValue } from '@/components/admin/ColorEditor';
 import type { Gender, ProductColor } from '@/lib/types';
 import { classNames, formatPrice } from '@/lib/utils';
 
@@ -27,8 +28,8 @@ export interface QuickDraft {
   isNew: boolean;
   featured: boolean;
   active: boolean;
-  // Nombre de color editado por foto (antes de publicar).
-  colorNames: Record<string, string>;
+  // Color editado por foto antes de publicar (null = esa foto no define un color).
+  colorEdits: Record<string, ColorValue | null>;
   status: 'draft' | 'saving' | 'done' | 'error';
   error?: string;
   ai?: 'loading' | 'done' | 'error';
@@ -109,10 +110,20 @@ export default function QuickDraftCard({
 
   // Colores: antes de publicar salen de las fotos (uno por color distinto);
   // después, del producto guardado.
-  const draftColors = d.photoIds
-    .map((pid) => ({ pid, p: photo(pid) }))
-    .filter((x) => x.p?.color)
-    .map((x) => ({ pid: x.pid, hex: x.p!.color!.hex, hex2: x.p!.color!.hex2, name: d.colorNames[x.pid] ?? x.p!.color!.name }));
+  const photoColor = (pid: string): ColorValue | null => {
+    if (pid in d.colorEdits) return d.colorEdits[pid];
+    const c = photo(pid)?.color;
+    return c ? (c.hex2 ? { name: c.name, hex: c.hex, hex2: c.hex2 } : { name: c.name, hex: c.hex }) : null;
+  };
+  // Qué color se está editando: el de una foto (borrador), uno del producto
+  // publicado o uno nuevo.
+  const [editingColor, setEditingColor] = useState<{ kind: 'photo'; pid: string } | { kind: 'pub'; index: number } | { kind: 'new' } | null>(null);
+  const editorValue: ColorValue =
+    editingColor?.kind === 'photo'
+      ? photoColor(editingColor.pid) ?? { name: '', hex: '#111111' }
+      : editingColor?.kind === 'pub'
+        ? (d.colors ?? [])[editingColor.index] ?? { name: '', hex: '#111111' }
+        : { name: '', hex: '#111111' };
 
   return (
     <article
@@ -285,45 +296,91 @@ export default function QuickDraftCard({
           </div>
 
           {/* Colores */}
-          {(published ? (d.colors ?? []).length > 0 : draftColors.length > 0) && (
-            <div>
-              <Label>Colores (puedes renombrarlos)</Label>
+          <div>
+            <Label>Colores · toca la muestra para editar (uno o dos tonos)</Label>
+            {published ? (
               <div className="grid gap-2 sm:grid-cols-2">
-                {published
-                  ? (d.colors ?? []).map((c, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <span className="h-7 w-7 shrink-0 rounded-full ring-1 ring-border" style={{ background: swatchBackground(c.hex, c.hex2) }} />
-                        <input
-                          value={c.name}
-                          onChange={(e) => onChange({ colors: (d.colors ?? []).map((x, j) => (j === i ? { ...x, name: e.target.value } : x)) })}
-                          className="input py-2"
-                          disabled={saving}
-                        />
+                {(d.colors ?? []).map((c, i) => (
+                  <div key={i} className="flex items-center gap-3 rounded-xl bg-cream-alt/60 p-2 pr-3">
+                    {c.image ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.image} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                    ) : null}
+                    <ColorChipButton value={c} onClick={() => setEditingColor({ kind: 'pub', index: i })} />
+                    <button type="button" onClick={() => setEditingColor({ kind: 'pub', index: i })} className="min-w-0 flex-1 truncate text-left text-sm font-bold text-ink">
+                      {c.name}
+                      <span className="block text-[10px] font-semibold text-muted">{c.hex2 ? 'Dos tonos' : 'Un tono'}</span>
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setEditingColor({ kind: 'new' })}
+                  disabled={saving}
+                  className="flex items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border p-2 text-xs font-extrabold text-muted hover:border-primary hover:text-ink"
+                >
+                  + Agregar color
+                </button>
+              </div>
+            ) : (
+              <div className="grid gap-2 sm:grid-cols-2">
+                {d.photoIds.map((pid) => {
+                  const p = photo(pid);
+                  if (!p) return null;
+                  const c = photoColor(pid);
+                  return (
+                    <div key={pid} className="flex items-center gap-3 rounded-xl bg-cream-alt/60 p-2 pr-3">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={p.preview} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                      {c ? (
+                        <>
+                          <ColorChipButton value={c} onClick={() => setEditingColor({ kind: 'photo', pid })} />
+                          <button type="button" onClick={() => setEditingColor({ kind: 'photo', pid })} className="min-w-0 flex-1 truncate text-left text-sm font-bold text-ink">
+                            {c.name}
+                            <span className="block text-[10px] font-semibold text-muted">{c.hex2 ? 'Dos tonos' : 'Un tono'}</span>
+                          </button>
+                        </>
+                      ) : (
                         <button
                           type="button"
-                          onClick={() => onChange({ colors: (d.colors ?? []).filter((_, j) => j !== i) })}
-                          className="shrink-0 text-sm text-urgent"
-                          aria-label="Quitar color"
+                          onClick={() => setEditingColor({ kind: 'photo', pid })}
+                          className="flex-1 rounded-lg border-2 border-dashed border-border px-2 py-2 text-left text-xs font-bold text-muted hover:border-primary hover:text-ink"
                         >
-                          ✕
+                          + Asignar color a esta foto
                         </button>
-                      </div>
-                    ))
-                  : draftColors.map((c) => (
-                      <div key={c.pid} className="flex items-center gap-2">
-                        <span className="h-7 w-7 shrink-0 rounded-full ring-1 ring-border" style={{ background: swatchBackground(c.hex, c.hex2) }} />
-                        <input
-                          value={c.name}
-                          onChange={(e) => onChange({ colorNames: { ...d.colorNames, [c.pid]: e.target.value } })}
-                          className="input py-2"
-                          disabled={saving}
-                        />
-                      </div>
-                    ))}
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              {!published && <p className="mt-1 text-[10px] text-muted">Fotos con el mismo nombre de color se agrupan en un solo color.</p>}
-            </div>
-          )}
+            )}
+            {!published && (
+              <p className="mt-1 text-[10px] text-muted">
+                Cada foto muestra su color. Fotos con el mismo nombre de color (ej: dos ángulos del mismo zapato) se agrupan en un solo color.
+              </p>
+            )}
+          </div>
+
+          <ColorEditor
+            open={editingColor !== null}
+            value={editorValue}
+            title={editingColor?.kind === 'new' ? 'Nuevo color' : 'Editar color'}
+            onClose={() => setEditingColor(null)}
+            onSave={(v) => {
+              if (!editingColor) return;
+              if (editingColor.kind === 'photo') onChange({ colorEdits: { ...d.colorEdits, [editingColor.pid]: v } });
+              else if (editingColor.kind === 'pub')
+                onChange({ colors: (d.colors ?? []).map((x, j) => (j === editingColor.index ? { ...v, ...(x.image ? { image: x.image } : {}) } : x)) });
+              else onChange({ colors: [...(d.colors ?? []), v] });
+            }}
+            onRemove={
+              editingColor?.kind === 'photo'
+                ? () => onChange({ colorEdits: { ...d.colorEdits, [editingColor.pid]: null } })
+                : editingColor?.kind === 'pub'
+                  ? () => onChange({ colors: (d.colors ?? []).filter((_, j) => j !== editingColor.index) })
+                  : undefined
+            }
+          />
 
           {/* Más detalles */}
           <button
