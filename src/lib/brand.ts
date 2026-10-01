@@ -1,8 +1,28 @@
 import type { FeaturedBrand } from './types';
 
+const norm = (b: string) => b.trim().toLowerCase().replace(/\s+/g, ' ');
+
+/**
+ * ¿El producto es de esta marca? Agrupa variantes de escritura: "On",
+ * "ON", "On Cloud" y "On Running" son la misma marca "On" (pero "Onitsuka
+ * Tiger" no, porque no empieza con "on ").
+ */
+export function brandMatches(productBrand: string | undefined, brand: string | undefined): boolean {
+  if (!productBrand || !brand) return false;
+  const a = norm(productBrand);
+  const b = norm(brand);
+  return a === b || a.startsWith(`${b} `) || b.startsWith(`${a} `);
+}
+
+// Lista de marcas sin duplicados por escritura: se queda la versión corta.
+export function canonicalBrands(brands: string[]): string[] {
+  const unique = Array.from(new Set(brands.map((b) => b.trim()).filter(Boolean)));
+  return unique.filter((b) => !unique.some((o) => o !== b && norm(b).startsWith(`${norm(o)} `)));
+}
+
 export function isStarBrand(featured: FeaturedBrand, brand: string | undefined): boolean {
   if (!featured.enabled || !brand) return false;
-  return brand.trim().toLowerCase() === featured.name.trim().toLowerCase();
+  return brandMatches(brand, featured.name);
 }
 
 export function brandHref(brand: string): string {
