@@ -110,6 +110,41 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     ],
     transferNote: 'Envíanos la foto del comprobante por WhatsApp y despachamos tu pedido ese mismo día.',
   },
+  categoryTiles: {
+    enabled: true,
+    eyebrow: 'Compra por categoría',
+    heading: '¿Qué andas buscando?',
+    tiles: [
+      {
+        label: 'Hombre',
+        sub: 'Urbanos, running y deportivos',
+        href: '/catalogo?genero=hombre',
+        image: 'https://images.unsplash.com/photo-1491553895911-0055eca6402d?auto=format&fit=crop&w=900&q=75',
+        buttonText: 'Comprar',
+      },
+      {
+        label: 'Mujer',
+        sub: 'Estilo y comodidad todo el día',
+        href: '/catalogo?genero=mujer',
+        image: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=900&q=75',
+        buttonText: 'Comprar',
+      },
+      {
+        label: 'Running',
+        sub: 'Para correr y entrenar',
+        href: '/catalogo?estilo=running',
+        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=75',
+        buttonText: 'Comprar',
+      },
+      {
+        label: 'Ofertas',
+        sub: 'Precios que no se repiten',
+        href: '/catalogo?ofertas=1',
+        image: 'https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=900&q=75',
+        buttonText: 'Comprar',
+      },
+    ],
+  },
   trustItems: [
     { icon: '🚚', title: 'Envío Servientrega', sub: 'A todo el Ecuador' },
     { icon: '💵', title: 'Contra entrega', sub: 'Hoy solo $5' },
@@ -278,6 +313,11 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
       bullets: data.featuredBrand?.bullets?.length ? data.featuredBrand.bullets : DEFAULT_SETTINGS.featuredBrand.bullets,
     },
     announcementMessages: data.announcementMessages?.length ? data.announcementMessages : DEFAULT_SETTINGS.announcementMessages,
+    categoryTiles: {
+      ...DEFAULT_SETTINGS.categoryTiles,
+      ...data.categoryTiles,
+      tiles: data.categoryTiles?.tiles ?? DEFAULT_SETTINGS.categoryTiles.tiles,
+    },
     trustItems: data.trustItems?.length ? data.trustItems : DEFAULT_SETTINGS.trustItems,
     benefits: data.benefits?.length ? data.benefits : DEFAULT_SETTINGS.benefits,
     testimonials: data.testimonials?.length ? data.testimonials : DEFAULT_SETTINGS.testimonials,

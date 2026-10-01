@@ -16,6 +16,7 @@ import type {
   FaqItem,
   CollectionMenuItem,
   PaymentLogo,
+  CategoryTile,
 } from '@/lib/types';
 import { PaymentLogoChip, CourierLogo } from '@/components/brand/PaymentLogos';
 
@@ -1050,6 +1051,141 @@ export default function ConfiguracionPage() {
             />
           </Field>
         </div>
+      </Section>
+
+      <Section
+        title="Inicio — Compra por categoría"
+        description="Las tarjetas grandes con foto (Hombre, Mujer, Running, Ofertas...). Cambia fotos, textos, botón y a dónde lleva cada una. Se recomiendan 4 tarjetas."
+      >
+        <label className="flex items-center gap-2 text-sm font-semibold text-ink">
+          <input
+            type="checkbox"
+            checked={settings.categoryTiles.enabled}
+            onChange={(e) => update('categoryTiles', { ...settings.categoryTiles, enabled: e.target.checked })}
+          />
+          Mostrar esta sección en el inicio
+        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Texto pequeño (arriba)">
+            <input
+              value={settings.categoryTiles.eyebrow}
+              onChange={(e) => update('categoryTiles', { ...settings.categoryTiles, eyebrow: e.target.value })}
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Título">
+            <input
+              value={settings.categoryTiles.heading}
+              onChange={(e) => update('categoryTiles', { ...settings.categoryTiles, heading: e.target.value })}
+              className={inputClass}
+            />
+          </Field>
+        </div>
+
+        <div className="grid gap-4 lg:grid-cols-2">
+          {settings.categoryTiles.tiles.map((tile, i) => {
+            const tiles = settings.categoryTiles.tiles;
+            const setTiles = (next: CategoryTile[]) => update('categoryTiles', { ...settings.categoryTiles, tiles: next });
+            const edit = (patch: Partial<CategoryTile>) => setTiles(tiles.map((t, j) => (j === i ? { ...t, ...patch } : t)));
+            const move = (dir: -1 | 1) => {
+              const j = i + dir;
+              if (j < 0 || j >= tiles.length) return;
+              const next = [...tiles];
+              [next[i], next[j]] = [next[j], next[i]];
+              setTiles(next);
+            };
+            const linkOptions = [
+              { label: 'Hombre', href: '/catalogo?genero=hombre' },
+              { label: 'Mujer', href: '/catalogo?genero=mujer' },
+              { label: 'Ofertas', href: '/catalogo?ofertas=1' },
+              { label: 'Todo el catálogo', href: '/catalogo' },
+              ...settings.collectionsMenu.map((c) => ({ label: `Estilo: ${c.label}`, href: `/catalogo?estilo=${encodeURIComponent(c.value)}` })),
+              ...settings.brands.map((b) => ({ label: `Marca: ${b}`, href: `/catalogo?marca=${encodeURIComponent(b)}` })),
+            ];
+            const known = linkOptions.some((o) => o.href === tile.href);
+            return (
+              <div key={i} className="overflow-hidden rounded-2xl border border-border">
+                <div className="relative aspect-[16/9] bg-ink">
+                  {tile.image && <Image src={tile.image} alt="" fill className="object-cover opacity-90" />}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-4">
+                    <p className="font-heading text-xl font-black uppercase text-white">{tile.label || 'Sin nombre'}</p>
+                    {tile.sub && <p className="text-xs text-white/80">{tile.sub}</p>}
+                    <span className="mt-2 inline-block rounded-full bg-white px-3 py-1 text-[10px] font-extrabold uppercase text-ink">
+                      {tile.buttonText || 'Comprar'} →
+                    </span>
+                  </div>
+                  <div className="absolute right-2 top-2 flex gap-1">
+                    <button type="button" onClick={() => move(-1)} disabled={i === 0} className="h-8 w-8 rounded-full bg-white/90 text-sm font-bold text-ink disabled:opacity-40" aria-label="Mover antes">
+                      ←
+                    </button>
+                    <button type="button" onClick={() => move(1)} disabled={i === tiles.length - 1} className="h-8 w-8 rounded-full bg-white/90 text-sm font-bold text-ink disabled:opacity-40" aria-label="Mover después">
+                      →
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => confirm(`¿Quitar la tarjeta "${tile.label}"?`) && setTiles(tiles.filter((_, j) => j !== i))}
+                      className="h-8 w-8 rounded-full bg-white/90 text-sm text-urgent"
+                      aria-label="Quitar tarjeta"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-3 p-4">
+                  <ImageUploadField label="Foto de la tarjeta (vertical se ve mejor)" value={tile.image} folder="home" onChange={(url) => edit({ image: url })} />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Nombre">
+                      <input value={tile.label} onChange={(e) => edit({ label: e.target.value })} className={inputClass} />
+                    </Field>
+                    <Field label="Texto del botón">
+                      <input value={tile.buttonText} onChange={(e) => edit({ buttonText: e.target.value })} className={inputClass} placeholder="Comprar" />
+                    </Field>
+                  </div>
+                  <Field label="Texto corto (debajo del nombre)">
+                    <input value={tile.sub} onChange={(e) => edit({ sub: e.target.value })} className={inputClass} />
+                  </Field>
+                  <Field label="¿A dónde lleva?">
+                    <select
+                      value={known ? tile.href : '__custom'}
+                      onChange={(e) => edit({ href: e.target.value === '__custom' ? '' : e.target.value })}
+                      className={`${inputClass} bg-white`}
+                    >
+                      {linkOptions.map((o) => (
+                        <option key={o.href} value={o.href}>
+                          {o.label}
+                        </option>
+                      ))}
+                      <option value="__custom">Otro enlace (escríbelo abajo)</option>
+                    </select>
+                    {!known && (
+                      <input
+                        value={tile.href}
+                        onChange={(e) => edit({ href: e.target.value })}
+                        className={`${inputClass} mt-2`}
+                        placeholder="/catalogo?marca=Nike&linea=Air%20Force"
+                      />
+                    )}
+                  </Field>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        {settings.categoryTiles.tiles.length < 8 && (
+          <button
+            type="button"
+            onClick={() =>
+              update('categoryTiles', {
+                ...settings.categoryTiles,
+                tiles: [...settings.categoryTiles.tiles, { label: 'Nueva categoría', sub: '', href: '/catalogo', image: '', buttonText: 'Comprar' }],
+              })
+            }
+            className="text-sm font-semibold text-primary hover:underline"
+          >
+            + Agregar tarjeta
+          </button>
+        )}
       </Section>
 
       <Section title="Barra de confianza" description="Los 5 iconos con texto que aparecen bajo el hero">

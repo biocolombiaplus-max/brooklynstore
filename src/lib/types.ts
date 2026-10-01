@@ -141,6 +141,22 @@ export interface Order {
 
 export type OrderInput = Omit<Order, 'id' | 'createdAt' | 'orderNumber'>;
 
+// Tarjeta de la sección "Compra por categoría" del inicio.
+export interface CategoryTile {
+  label: string;
+  sub: string;
+  href: string;
+  image: string;
+  buttonText: string;
+}
+
+export interface CategoryTilesSettings {
+  enabled: boolean;
+  eyebrow: string;
+  heading: string;
+  tiles: CategoryTile[];
+}
+
 export interface TrustItem {
   icon: string;
   title: string;
@@ -283,6 +299,7 @@ export interface SiteSettings {
   paymentLogos: PaymentLogo[];
   // Plazo (en horas desde que recibe el pedido) para pedir cambio de talla.
   exchangeWindowHours: number;
+  categoryTiles: CategoryTilesSettings;
   trustItems: TrustItem[];
   benefitsHeading: string;
   benefits: BenefitItem[];
