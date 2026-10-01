@@ -109,3 +109,27 @@ export async function deleteFirestoreImage(url: string): Promise<void> {
   const id = url.slice(FIRESTORE_IMAGE_PREFIX.length);
   await deleteDoc(doc(db, 'images', id)).catch(() => {});
 }
+
+// Guarda un archivo tal cual (ej: el PDF de una guía) en la misma colección
+// "images". Firestore admite documentos de hasta 1 MB.
+export async function uploadRawFileToFirestore(file: Blob, contentType: string): Promise<string> {
+  if (!db) throw new Error('No hay conexión con la base de datos. Revisa tu internet e intenta de nuevo.');
+  if (file.size > 950_000) {
+    throw new Error('El PDF pesa más de 950 KB. Envía una captura o foto de la guía, o un PDF más liviano.');
+  }
+  const bytes = Bytes.fromUint8Array(new Uint8Array(await file.arrayBuffer()));
+  try {
+    const ref = await addDoc(collection(db, 'images'), {
+      data: bytes,
+      contentType,
+      size: file.size,
+      createdAt: serverTimestamp(),
+    });
+    return `${FIRESTORE_IMAGE_PREFIX}${ref.id}`;
+  } catch (error) {
+    if ((error as { code?: string })?.code === 'permission-denied') {
+      throw new Error('Firebase no dio permiso para guardar el archivo. Revisa las reglas de Firestore (bloque "images").');
+    }
+    throw new Error('No se pudo guardar el archivo. Revisa tu conexión e intenta de nuevo.');
+  }
+}

@@ -244,3 +244,28 @@ ${accounts.map((a) => bankAccountText(a)).join('\n\n')}
 
 📸 Cuando pagues, mándanos por aquí la foto del comprobante y despachamos ese mismo día con Servientrega. 🚚`;
 }
+
+// Link a la página de la guía de envío (foto o PDF) de un pedido.
+export function guidePageUrl(order: { orderNumber: string; trackingNumber?: string; guideUrl?: string; guideType?: 'image' | 'pdf' }): string | null {
+  if (!order.guideUrl && !order.trackingNumber) return null;
+  const params = new URLSearchParams();
+  if (order.guideUrl) params.set('f', order.guideUrl);
+  if (order.guideType === 'pdf') params.set('t', 'pdf');
+  params.set('n', order.orderNumber);
+  if (order.trackingNumber) params.set('g', order.trackingNumber);
+  return `${SITE_URL}/guia?${params.toString()}`;
+}
+
+// Mensaje al cliente con los datos del envío y su guía.
+export function buildShippedMessage(order: Order, storeName: string): string {
+  const firstName = order.customer.name.split(' ')[0];
+  const link = guidePageUrl(order);
+  return `¡Hola ${firstName}! 👋 Tu pedido *${order.orderNumber}* de ${storeName} ya va en camino 🚚
+
+📦 *Transportadora:* ${order.carrier || 'Servientrega'}${order.trackingNumber ? `\n🔢 *Número de guía:* ${order.trackingNumber}` : ''}
+🏠 *Destino:* ${order.customer.city}, ${order.customer.province}${
+    order.paymentMethod === 'contra_entrega' ? `\n💵 *Al recibir pagas:* ${formatPrice(order.payOnDelivery)} en efectivo` : ''
+  }
+${link ? `\n📄 *Tu guía${order.guideType === 'pdf' ? ' (PDF)' : ''}:*\n${link}\n` : ''}
+Con el número de guía puedes rastrear tu paquete en servientrega.com.ec. Cualquier novedad, escríbenos por aquí. ¡Gracias por tu compra! 🙌`;
+}

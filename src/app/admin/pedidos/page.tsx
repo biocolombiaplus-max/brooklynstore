@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getAllOrders, updateOrderStatus, updateOrderShipping, deleteOrder } from '@/lib/orders';
+import { getAllOrders, updateOrderStatus, updateOrderShipping, updateOrderGuide, deleteOrder } from '@/lib/orders';
 import { getSiteSettings } from '@/lib/settings';
 import { CARRIERS, type Order, type OrderStatus, type Carrier, type BankAccount } from '@/lib/types';
-import { buildPaymentDataMessage, formatPrice, orderPhotoUrl, whatsappLinkTo } from '@/lib/utils';
+import { buildPaymentDataMessage, buildShippedMessage, formatPrice, guidePageUrl, orderPhotoUrl, whatsappLinkTo } from '@/lib/utils';
+import { uploadProductImage } from '@/lib/storage';
+import { uploadRawFileToFirestore } from '@/lib/firestoreImages';
 
 const STATUSES: { value: OrderStatus; label: string }[] = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -33,13 +35,8 @@ function buildStatusMessage(order: Order, storeName: string): string {
   switch (order.status) {
     case 'confirmado':
       return `Hola ${firstName}! Tu pedido ${order.orderNumber} en ${storeName} fue confirmado y ya lo estamos alistando. Te avisamos apenas salga hacia ${order.customer.city}. ¡Gracias por tu compra!`;
-    case 'enviado': {
-      const shippingInfo =
-        order.carrier && order.trackingNumber
-          ? `\n\nTransportadora: ${order.carrier}\nNúmero de guía: ${order.trackingNumber}`
-          : '';
-      return `Hola ${firstName}! Tu pedido ${order.orderNumber} ya salió hacia ${order.customer.city}.${shippingInfo}\n\nCualquier novedad con la entrega, escríbenos por este mismo medio.`;
-    }
+    case 'enviado':
+      return buildShippedMessage(order, storeName);
     case 'entregado':
       return `Hola ${firstName}! Vimos que tu pedido ${order.orderNumber} ya fue entregado. Esperamos que disfrutes tus zapatos nuevos 🔥 Si necesitas cambio de talla, recuerda escribirnos dentro de las 48 horas de recibido. Si tienes alguna duda, aquí estamos.`;
     case 'cancelado':
@@ -86,6 +83,13 @@ export default function AdminOrdersPage() {
     }
   }
 
+  async function handleGuideChange(order: Order, guide: { url: string; type: 'image' | 'pdf' } | null) {
+    await updateOrderGuide(order.id, guide);
+    setOrders((prev) =>
+      prev ? prev.map((o) => (o.id === order.id ? { ...o, guideUrl: guide?.url, guideType: guide?.type } : o)) : prev,
+    );
+  }
+
   async function handleDeleteOrder(order: Order) {
     if (!confirm(`¿Eliminar el pedido ${order.orderNumber}? Esta acción no se puede deshacer.`)) return;
     await deleteOrder(order.id);
@@ -119,6 +123,7 @@ export default function AdminOrdersPage() {
               saving={savingShipping === order.id}
               onStatusChange={(status) => handleStatusChange(order.id, status)}
               onShippingSave={(carrier, trackingNumber) => handleShippingSave(order, carrier, trackingNumber)}
+              onGuideChange={(guide) => handleGuideChange(order, guide)}
               onDelete={() => handleDeleteOrder(order)}
             />
           ))
@@ -135,6 +140,7 @@ function OrderCard({
   saving,
   onStatusChange,
   onShippingSave,
+  onGuideChange,
   onDelete,
 }: {
   order: Order;
@@ -143,8 +149,29 @@ function OrderCard({
   saving: boolean;
   onStatusChange: (status: OrderStatus) => void;
   onShippingSave: (carrier: Carrier | '', trackingNumber: string) => void;
+  onGuideChange: (guide: { url: string; type: 'image' | 'pdf' } | null) => Promise<void>;
   onDelete: () => void;
 }) {
+  const [guideUploading, setGuideUploading] = useState(false);
+  const [guideError, setGuideError] = useState('');
+
+  async function handleGuideFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setGuideError('');
+    setGuideUploading(true);
+    try {
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      const url = isPdf ? await uploadRawFileToFirestore(file, 'application/pdf') : await uploadProductImage(file, 'guias', 'original');
+      await onGuideChange({ url, type: isPdf ? 'pdf' : 'image' });
+    } catch (err) {
+      setGuideError(err instanceof Error ? err.message : 'No se pudo subir la guía. Intenta de nuevo.');
+    } finally {
+      setGuideUploading(false);
+    }
+  }
+
   const [carrier, setCarrier] = useState<Carrier | ''>(order.carrier ?? '');
   const [trackingNumber, setTrackingNumber] = useState(order.trackingNumber ?? '');
   const shippingChanged = carrier !== (order.carrier ?? '') || trackingNumber !== (order.trackingNumber ?? '');
@@ -279,6 +306,67 @@ function OrderCard({
               {saving ? 'Guardando...' : 'Guardar guía'}
             </button>
           )}
+        </div>
+
+        {/* Foto o PDF de la guía */}
+        <div className="mt-3 flex flex-wrap items-center gap-3 rounded-xl bg-cream-alt/60 p-3">
+          {order.guideUrl ? (
+            <>
+              <a
+                href={order.guideUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-white ring-1 ring-border"
+                title="Ver guía"
+              >
+                {order.guideType === 'pdf' ? (
+                  <span className="text-center text-[10px] font-black text-urgent">
+                    <span className="block text-2xl">📄</span>PDF
+                  </span>
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={order.guideUrl} alt="Guía" className="h-full w-full object-cover" />
+                )}
+              </a>
+              <div className="min-w-0 flex-1 text-xs">
+                <p className="font-bold text-ink">✓ Guía adjunta ({order.guideType === 'pdf' ? 'PDF' : 'foto'})</p>
+                <div className="mt-1 flex flex-wrap gap-3">
+                  <label className="cursor-pointer font-bold text-primary-hover underline">
+                    Cambiar
+                    <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleGuideFile} disabled={guideUploading} />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => confirm('¿Quitar la guía adjunta?') && onGuideChange(null)}
+                    className="font-bold text-urgent underline"
+                  >
+                    Quitar
+                  </button>
+                  {guidePageUrl(order) && (
+                    <a href={guidePageUrl(order)!} target="_blank" rel="noopener noreferrer" className="font-bold text-ink underline">
+                      Ver como la ve el cliente
+                    </a>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <label className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-primary/50 bg-white px-4 py-3 text-sm font-bold text-ink hover:bg-gold-50">
+              {guideUploading ? 'Subiendo guía...' : '📎 Subir guía (foto o PDF)'}
+              <input type="file" accept="image/*,application/pdf" className="hidden" onChange={handleGuideFile} disabled={guideUploading} />
+            </label>
+          )}
+          {(order.guideUrl || order.trackingNumber) && (
+            <a
+              href={whatsappLinkTo(order.customer.phone, buildShippedMessage(order, storeName))}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-whatsapp px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.02] sm:w-auto"
+            >
+              🚚 Enviar guía por WhatsApp
+            </a>
+          )}
+          {guideError && <p className="w-full text-xs font-semibold text-urgent">{guideError}</p>}
         </div>
       </div>
 

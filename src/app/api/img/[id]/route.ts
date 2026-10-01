@@ -24,6 +24,7 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     headers: {
       'Content-Type': contentType,
       'Content-Length': String(body.length),
+      ...(contentType === 'application/pdf' ? { 'Content-Disposition': 'inline; filename="guia.pdf"' } : {}),
       'Cache-Control': 'public, max-age=31536000, s-maxage=31536000, immutable',
     },
   });

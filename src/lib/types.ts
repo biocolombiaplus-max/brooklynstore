@@ -135,6 +135,9 @@ export interface Order {
   status: OrderStatus;
   carrier?: Carrier;
   trackingNumber?: string;
+  // Foto o PDF de la guía de envío (para enviársela al cliente).
+  guideUrl?: string;
+  guideType?: 'image' | 'pdf';
   couponCode?: string;
   createdAt: number;
 }

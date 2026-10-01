@@ -21,6 +21,8 @@ function toOrder(id: string, data: any): Order {
     status: data.status ?? 'pendiente',
     carrier: data.carrier || undefined,
     trackingNumber: data.trackingNumber || undefined,
+    guideUrl: data.guideUrl || undefined,
+    guideType: data.guideType === 'pdf' ? 'pdf' : data.guideUrl ? 'image' : undefined,
     couponCode: data.couponCode || undefined,
     createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : Date.now(),
   };
@@ -190,4 +192,9 @@ export async function updateOrderShipping(
     carrier: shipping.carrier ?? '',
     trackingNumber: shipping.trackingNumber ?? '',
   });
+}
+
+// Guarda (o quita, con url vacía) la foto / PDF de la guía de un pedido.
+export async function updateOrderGuide(id: string, guide: { url: string; type: 'image' | 'pdf' } | null): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, id), { guideUrl: guide?.url ?? '', guideType: guide?.type ?? '' });
 }
