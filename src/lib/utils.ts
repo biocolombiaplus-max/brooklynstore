@@ -66,15 +66,34 @@ export function whatsappLinkTo(phone: string, message: string, countryCode?: str
   return `https://wa.me/${fullNumber}?text=${encodeURIComponent(message)}`;
 }
 
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore-six.vercel.app').replace(/\/$/, '');
+
+// Link a la "foto del pedido": WhatsApp muestra la foto del modelo en el
+// color elegido como vista previa del mensaje.
+export function orderPhotoUrl(item: { slug?: string; color?: string; size?: string; quantity?: number }): string | null {
+  if (!item.slug) return null;
+  const params = new URLSearchParams();
+  if (item.color) params.set('c', item.color);
+  if (item.size) params.set('t', item.size);
+  if (item.quantity && item.quantity > 1) params.set('n', String(item.quantity));
+  const qs = params.toString();
+  return `${SITE_URL}/foto/${encodeURIComponent(item.slug)}${qs ? `?${qs}` : ''}`;
+}
+
+function photoLine(item: { slug?: string; color?: string; size?: string; quantity?: number }): string {
+  const url = orderPhotoUrl(item);
+  return url ? `\n   📸 Foto: ${url}` : '';
+}
+
 export function buildCartWhatsAppMessage(
-  items: { title: string; size: string; sizeUs?: string; color: string; quantity: number; price?: number }[],
+  items: { title: string; slug?: string; size: string; sizeUs?: string; color: string; quantity: number; price?: number }[],
 ): string {
   const lines = items
     .map(
       (i) =>
         `• ${i.title}\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity}${
           i.price !== undefined ? ` — ${formatPrice(i.price * i.quantity)}` : ''
-        }`,
+        }${photoLine(i)}`,
     )
     .join('\n');
   const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.quantity, 0);
@@ -92,7 +111,7 @@ export function paymentMethodLabel(method: PaymentMethod): string {
 // es lo que más confianza genera (y evita malentendidos con el courier).
 export function buildOrderWhatsAppMessage(order: {
   orderNumber: string;
-  items: { title: string; size: string; sizeUs?: string; color: string; quantity: number; price: number }[];
+  items: { title: string; slug?: string; size: string; sizeUs?: string; color: string; quantity: number; price: number }[];
   subtotal: number;
   discount?: number;
   shipping: number;
@@ -106,7 +125,7 @@ export function buildOrderWhatsAppMessage(order: {
   const itemsList = order.items
     .map(
       (i) =>
-        `• ${i.title}\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity} — ${formatPrice(i.price * i.quantity)}`,
+        `• ${i.title}\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity} — ${formatPrice(i.price * i.quantity)}${photoLine(i)}`,
     )
     .join('\n');
 

@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { getAllOrders, updateOrderStatus, updateOrderShipping, deleteOrder } from '@/lib/orders';
 import { getSiteSettings } from '@/lib/settings';
 import { CARRIERS, type Order, type OrderStatus, type Carrier, type BankAccount } from '@/lib/types';
-import { buildPaymentDataMessage, formatPrice, whatsappLinkTo } from '@/lib/utils';
+import { buildPaymentDataMessage, formatPrice, orderPhotoUrl, whatsappLinkTo } from '@/lib/utils';
 
 const STATUSES: { value: OrderStatus; label: string }[] = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -206,10 +206,37 @@ function OrderCard({
         </div>
         <div>
           <p className="mb-1 text-xs font-bold uppercase text-muted">Productos</p>
-          <ul className="space-y-1 text-sm text-ink">
+          <ul className="space-y-2">
             {order.items.map((item, i) => (
-              <li key={i}>
-                {item.title} (T.{item.size}{item.sizeUs ? ` · US ${item.sizeUs}` : ''}, {item.color}) × {item.quantity}
+              <li key={i} className="flex items-center gap-3 rounded-xl bg-cream-alt/60 p-2 pr-3">
+                <a
+                  href={item.image || orderPhotoUrl(item) || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Ver foto grande"
+                  className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-white ring-1 ring-border transition-transform hover:scale-105"
+                >
+                  {item.image ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="flex h-full w-full items-center justify-center text-xs text-muted">Sin foto</span>
+                  )}
+                  {item.quantity > 1 && (
+                    <span className="absolute right-1 top-1 rounded-full bg-ink px-1.5 py-0.5 text-[10px] font-black text-white">×{item.quantity}</span>
+                  )}
+                </a>
+                <div className="min-w-0 text-sm">
+                  <p className="font-bold leading-tight text-ink">{item.title}</p>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5 text-[11px] font-bold">
+                    <span className="rounded-full bg-ink px-2 py-0.5 text-white">
+                      Talla {item.size}
+                      {item.sizeUs ? ` · US ${item.sizeUs}` : ''}
+                    </span>
+                    {item.color && <span className="rounded-full bg-white px-2 py-0.5 text-ink ring-1 ring-border">🎨 {item.color}</span>}
+                    <span className="rounded-full bg-white px-2 py-0.5 text-ink ring-1 ring-border">× {item.quantity}</span>
+                  </div>
+                </div>
               </li>
             ))}
           </ul>
