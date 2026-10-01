@@ -27,7 +27,7 @@ export default function PaymentMethods() {
         </div>
 
         <div className="mx-auto mt-10 grid max-w-5xl gap-5 md:grid-cols-2">
-          <div className="relative overflow-hidden rounded-3xl border border-primary/50 bg-gradient-to-br from-white/10 to-white/[0.02] p-7 sm:p-9">
+          <div className="relative flex flex-col overflow-hidden rounded-3xl border border-primary/50 bg-gradient-to-br from-white/10 to-white/[0.02] p-7 sm:p-9">
             <span className="absolute right-5 top-5 rounded-full bg-gold-gradient px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-ink">
               Mejor precio
             </span>
@@ -53,10 +53,24 @@ export default function PaymentMethods() {
                 ))}
               </div>
             )}
+            {/* Empuja el botón al fondo para que ambos queden alineados */}
+            <div className="min-h-8 flex-1" />
+            <Link
+              href="/catalogo"
+              className="group btn-primary btn-shine w-full justify-between gap-3 rounded-2xl px-5 py-4 text-left normal-case tracking-normal"
+            >
+              <span className="flex flex-col">
+                <span className="text-[15px] font-black uppercase tracking-wide">Ver catálogo y pagar ya</span>
+                <span className="text-[11px] font-bold opacity-75">Transferencia o depósito · despacho el mismo día</span>
+              </span>
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-lg text-primary-light transition-transform group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
           </div>
 
           {payments.codEnabled && (
-            <div className="relative overflow-hidden rounded-3xl bg-gold-gradient p-7 text-ink sm:p-9">
+            <div className="relative flex flex-col overflow-hidden rounded-3xl bg-gold-gradient p-7 text-ink sm:p-9">
               <span className="absolute right-5 top-5 rounded-full bg-ink px-3 py-1 text-[10px] font-extrabold uppercase tracking-wider text-primary-light">
                 Más confianza
               </span>
@@ -79,6 +93,19 @@ export default function PaymentMethods() {
                   <p className="text-[11px] text-ink/70">en efectivo</p>
                 </div>
               </div>
+              <div className="min-h-8 flex-1" />
+              <Link
+                href="/catalogo"
+                className="group flex w-full items-center justify-between gap-3 rounded-2xl bg-ink px-5 py-4 text-white shadow-dark transition-transform hover:-translate-y-0.5"
+              >
+                <span className="flex flex-col">
+                  <span className="text-[15px] font-black uppercase tracking-wide">Ver catálogo y pagar al recibir</span>
+                  <span className="text-[11px] font-bold text-primary-light">Hoy solo {formatPrice(payments.codAdvance)} · el resto en efectivo</span>
+                </span>
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold-gradient text-lg text-ink transition-transform group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
             </div>
           )}
         </div>
@@ -94,11 +121,6 @@ export default function PaymentMethods() {
           </div>
         </div>
 
-        <div className="mt-10 text-center">
-          <Link href="/catalogo" className="btn-primary btn-shine">
-            Elegir mis zapatos →
-          </Link>
-        </div>
       </div>
     </section>
   );
