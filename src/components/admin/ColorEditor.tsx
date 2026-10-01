@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { swatchBackground } from '@/components/ColorSwatch';
+import { PATTERNS, swatchBackground } from '@/components/ColorSwatch';
+import type { ColorPattern } from '@/lib/types';
 import { colorName } from '@/lib/colorDetect';
 import { classNames } from '@/lib/utils';
 
@@ -12,7 +13,49 @@ export interface ColorValue {
   hex2?: string;
   // Color del logo / detalles (opcional).
   hex3?: string;
+  // Estampado (animal print, camuflaje, multicolor...).
+  pattern?: ColorPattern;
+  // Foto asociada (para la muestra con foto). Se conserva tal cual.
+  image?: string;
 }
+
+// Qué tonos usa cada estampado.
+const PATTERN_PARTS: Record<ColorPattern, { hex2?: string; hex3?: string }> = {
+  leopardo: { hex2: 'Manchas', hex3: 'Centro de manchas' },
+  cebra: { hex2: 'Franjas' },
+  vaca: { hex2: 'Manchas' },
+  serpiente: { hex2: 'Escamas' },
+  camuflaje: { hex2: 'Manchas', hex3: 'Manchas claras' },
+  multicolor: { hex2: 'Color 2', hex3: 'Color 3' },
+  degradado: { hex2: 'Color final' },
+  foto: {},
+};
+
+function patternName(pattern: ColorPattern, hex: string, hex2?: string): string {
+  switch (pattern) {
+    case 'leopardo':
+      return 'Animal print leopardo';
+    case 'cebra':
+      return 'Animal print cebra';
+    case 'vaca':
+      return 'Animal print vaca';
+    case 'serpiente':
+      return 'Animal print pitón';
+    case 'camuflaje':
+      return 'Camuflaje';
+    case 'multicolor':
+      return 'Multicolor';
+    case 'degradado':
+      return `Degradado ${toneName(hex).toLowerCase()} / ${toneName(hex2 ?? hex).toLowerCase()}`;
+    default:
+      return 'Estampado';
+  }
+}
+
+// Silueta de zapatilla (para rellenar con el estampado en la vista previa).
+const SNEAKER_MASK = `url("data:image/svg+xml,${encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100"><path d="M16 70 L20 48 Q23 36 40 35 Q46 26 60 26 L66 33 Q82 20 102 23 L118 29 Q150 40 175 52 Q192 59 190 71 L192 70 L192 76 Q192 86 178 86 L24 86 Q10 86 10 76 L10 70 Z" fill="black"/></svg>',
+)}")`;
 
 // Paleta de colores de zapatos (capellada y suela) con su nombre comercial.
 export const SHOE_PALETTE: { name: string; hex: string }[] = [
@@ -22,6 +65,7 @@ export const SHOE_PALETTE: { name: string; hex: string }[] = [
   { name: 'Crema', hex: '#EFE3C8' },
   { name: 'Beige', hex: '#D9C7A7' },
   { name: 'Arena', hex: '#C8B08A' },
+  { name: 'Miel', hex: '#D9B77E' },
   { name: 'Gris claro', hex: '#D1D5DB' },
   { name: 'Gris', hex: '#9CA3AF' },
   { name: 'Plomo', hex: '#4B5563' },
@@ -64,7 +108,8 @@ function isDark(hex: string): boolean {
   return 0.299 * r + 0.587 * g + 0.114 * b < 140;
 }
 
-function suggestedName(hex: string, hex2?: string, hex3?: string): string {
+function suggestedName(hex: string, hex2?: string, hex3?: string, pattern?: ColorPattern): string {
+  if (pattern) return patternName(pattern, hex, hex2);
   const a = toneName(hex);
   const b = hex2 ? toneName(hex2) : a;
   const base = a === b ? a : `${a} / ${b}`;
@@ -99,7 +144,8 @@ export function SneakerPreview({ hex, hex2, hex3, className }: { hex: string; he
 }
 
 // Descripción corta de los tonos de un color.
-export function toneSummary(c: { hex2?: string; hex3?: string }): string {
+export function toneSummary(c: { hex2?: string; hex3?: string; pattern?: ColorPattern }): string {
+  if (c.pattern) return c.pattern === 'foto' ? 'Muestra con foto' : `Estampado · ${PATTERNS.find((p) => p.key === c.pattern)?.label ?? ''}`;
   if (c.hex2 && c.hex3) return 'Capellada, suela y logo';
   if (c.hex3) return 'Un tono + logo';
   return c.hex2 ? 'Dos tonos · capellada / suela' : 'Un tono';
@@ -116,7 +162,7 @@ export function ColorChipButton({ value, onClick, size = 'md' }: { value: ColorV
         'group relative shrink-0 rounded-full ring-2 ring-white shadow-[0_0_0_1px_rgba(0,0,0,0.15)] transition-transform hover:scale-110',
         size === 'sm' ? 'h-7 w-7' : 'h-10 w-10',
       )}
-      style={{ background: swatchBackground(value.hex, value.hex2, value.hex3) }}
+      style={{ background: swatchBackground(value.hex, value.hex2, value.hex3, { pattern: value.pattern, image: value.image }) }}
     >
       <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-ink text-[8px] text-white opacity-90 group-hover:opacity-100">
         ✎
@@ -134,6 +180,7 @@ export default function ColorEditor({
   open,
   value,
   title = 'Editar color',
+  image,
   onClose,
   onSave,
   onRemove,
@@ -141,6 +188,8 @@ export default function ColorEditor({
   open: boolean;
   value: ColorValue;
   title?: string;
+  // Foto del zapato de este color (habilita "Usar la foto" como muestra).
+  image?: string;
   onClose: () => void;
   onSave: (value: ColorValue) => void;
   onRemove?: () => void;
@@ -149,6 +198,7 @@ export default function ColorEditor({
   const [hex2, setHex2] = useState<string | undefined>(value.hex2);
   const [hex3, setHex3] = useState<string | undefined>(value.hex3);
   const [part, setPart] = useState<'upper' | 'sole' | 'logo'>('upper');
+  const [pattern, setPattern] = useState<ColorPattern | undefined>(value.pattern);
   const [name, setName] = useState(value.name);
   const [nameTouched, setNameTouched] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -159,10 +209,11 @@ export default function ColorEditor({
     setHex(value.hex);
     setHex2(value.hex2);
     setHex3(value.hex3);
+    setPattern(value.pattern);
     setName(value.name);
     setPart('upper');
     // Si el nombre actual es el sugerido, lo seguimos actualizando solo.
-    setNameTouched(value.name.trim() !== '' && value.name !== suggestedName(value.hex, value.hex2, value.hex3));
+    setNameTouched(value.name.trim() !== '' && value.name !== suggestedName(value.hex, value.hex2, value.hex3, value.pattern));
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -174,7 +225,25 @@ export default function ColorEditor({
 
   const twoTone = hex2 !== undefined;
   const hasLogo = hex3 !== undefined;
-  const effectiveName = nameTouched ? name : suggestedName(hex, hex2, hex3);
+  const effectiveName = nameTouched ? name : suggestedName(hex, hex2, hex3, pattern);
+  const previewImage = image ?? value.image;
+
+  function choosePattern(next: ColorPattern | undefined) {
+    if (next === pattern) return;
+    if (!next) {
+      setPattern(undefined);
+      setHex2(undefined);
+      setHex3(undefined);
+      setPart('upper');
+      return;
+    }
+    const preset = PATTERNS.find((p) => p.key === next)!.defaults;
+    setPattern(next);
+    setHex(preset.hex);
+    setHex2(PATTERN_PARTS[next].hex2 ? preset.hex2 : undefined);
+    setHex3(PATTERN_PARTS[next].hex3 ? preset.hex3 : undefined);
+    setPart('upper');
+  }
 
   function pick(color: string) {
     if (part === 'sole' && twoTone) setHex2(color);
@@ -203,12 +272,22 @@ export default function ColorEditor({
   }
 
   const activeHex = part === 'sole' && twoTone ? hex2! : part === 'logo' && hasLogo ? hex3! : hex;
-  const parts = [
-    { key: 'upper' as const, label: 'Capellada', color: hex },
-    ...(twoTone ? [{ key: 'sole' as const, label: 'Suela', color: hex2! }] : []),
-    ...(hasLogo ? [{ key: 'logo' as const, label: 'Logo / detalles', color: hex3! }] : []),
-  ];
-  const partLabel = part === 'sole' && twoTone ? 'de la suela' : part === 'logo' && hasLogo ? 'del logo / detalles' : 'de la capellada';
+  const patternParts = pattern ? PATTERN_PARTS[pattern] : null;
+  const parts = patternParts
+    ? pattern === 'foto'
+      ? []
+      : [
+          { key: 'upper' as const, label: pattern === 'multicolor' ? 'Color 1' : pattern === 'degradado' ? 'Color inicial' : 'Fondo', color: hex },
+          ...(patternParts.hex2 && hex2 ? [{ key: 'sole' as const, label: patternParts.hex2, color: hex2 }] : []),
+          ...(patternParts.hex3 && hex3 ? [{ key: 'logo' as const, label: patternParts.hex3, color: hex3 }] : []),
+        ]
+    : [
+        { key: 'upper' as const, label: 'Capellada', color: hex },
+        ...(twoTone ? [{ key: 'sole' as const, label: 'Suela', color: hex2! }] : []),
+        ...(hasLogo ? [{ key: 'logo' as const, label: 'Logo / detalles', color: hex3! }] : []),
+      ];
+  const partLabel = (parts.find((p) => p.key === part)?.label ?? parts[0]?.label ?? '').toLowerCase();
+  const background = swatchBackground(hex, hex2, hex3, { pattern, image: previewImage });
 
   if (!open || !mounted) return null;
 
@@ -233,7 +312,26 @@ export default function ColorEditor({
 
         {/* Vista previa */}
         <div className="mt-4 rounded-2xl bg-[radial-gradient(ellipse_at_50%_0%,#2a2a2a,#0a0a0a_70%)] p-4 text-white">
-          <SneakerPreview hex={hex} hex2={hex2} hex3={hex3} className="mx-auto h-28 w-full max-w-[260px]" />
+          {pattern ? (
+            <div className="relative mx-auto h-28 w-full max-w-[260px]">
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: pattern === 'foto' ? background : background.replace(/22px 22px|9px 8px/, (m) => (m === '9px 8px' ? '12px 11px' : '34px 34px')),
+                  WebkitMaskImage: SNEAKER_MASK,
+                  maskImage: SNEAKER_MASK,
+                  WebkitMaskSize: 'contain',
+                  maskSize: 'contain',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskPosition: 'center',
+                  maskPosition: 'center',
+                }}
+              />
+            </div>
+          ) : (
+            <SneakerPreview hex={hex} hex2={hex2} hex3={hex3} className="mx-auto h-28 w-full max-w-[260px]" />
+          )}
           <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px]">
             {parts.map((p) => (
               <span key={p.key} className="flex items-center gap-1.5">
@@ -241,27 +339,24 @@ export default function ColorEditor({
                 {p.label}: <strong>{toneName(p.color)}</strong>
               </span>
             ))}
-            <span
-              className="ml-1 h-5 w-5 rounded-full ring-2 ring-white/20"
-              style={{ background: swatchBackground(hex, hex2, hex3) }}
-              title="Así se ve la muestra en la tienda"
-            />
+            {pattern === 'foto' && <span className="text-white/70">La muestra usa un acercamiento de la foto del zapato</span>}
+            <span className="ml-1 h-6 w-6 rounded-full ring-2 ring-white/20" style={{ background }} title="Así se ve la muestra en la tienda" />
           </div>
         </div>
 
-        {/* Un color / dos colores */}
+        {/* Liso / estampado */}
         <div className="mt-4 grid grid-cols-2 gap-1 rounded-full bg-cream-alt p-1">
           {[
-            { on: false, label: 'Un color' },
-            { on: true, label: 'Dos colores' },
+            { on: false, label: 'Liso' },
+            { on: true, label: 'Estampado' },
           ].map((o) => (
             <button
               key={o.label}
               type="button"
-              onClick={() => setTwoTone(o.on)}
+              onClick={() => choosePattern(o.on ? pattern ?? 'leopardo' : undefined)}
               className={classNames(
                 'rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition-colors',
-                twoTone === o.on ? 'bg-ink text-white shadow-dark' : 'text-muted',
+                !!pattern === o.on ? 'bg-ink text-white shadow-dark' : 'text-muted',
               )}
             >
               {o.label}
@@ -269,20 +364,73 @@ export default function ColorEditor({
           ))}
         </div>
 
-        {/* Logo / detalles */}
-        <button
-          type="button"
-          onClick={() => setLogo(!hasLogo)}
-          className={classNames(
-            'mt-2 flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold ring-1 transition-colors',
-            hasLogo ? 'bg-gold-50 text-ink ring-primary/50' : 'bg-white text-muted ring-border hover:text-ink',
-          )}
-        >
-          <span>🏷️ Color del logo / detalles (franjas, costuras, talón)</span>
-          <span className={classNames('relative h-5 w-9 shrink-0 rounded-full transition-colors', hasLogo ? 'bg-primary' : 'bg-border')}>
-            <span className={classNames('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all', hasLogo ? 'left-[18px]' : 'left-0.5')} />
-          </span>
-        </button>
+        {pattern ? (
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {PATTERNS.map((p) => {
+              const disabled = p.key === 'foto' && !previewImage;
+              const d = p.defaults;
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  disabled={disabled}
+                  onClick={() => choosePattern(p.key)}
+                  title={disabled ? 'Primero asigna una foto a este color' : p.label}
+                  className={classNames(
+                    'flex flex-col items-center gap-1.5 rounded-xl p-2 text-center text-[10px] font-bold leading-tight ring-2 transition-colors disabled:opacity-40',
+                    pattern === p.key ? 'bg-gold-50 text-ink ring-primary' : 'bg-white text-muted ring-border',
+                  )}
+                >
+                  <span
+                    className="h-9 w-9 rounded-full shadow-[0_0_0_1px_rgba(0,0,0,0.15)]"
+                    style={{
+                      background:
+                        pattern === p.key ? background : swatchBackground(d.hex, d.hex2, d.hex3, { pattern: p.key, image: previewImage }),
+                    }}
+                  />
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            {/* Un color / dos colores */}
+            <div className="mt-3 grid grid-cols-2 gap-1 rounded-full bg-cream-alt p-1">
+              {[
+                { on: false, label: 'Un color' },
+                { on: true, label: 'Dos colores' },
+              ].map((o) => (
+                <button
+                  key={o.label}
+                  type="button"
+                  onClick={() => setTwoTone(o.on)}
+                  className={classNames(
+                    'rounded-full py-2 text-xs font-extrabold uppercase tracking-wider transition-colors',
+                    twoTone === o.on ? 'bg-ink text-white shadow-dark' : 'text-muted',
+                  )}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Logo / detalles */}
+            <button
+              type="button"
+              onClick={() => setLogo(!hasLogo)}
+              className={classNames(
+                'mt-2 flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold ring-1 transition-colors',
+                hasLogo ? 'bg-gold-50 text-ink ring-primary/50' : 'bg-white text-muted ring-border hover:text-ink',
+              )}
+            >
+              <span>🏷️ Color del logo / detalles (franjas, costuras, talón)</span>
+              <span className={classNames('relative h-5 w-9 shrink-0 rounded-full transition-colors', hasLogo ? 'bg-primary' : 'bg-border')}>
+                <span className={classNames('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all', hasLogo ? 'left-[18px]' : 'left-0.5')} />
+              </span>
+            </button>
+          </>
+        )}
 
         {parts.length > 1 && (
           <div className={classNames('mt-3 grid gap-2', parts.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
@@ -304,8 +452,10 @@ export default function ColorEditor({
         )}
 
         {/* Paleta */}
+        {pattern !== 'foto' && (
+        <>
         <p className="mb-2 mt-4 text-[10px] font-extrabold uppercase tracking-wider text-muted">
-          {parts.length > 1 ? `Elige el color ${partLabel}` : 'Elige el color'}
+          {parts.length > 1 ? `Elige el color: ${partLabel}` : 'Elige el color'}
         </p>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
           {SHOE_PALETTE.map((c) => {
@@ -336,6 +486,8 @@ export default function ColorEditor({
           <input type="color" value={activeHex} onChange={(e) => pick(e.target.value.toUpperCase())} className="h-8 w-10 cursor-pointer rounded-md border border-border" />
           🎨 Otro tono exacto (personalizado)
         </label>
+        </>
+        )}
 
         {/* Nombre */}
         <label className="mt-4 block">
@@ -374,11 +526,18 @@ export default function ColorEditor({
           <button
             type="button"
             onClick={() => {
-              const finalName = effectiveName.trim() || suggestedName(hex, hex2, hex3);
+              const finalName = effectiveName.trim() || suggestedName(hex, hex2, hex3, pattern);
               // Solo se guardan los tonos usados (Firestore no acepta undefined).
               const result: ColorValue = { name: finalName, hex };
-              if (twoTone && hex2 && hex2.toLowerCase() !== hex.toLowerCase()) result.hex2 = hex2;
-              if (hasLogo && hex3) result.hex3 = hex3;
+              if (pattern) {
+                result.pattern = pattern;
+                if (PATTERN_PARTS[pattern].hex2 && hex2) result.hex2 = hex2;
+                if (PATTERN_PARTS[pattern].hex3 && hex3) result.hex3 = hex3;
+              } else {
+                if (twoTone && hex2 && hex2.toLowerCase() !== hex.toLowerCase()) result.hex2 = hex2;
+                if (hasLogo && hex3) result.hex3 = hex3;
+              }
+              if (value.image) result.image = value.image;
               onSave(result);
               onClose();
             }}

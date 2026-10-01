@@ -334,7 +334,7 @@ export default function QuickDraftCard({
                       <img src={p.preview} alt="" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
                       {c ? (
                         <>
-                          <ColorChipButton value={c} onClick={() => setEditingColor({ kind: 'photo', pid })} />
+                          <ColorChipButton value={{ ...c, image: p.preview }} onClick={() => setEditingColor({ kind: 'photo', pid })} />
                           <button type="button" onClick={() => setEditingColor({ kind: 'photo', pid })} className="min-w-0 flex-1 truncate text-left text-sm font-bold text-ink">
                             {c.name}
                             <span className="block text-[10px] font-semibold text-muted">{toneSummary(c)}</span>
@@ -365,6 +365,13 @@ export default function QuickDraftCard({
             open={editingColor !== null}
             value={editorValue}
             title={editingColor?.kind === 'new' ? 'Nuevo color' : 'Editar color'}
+            image={
+              editingColor?.kind === 'photo'
+                ? photo(editingColor.pid)?.preview
+                : editingColor?.kind === 'pub'
+                  ? (d.colors ?? [])[editingColor.index]?.image
+                  : d.images?.[0]
+            }
             onClose={() => setEditingColor(null)}
             onSave={(v) => {
               if (!editingColor) return;

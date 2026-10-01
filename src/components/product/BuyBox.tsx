@@ -159,10 +159,10 @@ export default function BuyBox({
                   {thumb ? (
                     <>
                       <SafeImage src={thumb} alt={c.name} fill sizes="64px" className="object-cover" />
-                      <ColorSwatch hex={c.hex} hex2={c.hex2} hex3={c.hex3} className="absolute bottom-1 right-1 h-4 w-4 ring-2 ring-white" />
+                      <ColorSwatch hex={c.hex} hex2={c.hex2} hex3={c.hex3} pattern={c.pattern} image={c.image} className="absolute bottom-1 right-1 h-4 w-4 ring-2 ring-white" />
                     </>
                   ) : (
-                    <span className="absolute inset-1 rounded-full" style={{ background: swatchBackground(c.hex, c.hex2, c.hex3) }} />
+                    <span className="absolute inset-1 rounded-full" style={{ background: swatchBackground(c.hex, c.hex2, c.hex3, { pattern: c.pattern, image: c.image }) }} />
                   )}
                 </button>
               );

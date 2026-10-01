@@ -1,3 +1,7 @@
+// Estampado del color (animal print, camuflaje, mezcla...). "foto" usa un
+// acercamiento de la foto del zapato como muestra.
+export type ColorPattern = 'leopardo' | 'cebra' | 'vaca' | 'serpiente' | 'camuflaje' | 'multicolor' | 'degradado' | 'foto';
+
 export interface ProductColor {
   name: string;
   // Color principal (capellada) y, opcionales, el color de la suela (dos
@@ -5,6 +9,7 @@ export interface ProductColor {
   hex: string;
   hex2?: string;
   hex3?: string;
+  pattern?: ColorPattern;
   image?: string;
 }
 

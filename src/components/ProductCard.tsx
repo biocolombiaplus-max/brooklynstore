@@ -97,7 +97,7 @@ export default function ProductCard({ product, priority = false }: { product: Pr
         {product.colors.length > 1 && (
           <div className="mt-1.5 flex items-center gap-1">
             {product.colors.slice(0, 4).map((c) => (
-              <ColorSwatch key={c.name} hex={c.hex} hex2={c.hex2} hex3={c.hex3} title={c.name} className="h-3.5 w-3.5" />
+              <ColorSwatch key={c.name} hex={c.hex} hex2={c.hex2} hex3={c.hex3} pattern={c.pattern} image={c.image} title={c.name} className="h-3.5 w-3.5" />
             ))}
             {product.colors.length > 4 && <span className="text-[10px] font-bold text-muted">+{product.colors.length - 4}</span>}
             <span className="ml-1 text-[10px] font-semibold text-muted">{product.colors.length} colores</span>

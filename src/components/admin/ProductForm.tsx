@@ -126,12 +126,21 @@ export default function ProductForm({ product }: { product?: Product }) {
       if (colorEditing === 'new') {
         const exists = prev.some((x) => x.name.toLowerCase() === v.name.toLowerCase());
         return exists
-          ? prev.map((x) => (x.name.toLowerCase() === v.name.toLowerCase() ? stripHex2({ ...x, hex: v.hex, hex2: v.hex2, hex3: v.hex3 }) : x))
-          : [...prev, stripHex2({ ...v })];
+          ? prev.map((x) => (x.name.toLowerCase() === v.name.toLowerCase() ? stripHex2({ ...x, hex: v.hex, hex2: v.hex2, hex3: v.hex3, pattern: v.pattern, image: x.image || (v.pattern === 'foto' ? images[0] : x.image) }) : x))
+          : [...prev, stripHex2({ ...v, ...(v.pattern === 'foto' && !v.image && images[0] ? { image: images[0] } : {}) })];
       }
       const clash = prev.some((x) => x.name !== colorEditing && x.name.toLowerCase() === v.name.toLowerCase());
       return prev.map((x) =>
-        x.name === colorEditing ? stripHex2({ ...x, name: clash ? x.name : v.name, hex: v.hex, hex2: v.hex2, hex3: v.hex3 }) : x,
+        x.name === colorEditing ? stripHex2({
+                ...x,
+                name: clash ? x.name : v.name,
+                hex: v.hex,
+                hex2: v.hex2,
+                hex3: v.hex3,
+                pattern: v.pattern,
+                // La muestra con foto necesita una foto: si el color no tiene, usa la principal.
+                image: x.image || (v.pattern === 'foto' ? images[0] : x.image),
+              }) : x,
       );
     });
   }
@@ -494,7 +503,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                   colors.some((x) => x.name === c.name) ? 'border-primary bg-primary-light/20' : 'border-border'
                 }`}
               >
-                <ColorSwatch hex={c.hex} hex2={c.hex2} hex3={c.hex3} className="h-4 w-4" />
+                <ColorSwatch hex={c.hex} hex2={c.hex2} hex3={c.hex3} pattern={c.pattern} image={c.image} className="h-4 w-4" />
                 {c.name}
               </button>
             ))}
@@ -507,7 +516,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                   onClick={() => removeColor(c.name)}
                   className="flex items-center gap-2 rounded-full border-2 border-primary bg-primary-light/20 px-3 py-1.5 text-xs font-semibold"
                 >
-                  <ColorSwatch hex={c.hex} hex2={c.hex2} hex3={c.hex3} className="h-4 w-4" />
+                  <ColorSwatch hex={c.hex} hex2={c.hex2} hex3={c.hex3} pattern={c.pattern} image={c.image} className="h-4 w-4" />
                   {c.name} <span>✕</span>
                 </button>
               ))}
@@ -540,6 +549,7 @@ export default function ProductForm({ product }: { product?: Product }) {
           <ColorEditor
             open={colorEditing !== null}
             title={colorEditing === 'new' ? 'Nuevo color' : 'Editar color'}
+            image={(colorEditing && colorEditing !== 'new' ? colors.find((c) => c.name === colorEditing)?.image : undefined) || images[0]}
             value={
               colorEditing && colorEditing !== 'new'
                 ? colors.find((c) => c.name === colorEditing) ?? { name: '', hex: '#111111' }

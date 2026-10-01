@@ -8,7 +8,7 @@ import { resizeForUpload } from '@/lib/imageCrop';
 import { createProduct, deleteProduct, updateProduct } from '@/lib/products';
 import { useSiteSettings } from '@/lib/settings-context';
 import { deleteProductImage, uploadProductImage } from '@/lib/storage';
-import type { Gender, ProductColor, ProductInput } from '@/lib/types';
+import type { ColorPattern, Gender, ProductColor, ProductInput } from '@/lib/types';
 import QuickDraftCard, { COLLECTIONS, SIZE_PRESETS, type QuickDraft as Draft, type QuickPhoto as Photo } from '@/components/admin/QuickDraftCard';
 import { classNames, slugify } from '@/lib/utils';
 
@@ -28,14 +28,14 @@ function defaultDescription(d: Draft, colorNames: string[]): string {
 }
 
 // Colores del borrador: uno por color distinto (según el nombre).
-function draftColorList(d: Draft, photo: (id: string) => Photo | undefined): { pid: string; name: string; hex: string; hex2?: string; hex3?: string }[] {
-  const list: { pid: string; name: string; hex: string; hex2?: string; hex3?: string }[] = [];
+function draftColorList(d: Draft, photo: (id: string) => Photo | undefined): { pid: string; name: string; hex: string; hex2?: string; hex3?: string; pattern?: ColorPattern }[] {
+  const list: { pid: string; name: string; hex: string; hex2?: string; hex3?: string; pattern?: ColorPattern }[] = [];
   for (const pid of d.photoIds) {
     const detected = photo(pid)?.color ?? null;
     const c = pid in d.colorEdits ? d.colorEdits[pid] : detected;
     if (!c) continue;
     const name = c.name.trim() || 'Color';
-    if (!list.some((x) => x.name.toLowerCase() === name.toLowerCase())) list.push({ pid, name, hex: c.hex, hex2: c.hex2, hex3: (c as { hex3?: string }).hex3 });
+    if (!list.some((x) => x.name.toLowerCase() === name.toLowerCase())) list.push({ pid, name, hex: c.hex, hex2: c.hex2, hex3: (c as { hex3?: string }).hex3, pattern: (c as { pattern?: ColorPattern }).pattern });
   }
   return list;
 }
@@ -228,6 +228,7 @@ export default function CargaRapidaPage() {
         const color: ProductColor = { name: c.name, hex: c.hex, image: urlByPhoto[c.pid] };
         if (c.hex2 && c.hex2.toLowerCase() !== c.hex.toLowerCase()) color.hex2 = c.hex2;
         if (c.hex3) color.hex3 = c.hex3;
+        if (c.pattern) color.pattern = c.pattern;
         return color;
       });
 
