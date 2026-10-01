@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { suggestLine } from '@/lib/brand';
 import { useState } from 'react';
 import ColorEditor, { ColorChipButton, toneSummary, type ColorValue } from '@/components/admin/ColorEditor';
 import type { Gender, ProductColor } from '@/lib/types';
@@ -18,6 +19,8 @@ export interface QuickDraft {
   photoIds: string[];
   title: string;
   brand: string;
+  // Colección dentro de la marca (vacía = se deduce del nombre).
+  line: string;
   gender: Gender;
   collection: string;
   price: string;
@@ -273,6 +276,16 @@ export default function QuickDraftCard({
                   </option>
                 ))}
               </select>
+            </label>
+            <label className="col-span-2">
+              <Label>Colección de la marca</Label>
+              <input
+                value={d.line}
+                onChange={(e) => onChange({ line: e.target.value })}
+                placeholder={suggestLine(d.title, d.brand) ? `Automática: ${suggestLine(d.title, d.brand)}` : 'Se crea sola a partir del nombre'}
+                className="input"
+                disabled={saving}
+              />
             </label>
           </div>
 

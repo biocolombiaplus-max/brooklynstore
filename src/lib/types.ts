@@ -49,6 +49,9 @@ export interface Product {
   slug: string;
   title: string;
   brand: string;
+  // Colección / línea dentro de la marca (ej: "Air Force", "Cloud", "Samba").
+  // Si está vacía se deduce del nombre del modelo.
+  line?: string;
   gender: Gender;
   description: string;
   price: number;

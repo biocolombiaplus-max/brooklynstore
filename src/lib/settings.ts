@@ -301,3 +301,13 @@ export async function updateSiteSettings(settings: SiteSettings): Promise<void> 
   const ref = doc(db, DOC_PATH.collection, DOC_PATH.id);
   await setDoc(ref, settings, { merge: true });
 }
+
+// Agrega una marca nueva a la lista de la tienda (menú, cinta de marcas y
+// filtros) la primera vez que se guarda un producto con ella.
+export async function registerBrand(brand: string): Promise<void> {
+  const name = brand.trim();
+  if (!name || !db) return;
+  const current = await getSiteSettings();
+  if (current.brands.some((b) => b.trim().toLowerCase() === name.toLowerCase())) return;
+  await setDoc(doc(db, DOC_PATH.collection, DOC_PATH.id), { brands: [...current.brands, name] }, { merge: true });
+}

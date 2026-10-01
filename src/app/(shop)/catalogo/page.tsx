@@ -11,7 +11,7 @@ import ProductGrid, { ProductGridSkeleton } from '@/components/ProductGrid';
 import { discountPercentOf } from '@/components/ProductCard';
 import { CloseIcon } from '@/components/icons';
 import SafeImage from '@/components/SafeImage';
-import { brandTagline, isStarBrand } from '@/lib/brand';
+import { brandTagline, isStarBrand, productLine } from '@/lib/brand';
 import ShoeStage from '@/components/brand/ShoeStage';
 import StarSeal from '@/components/brand/StarSeal';
 
@@ -85,6 +85,7 @@ function CatalogoContent() {
   // "Nike", "Ofertas"...) llegan ya filtrados y se pueden compartir.
   const gender = searchParams.get('genero') ?? '';
   const brand = searchParams.get('marca') ?? '';
+  const line = searchParams.get('linea') ?? '';
   const style = searchParams.get('estilo') ?? searchParams.get('collection') ?? '';
   const size = searchParams.get('talla') ?? '';
   const price = searchParams.get('precio') ?? '';
@@ -97,6 +98,8 @@ function CatalogoContent() {
     if (value) params.set(key, value);
     else params.delete(key);
     if (key === 'estilo') params.delete('collection');
+    // Cada marca tiene sus propias colecciones.
+    if (key === 'marca') params.delete('linea');
     router.replace(`${pathname}${params.toString() ? `?${params}` : ''}`, { scroll: false });
   }
 
@@ -144,11 +147,28 @@ function CatalogoContent() {
     [products],
   );
 
+  // Colecciones de la marca elegida, creadas solas a partir de sus modelos
+  // (campo "Colección" del producto o, si está vacío, deducida del nombre).
+  const brandLines = useMemo(() => {
+    if (!brand || !products) return [];
+    const counts = new Map<string, number>();
+    for (const p of products) {
+      if (p.brand.trim().toLowerCase() !== brand.trim().toLowerCase()) continue;
+      const l = productLine(p);
+      if (l) counts.set(l, (counts.get(l) ?? 0) + 1);
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+      .map(([name, count]) => ({ name, count }));
+  }, [products, brand]);
+  const brandTotal = brandLines.reduce((n, l) => n + l.count, 0);
+
   const filtered = useMemo(() => {
     if (!products) return [];
     let list = products;
     if (gender) list = list.filter((p) => p.gender === gender || p.gender === 'unisex');
-    if (brand) list = list.filter((p) => p.brand.toLowerCase() === brand.toLowerCase());
+    if (brand) list = list.filter((p) => p.brand.trim().toLowerCase() === brand.trim().toLowerCase());
+    if (brand && line) list = list.filter((p) => productLine(p).toLowerCase() === line.toLowerCase());
     if (style) list = list.filter((p) => p.collection === style);
     if (size) list = list.filter((p) => p.sizes.includes(size));
     if (onlyOffers) list = list.filter((p) => discountPercentOf(p) > 0);
@@ -161,7 +181,7 @@ function CatalogoContent() {
       list = list.filter((p) => normalize(`${p.brand} ${p.title} ${p.collection}`).includes(needle));
     }
     return sortProducts(list, sort);
-  }, [products, gender, brand, style, size, onlyOffers, price, q, sort]);
+  }, [products, gender, brand, line, style, size, onlyOffers, price, q, sort]);
 
   const activeCount = [gender, brand, style, size, price, onlyOffers ? '1' : '', q].filter(Boolean).length;
   const genderLabel = GENDERS.find((g) => g.value === gender)?.label;
@@ -169,7 +189,7 @@ function CatalogoContent() {
     ? `Resultados para “${q}”`
     : onlyOffers
       ? 'Ofertas 🔥'
-      : brand || (genderLabel ? `Zapatos de ${genderLabel.toLowerCase()}` : 'Todo el catálogo');
+      : (brand && line ? `${brand} ${line}` : brand) || (genderLabel ? `Zapatos de ${genderLabel.toLowerCase()}` : 'Todo el catálogo');
 
   const filtersPanel = (
     <div className="space-y-7">
@@ -347,6 +367,37 @@ function CatalogoContent() {
           </aside>
 
           <div>
+            {brand && brandLines.length > 1 && (
+              <div className="mb-6">
+                <p className="mb-2.5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-muted">Colecciones de {brand}</p>
+                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] lg:mx-0 lg:flex-wrap lg:px-0">
+                  {[{ name: '', count: brandTotal }, ...brandLines].map((l) => {
+                    const active = l.name ? line.toLowerCase() === l.name.toLowerCase() : !line;
+                    return (
+                      <button
+                        key={l.name || 'todas'}
+                        type="button"
+                        onClick={() => setParam('linea', l.name || null)}
+                        className={classNames(
+                          'flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2 text-xs font-extrabold transition-all',
+                          active ? 'bg-ink text-white shadow-dark' : 'bg-white text-ink ring-1 ring-border hover:ring-ink',
+                        )}
+                      >
+                        {l.name ? l.name : `Todo ${brand}`}
+                        <span
+                          className={classNames(
+                            'rounded-full px-1.5 py-0.5 text-[10px]',
+                            active ? 'bg-gold-gradient text-ink' : 'bg-cream-alt text-muted',
+                          )}
+                        >
+                          {l.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <p className="mb-4 text-xs text-muted lg:hidden">{products ? `${filtered.length} modelos` : ''}</p>
             {products === null ? (
               <ProductGridSkeleton count={8} />

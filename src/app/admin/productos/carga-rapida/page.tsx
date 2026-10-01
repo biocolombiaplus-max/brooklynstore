@@ -11,6 +11,8 @@ import { deleteProductImage, uploadProductImage } from '@/lib/storage';
 import type { ColorPattern, Gender, ProductColor, ProductInput } from '@/lib/types';
 import QuickDraftCard, { COLLECTIONS, SIZE_PRESETS, type QuickDraft as Draft, type QuickPhoto as Photo } from '@/components/admin/QuickDraftCard';
 import { classNames, slugify } from '@/lib/utils';
+import { suggestLine } from '@/lib/brand';
+import { registerBrand } from '@/lib/settings';
 
 // Carga rápida: subir muchos productos de una sola vez con las fotos que
 // ya tienes (por ejemplo, las que te llegan por WhatsApp). Eliges las fotos,
@@ -106,6 +108,7 @@ export default function CargaRapidaPage() {
       photoIds,
       title: '',
       brand: defaults.brand,
+      line: '',
       gender: defaults.gender,
       collection: 'urbanos',
       price: defaults.price,
@@ -237,6 +240,7 @@ export default function CargaRapidaPage() {
         slug: base,
         title: draft.title.trim(),
         brand: draft.brand.trim(),
+        line: draft.line.trim() || suggestLine(draft.title, draft.brand),
         gender: draft.gender,
         fit: 'normal',
         isNew: draft.isNew,
@@ -269,6 +273,7 @@ export default function CargaRapidaPage() {
         }
       }
       if (!created) throw lastError;
+      await registerBrand(input.brand).catch(() => {});
       updateDraft(draft.id, {
         status: 'done',
         productId: created.id,
@@ -295,6 +300,7 @@ export default function CargaRapidaPage() {
       await updateProduct(draft.productId, {
         title: draft.title.trim(),
         brand: draft.brand.trim(),
+        line: draft.line.trim() || suggestLine(draft.title, draft.brand),
         gender: draft.gender,
         collection: draft.collection,
         price: Number(draft.price) || payments.defaultPrice,
@@ -307,6 +313,7 @@ export default function CargaRapidaPage() {
         featured: draft.featured,
         active: draft.active,
       });
+      await registerBrand(draft.brand).catch(() => {});
       updateDraft(draft.id, { savingEdit: false, editing: false, note: '✓ Cambios guardados en la tienda.' });
     } catch (err) {
       updateDraft(draft.id, { savingEdit: false, error: err instanceof Error ? err.message : 'No se pudieron guardar los cambios.' });

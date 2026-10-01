@@ -2,11 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FITS, GENDERS, type Fit, type Gender, type Product, type ProductColor, type ProductInput, type ProductReview } from '@/lib/types';
 import { useSiteSettings } from '@/lib/settings-context';
 import { slugify } from '@/lib/utils';
-import { createProduct, updateProduct, deleteProduct } from '@/lib/products';
+import { createProduct, updateProduct, deleteProduct, getAllProducts } from '@/lib/products';
+import { registerBrand } from '@/lib/settings';
+import { suggestLine } from '@/lib/brand';
 import { uploadProductImage, deleteProductImage, type ImageCropMode } from '@/lib/storage';
 import { resizeForUpload } from '@/lib/imageCrop';
 import { detectShoeColors, type DetectedColor } from '@/lib/colorDetect';
@@ -60,6 +62,23 @@ export default function ProductForm({ product }: { product?: Product }) {
   const [compareAtPrice, setCompareAtPrice] = useState(product?.compareAtPrice?.toString() ?? '');
   const [collectionName, setCollectionName] = useState(product?.collection ?? 'urbanos');
   const [brand, setBrand] = useState(product?.brand ?? '');
+  const [line, setLine] = useState(product?.line ?? '');
+  // Colecciones que ya existen por marca (de los demás productos), para sugerirlas.
+  const [linesByBrand, setLinesByBrand] = useState<Record<string, string[]>>({});
+  useEffect(() => {
+    getAllProducts()
+      .then((all) => {
+        const map: Record<string, Set<string>> = {};
+        for (const p of all) {
+          const key = p.brand.trim().toLowerCase();
+          const l = (p.line && p.line.trim()) || suggestLine(p.title, p.brand);
+          if (!key || !l) continue;
+          (map[key] ??= new Set()).add(l);
+        }
+        setLinesByBrand(Object.fromEntries(Object.entries(map).map(([k, v]) => [k, Array.from(v).sort()])));
+      })
+      .catch(() => {});
+  }, []);
   const [gender, setGender] = useState<Gender>(product?.gender ?? 'unisex');
   const [fit, setFit] = useState<Fit>(product?.fit ?? 'normal');
   const [isNew, setIsNew] = useState(product?.isNew ?? false);
@@ -226,6 +245,7 @@ export default function ProductForm({ product }: { product?: Product }) {
       slug,
       title,
       brand: brand.trim(),
+      line: line.trim() || suggestLine(title, brand),
       gender,
       fit,
       isNew,
@@ -251,6 +271,8 @@ export default function ProductForm({ product }: { product?: Product }) {
       } else {
         await createProduct(input);
       }
+      // Una marca nueva aparece sola en el menú, la cinta de marcas y los filtros.
+      await registerBrand(input.brand).catch(() => {});
       router.push('/admin/productos');
       router.refresh();
     } catch (err) {
@@ -319,6 +341,43 @@ export default function ProductForm({ product }: { product?: Product }) {
                   <option key={b} value={b} />
                 ))}
               </datalist>
+            </div>
+            <div className="sm:col-span-3 sm:order-last">
+              <label className="mb-1 block text-sm font-semibold text-ink">
+                Colección de la marca <span className="font-normal text-muted">(ej: Air Force, Cloud, Samba)</span>
+              </label>
+              <input
+                value={line}
+                onChange={(e) => setLine(e.target.value)}
+                className="w-full rounded-lg border border-border px-4 py-2.5 focus:border-primary focus:outline-none"
+                placeholder={suggestLine(title, brand) ? `Automática: ${suggestLine(title, brand)}` : 'Se crea sola a partir del nombre'}
+              />
+              {(() => {
+                const existing = linesByBrand[brand.trim().toLowerCase()] ?? [];
+                const suggested = suggestLine(title, brand);
+                const options = Array.from(new Set([...(suggested ? [suggested] : []), ...existing]));
+                return options.length > 0 ? (
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {options.map((o) => (
+                      <button
+                        key={o}
+                        type="button"
+                        onClick={() => setLine(o)}
+                        className={`rounded-full px-3 py-1 text-xs font-bold ring-1 transition-colors ${
+                          (line.trim() || suggested).toLowerCase() === o.toLowerCase()
+                            ? 'bg-ink text-white ring-ink'
+                            : 'bg-white text-ink ring-border hover:ring-ink'
+                        }`}
+                      >
+                        {o}
+                      </button>
+                    ))}
+                  </div>
+                ) : null;
+              })()}
+              <p className="mt-1.5 text-xs text-muted">
+                Cuando el cliente elige la marca en la tienda, ve sus colecciones para filtrar (se crean solas). Déjalo vacío y la tomamos del nombre.
+              </p>
             </div>
             <div>
               <label className="mb-1 block text-sm font-semibold text-ink">Para</label>
@@ -756,18 +815,27 @@ export default function ProductForm({ product }: { product?: Product }) {
 
         <div className="rounded-card bg-white p-6 shadow-soft">
           <h2 className="mb-4 font-heading text-lg font-bold text-ink">Organización</h2>
-          <label className="mb-1 block text-sm font-semibold text-ink">Estilo / colección</label>
-          <input
-            list="collections"
-            value={collectionName}
-            onChange={(e) => setCollectionName(e.target.value)}
-            className="mb-4 w-full rounded-lg border border-border px-4 py-2.5 focus:border-primary focus:outline-none"
-          />
-          <datalist id="collections">
-            {COMMON_COLLECTIONS.map((c) => (
-              <option key={c} value={c} />
+          <label className="mb-2 block text-sm font-semibold text-ink">Estilo</label>
+          <div className="mb-2 flex flex-wrap gap-1.5">
+            {Array.from(new Set([...COMMON_COLLECTIONS, collectionName].filter(Boolean))).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setCollectionName(c)}
+                className={`rounded-full px-3 py-1.5 text-xs font-bold capitalize ring-1 transition-colors ${
+                  collectionName === c ? 'bg-ink text-white ring-ink' : 'bg-white text-ink ring-border hover:ring-ink'
+                }`}
+              >
+                {c}
+              </button>
             ))}
-          </datalist>
+          </div>
+          <input
+            value={collectionName}
+            onChange={(e) => setCollectionName(e.target.value.toLowerCase())}
+            className="mb-4 w-full rounded-lg border border-border px-4 py-2 text-sm focus:border-primary focus:outline-none"
+            placeholder="u otro estilo (ej: casual)"
+          />
 
           <label className="mb-2 flex items-center gap-2 text-sm font-semibold text-ink">
             <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
