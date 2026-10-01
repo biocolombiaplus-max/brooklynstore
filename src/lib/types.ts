@@ -10,6 +10,8 @@ export interface ProductColor {
   hex2?: string;
   hex3?: string;
   pattern?: ColorPattern;
+  // Estampado solo del logo / detalles (con hex3 como color base).
+  logoPattern?: ColorPattern;
   image?: string;
 }
 

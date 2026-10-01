@@ -13,7 +13,35 @@ export const PATTERNS: { key: ColorPattern; label: string; icon: string; default
   { key: 'foto', label: 'Usar la foto', icon: '📷', defaults: { hex: '#D1D5DB', hex2: '#9CA3AF' } },
 ];
 
-const svgUrl = (svg: string) => `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
+const svgUrl = (svg: string) => `data:image/svg+xml,${encodeURIComponent(svg)}`;
+
+// Estampados que se pueden usar solo en el logo / detalles.
+export const LOGO_PATTERNS = PATTERNS.filter((p) => p.key !== 'foto');
+
+/**
+ * Imagen (data URI) de un estampado: dibujo repetible para animal print y
+ * camuflaje; muestra completa para multicolor y degradado.
+ */
+export function patternDataUri(pattern: ColorPattern, hex: string, hex2: string, hex3: string): string | null {
+  if (pattern === 'multicolor') {
+    const colors = [hex, hex2, hex3, '#15803D', '#DC2626'];
+    const slices = colors
+      .map((c, i) => {
+        const a0 = (i / colors.length) * Math.PI * 2;
+        const a1 = ((i + 1) / colors.length) * Math.PI * 2;
+        const p = (a: number) => `${(20 + 30 * Math.sin(a)).toFixed(2)} ${(20 - 30 * Math.cos(a)).toFixed(2)}`;
+        return `<path d="M20 20 L${p(a0)} A30 30 0 0 1 ${p(a1)} Z" fill="${c}"/>`;
+      })
+      .join('');
+    return svgUrl(`<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40">${slices}</svg>`);
+  }
+  if (pattern === 'degradado') {
+    return svgUrl(
+      `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${hex}"/><stop offset="1" stop-color="${hex2}"/></linearGradient></defs><rect width="40" height="40" fill="url(#g)"/></svg>`,
+    );
+  }
+  return patternTile(pattern, hex, hex2, hex3);
+}
 
 // Dibujo repetible (SVG) de cada estampado animal / camuflaje.
 function patternTile(pattern: ColorPattern, hex: string, hex2: string, hex3: string): string | null {
@@ -73,7 +101,7 @@ export function swatchBackground(
   hex: string,
   hex2?: string,
   hex3?: string,
-  extra?: { pattern?: ColorPattern; image?: string },
+  extra?: { pattern?: ColorPattern; image?: string; logoPattern?: ColorPattern },
 ): string {
   const pattern = extra?.pattern;
   if (pattern === 'foto' && extra?.image) return `url("${extra.image}") 50% 55% / 260% auto no-repeat, ${hex}`;
@@ -84,15 +112,40 @@ export function swatchBackground(
   if (pattern === 'degradado') return `linear-gradient(135deg, ${hex}, ${hex2 ?? '#FFFFFF'})`;
   if (pattern && pattern !== 'foto') {
     const tile = patternTile(pattern, hex, hex2 ?? '#111111', hex3 ?? hex2 ?? '#111111');
-    if (tile) return `${tile} 0 0 / ${pattern === 'serpiente' ? '9px 8px' : '22px 22px'} repeat, ${hex}`;
+    if (tile) return `url("${tile}") 0 0 / ${pattern === 'serpiente' ? '9px 8px' : '22px 22px'} repeat, ${hex}`;
   }
   const base = hex2 ? `linear-gradient(135deg, ${hex} 0 50%, ${hex2} 50% 100%)` : `linear-gradient(${hex}, ${hex})`;
+  if (hex3 && extra?.logoPattern) {
+    // Logo con estampado: punto central relleno con el estampado.
+    const uri = logoPatternUri(extra.logoPattern, hex3);
+    if (uri) {
+      const overlay = svgUrl(
+        `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100"><defs><pattern id="p" patternUnits="userSpaceOnUse" width="${extra.logoPattern === 'serpiente' ? 14 : 30}" height="${extra.logoPattern === 'serpiente' ? 12 : 30}"><image href="${uri}" xlink:href="${uri}" width="${extra.logoPattern === 'serpiente' ? 14 : 30}" height="${extra.logoPattern === 'serpiente' ? 12 : 30}" preserveAspectRatio="none"/></pattern></defs><circle cx="50" cy="50" r="31" fill="rgba(255,255,255,0.9)"/><circle cx="50" cy="50" r="25" fill="url(#p)"/></svg>`,
+      );
+      return `url("${overlay}") center / 100% 100% no-repeat, ${base}`;
+    }
+  }
   return hex3 ? `radial-gradient(circle at 50% 50%, ${hex3} 0 24%, rgba(255,255,255,0.9) 25% 31%, transparent 32%), ${base}` : hex2 ? base : hex;
 }
 
+// Estampado del logo: el color del logo es el fondo y el resto de tonos
+// salen del estampado elegido.
+export function logoPatternUri(pattern: ColorPattern, base: string): string | null {
+  const preset = PATTERNS.find((p) => p.key === pattern)?.defaults;
+  if (!preset || pattern === 'foto') return null;
+  return patternDataUri(pattern, base, preset.hex2, preset.hex3 ?? preset.hex2);
+}
+
 // Atajo para un color de producto completo.
-export function colorBackground(c: { hex: string; hex2?: string; hex3?: string; pattern?: ColorPattern; image?: string }): string {
-  return swatchBackground(c.hex, c.hex2, c.hex3, { pattern: c.pattern, image: c.image });
+export function colorBackground(c: {
+  hex: string;
+  hex2?: string;
+  hex3?: string;
+  pattern?: ColorPattern;
+  logoPattern?: ColorPattern;
+  image?: string;
+}): string {
+  return swatchBackground(c.hex, c.hex2, c.hex3, { pattern: c.pattern, image: c.image, logoPattern: c.logoPattern });
 }
 
 export default function ColorSwatch({
@@ -100,6 +153,7 @@ export default function ColorSwatch({
   hex2,
   hex3,
   pattern,
+  logoPattern,
   image,
   className,
   title,
@@ -108,6 +162,7 @@ export default function ColorSwatch({
   hex2?: string;
   hex3?: string;
   pattern?: ColorPattern;
+  logoPattern?: ColorPattern;
   image?: string;
   className?: string;
   title?: string;
@@ -116,7 +171,7 @@ export default function ColorSwatch({
     <span
       title={title}
       className={classNames('inline-block shrink-0 rounded-full border border-black/15 shadow-inner', className)}
-      style={{ background: swatchBackground(hex, hex2, hex3, { pattern, image }) }}
+      style={{ background: swatchBackground(hex, hex2, hex3, { pattern, image, logoPattern }) }}
     />
   );
 }

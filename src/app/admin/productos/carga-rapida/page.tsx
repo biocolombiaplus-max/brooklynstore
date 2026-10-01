@@ -28,14 +28,14 @@ function defaultDescription(d: Draft, colorNames: string[]): string {
 }
 
 // Colores del borrador: uno por color distinto (según el nombre).
-function draftColorList(d: Draft, photo: (id: string) => Photo | undefined): { pid: string; name: string; hex: string; hex2?: string; hex3?: string; pattern?: ColorPattern }[] {
-  const list: { pid: string; name: string; hex: string; hex2?: string; hex3?: string; pattern?: ColorPattern }[] = [];
+function draftColorList(d: Draft, photo: (id: string) => Photo | undefined): { pid: string; name: string; hex: string; hex2?: string; hex3?: string; pattern?: ColorPattern; logoPattern?: ColorPattern }[] {
+  const list: { pid: string; name: string; hex: string; hex2?: string; hex3?: string; pattern?: ColorPattern; logoPattern?: ColorPattern }[] = [];
   for (const pid of d.photoIds) {
     const detected = photo(pid)?.color ?? null;
     const c = pid in d.colorEdits ? d.colorEdits[pid] : detected;
     if (!c) continue;
     const name = c.name.trim() || 'Color';
-    if (!list.some((x) => x.name.toLowerCase() === name.toLowerCase())) list.push({ pid, name, hex: c.hex, hex2: c.hex2, hex3: (c as { hex3?: string }).hex3, pattern: (c as { pattern?: ColorPattern }).pattern });
+    if (!list.some((x) => x.name.toLowerCase() === name.toLowerCase())) list.push({ pid, name, hex: c.hex, hex2: c.hex2, hex3: (c as { hex3?: string }).hex3, pattern: (c as { pattern?: ColorPattern }).pattern, logoPattern: (c as { logoPattern?: ColorPattern }).logoPattern });
   }
   return list;
 }
@@ -229,6 +229,7 @@ export default function CargaRapidaPage() {
         if (c.hex2 && c.hex2.toLowerCase() !== c.hex.toLowerCase()) color.hex2 = c.hex2;
         if (c.hex3) color.hex3 = c.hex3;
         if (c.pattern) color.pattern = c.pattern;
+        if (c.logoPattern && c.hex3) color.logoPattern = c.logoPattern;
         return color;
       });
 

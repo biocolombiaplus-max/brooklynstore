@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { PATTERNS, swatchBackground } from '@/components/ColorSwatch';
+import { LOGO_PATTERNS, PATTERNS, logoPatternUri, swatchBackground } from '@/components/ColorSwatch';
 import type { ColorPattern } from '@/lib/types';
 import { colorName } from '@/lib/colorDetect';
 import { classNames } from '@/lib/utils';
@@ -15,6 +15,8 @@ export interface ColorValue {
   hex3?: string;
   // Estampado (animal print, camuflaje, multicolor...).
   pattern?: ColorPattern;
+  // Estampado solo del logo / detalles.
+  logoPattern?: ColorPattern;
   // Foto asociada (para la muestra con foto). Se conserva tal cual.
   image?: string;
 }
@@ -108,8 +110,15 @@ function isDark(hex: string): boolean {
   return 0.299 * r + 0.587 * g + 0.114 * b < 140;
 }
 
-function suggestedName(hex: string, hex2?: string, hex3?: string, pattern?: ColorPattern): string {
+function suggestedName(hex: string, hex2?: string, hex3?: string, pattern?: ColorPattern, logoPattern?: ColorPattern): string {
   if (pattern) return patternName(pattern, hex, hex2);
+  if (hex3 && logoPattern) {
+    const a = toneName(hex);
+    const b = hex2 ? toneName(hex2) : a;
+    const base = a === b ? a : `${a} / ${b}`;
+    const print = patternName(logoPattern, hex3).toLowerCase().replace('degradado', 'en degradado');
+    return `${base} con logo ${print}`;
+  }
   const a = toneName(hex);
   const b = hex2 ? toneName(hex2) : a;
   const base = a === b ? a : `${a} / ${b}`;
@@ -119,11 +128,34 @@ function suggestedName(hex: string, hex2?: string, hex3?: string, pattern?: Colo
 }
 
 // Zapatilla de referencia que se pinta con los colores elegidos.
-export function SneakerPreview({ hex, hex2, hex3, className }: { hex: string; hex2?: string; hex3?: string; className?: string }) {
+export function SneakerPreview({
+  hex,
+  hex2,
+  hex3,
+  logoPattern,
+  className,
+}: {
+  hex: string;
+  hex2?: string;
+  hex3?: string;
+  logoPattern?: ColorPattern;
+  className?: string;
+}) {
+  const uid = useId().replace(/:/g, '');
   const sole = hex2 ?? hex;
+  const logoUri = hex3 && logoPattern ? logoPatternUri(logoPattern, hex3) : null;
+  const tile = logoPattern === 'serpiente' ? [9, 8] : logoPattern === 'multicolor' || logoPattern === 'degradado' ? [40, 40] : [16, 16];
+  const logoFill = logoUri ? `url(#logo-${uid})` : hex3 ?? 'transparent';
   const stroke = isDark(hex) ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)';
   return (
     <svg viewBox="0 0 200 100" className={className} aria-hidden>
+      {logoUri && (
+        <defs>
+          <pattern id={`logo-${uid}`} patternUnits="userSpaceOnUse" width={tile[0]} height={tile[1]} x="56" y="40">
+            <image href={logoUri} width={tile[0]} height={tile[1]} preserveAspectRatio="none" />
+          </pattern>
+        </defs>
+      )}
       <ellipse cx="100" cy="92" rx="88" ry="5" fill="rgba(0,0,0,0.35)" />
       {/* Capellada */}
       <path d="M16 70 L20 48 Q23 36 40 35 L66 33 Q82 20 102 23 L118 29 Q150 40 175 52 Q192 59 190 71 Z" fill={hex} stroke={stroke} strokeWidth="1" />
@@ -134,8 +166,14 @@ export function SneakerPreview({ hex, hex2, hex3, className }: { hex: string; he
         <line key={i} x1={78 + i * 12} y1={30 + i * 3} x2={86 + i * 12} y2={38 + i * 3} stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
       ))}
       {/* Logo / detalles */}
-      <path d="M58 62 Q102 64 156 44 Q118 64 66 58 Z" fill={hex3 ?? 'transparent'} stroke={hex3 ? 'none' : stroke} strokeWidth="1" strokeDasharray={hex3 ? undefined : '3 3'} />
-      <circle cx="30" cy="56" r="4.5" fill={hex3 ?? 'transparent'} stroke={hex3 ? 'none' : stroke} strokeWidth="1" />
+      <path
+        d={logoUri ? 'M52 64 Q102 68 160 42 Q120 68 62 58 Z' : 'M58 62 Q102 64 156 44 Q118 64 66 58 Z'}
+        fill={logoFill}
+        stroke={hex3 ? (logoUri ? stroke : 'none') : stroke}
+        strokeWidth={logoUri ? 0.6 : 1}
+        strokeDasharray={hex3 ? undefined : '3 3'}
+      />
+      <circle cx="30" cy="56" r={logoUri ? 5.5 : 4.5} fill={logoFill} stroke={hex3 ? (logoUri ? stroke : 'none') : stroke} strokeWidth={logoUri ? 0.6 : 1} />
       {/* Suela */}
       <path d="M10 70 L192 70 L192 76 Q192 86 178 86 L24 86 Q10 86 10 76 Z" fill={sole} stroke={isDark(sole) ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)'} strokeWidth="1" />
       <line x1="14" y1="78" x2="188" y2="78" stroke={isDark(sole) ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)'} strokeWidth="1" />
@@ -144,7 +182,8 @@ export function SneakerPreview({ hex, hex2, hex3, className }: { hex: string; he
 }
 
 // Descripción corta de los tonos de un color.
-export function toneSummary(c: { hex2?: string; hex3?: string; pattern?: ColorPattern }): string {
+export function toneSummary(c: { hex2?: string; hex3?: string; pattern?: ColorPattern; logoPattern?: ColorPattern }): string {
+  if (!c.pattern && c.hex3 && c.logoPattern) return `Logo estampado · ${PATTERNS.find((p) => p.key === c.logoPattern)?.label ?? ''}`;
   if (c.pattern) return c.pattern === 'foto' ? 'Muestra con foto' : `Estampado · ${PATTERNS.find((p) => p.key === c.pattern)?.label ?? ''}`;
   if (c.hex2 && c.hex3) return 'Capellada, suela y logo';
   if (c.hex3) return 'Un tono + logo';
@@ -162,7 +201,9 @@ export function ColorChipButton({ value, onClick, size = 'md' }: { value: ColorV
         'group relative shrink-0 rounded-full ring-2 ring-white shadow-[0_0_0_1px_rgba(0,0,0,0.15)] transition-transform hover:scale-110',
         size === 'sm' ? 'h-7 w-7' : 'h-10 w-10',
       )}
-      style={{ background: swatchBackground(value.hex, value.hex2, value.hex3, { pattern: value.pattern, image: value.image }) }}
+      style={{
+        background: swatchBackground(value.hex, value.hex2, value.hex3, { pattern: value.pattern, image: value.image, logoPattern: value.logoPattern }),
+      }}
     >
       <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-ink text-[8px] text-white opacity-90 group-hover:opacity-100">
         ✎
@@ -199,6 +240,7 @@ export default function ColorEditor({
   const [hex3, setHex3] = useState<string | undefined>(value.hex3);
   const [part, setPart] = useState<'upper' | 'sole' | 'logo'>('upper');
   const [pattern, setPattern] = useState<ColorPattern | undefined>(value.pattern);
+  const [logoPattern, setLogoPattern] = useState<ColorPattern | undefined>(value.logoPattern);
   const [name, setName] = useState(value.name);
   const [nameTouched, setNameTouched] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -210,10 +252,11 @@ export default function ColorEditor({
     setHex2(value.hex2);
     setHex3(value.hex3);
     setPattern(value.pattern);
+    setLogoPattern(value.logoPattern);
     setName(value.name);
     setPart('upper');
     // Si el nombre actual es el sugerido, lo seguimos actualizando solo.
-    setNameTouched(value.name.trim() !== '' && value.name !== suggestedName(value.hex, value.hex2, value.hex3, value.pattern));
+    setNameTouched(value.name.trim() !== '' && value.name !== suggestedName(value.hex, value.hex2, value.hex3, value.pattern, value.logoPattern));
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -225,7 +268,15 @@ export default function ColorEditor({
 
   const twoTone = hex2 !== undefined;
   const hasLogo = hex3 !== undefined;
-  const effectiveName = nameTouched ? name : suggestedName(hex, hex2, hex3, pattern);
+  const effectiveName = nameTouched ? name : suggestedName(hex, hex2, hex3, pattern, hasLogo ? logoPattern : undefined);
+
+  function chooseLogoPattern(next: ColorPattern | undefined) {
+    setLogoPattern(next);
+    if (next) {
+      const preset = PATTERNS.find((p) => p.key === next)!.defaults;
+      setHex3(preset.hex);
+    }
+  }
   const previewImage = image ?? value.image;
 
   function choosePattern(next: ColorPattern | undefined) {
@@ -287,7 +338,8 @@ export default function ColorEditor({
         ...(hasLogo ? [{ key: 'logo' as const, label: 'Logo / detalles', color: hex3! }] : []),
       ];
   const partLabel = (parts.find((p) => p.key === part)?.label ?? parts[0]?.label ?? '').toLowerCase();
-  const background = swatchBackground(hex, hex2, hex3, { pattern, image: previewImage });
+  const background = swatchBackground(hex, hex2, hex3, { pattern, image: previewImage, logoPattern: hasLogo ? logoPattern : undefined });
+  const logoPart = !pattern && hasLogo && part === 'logo';
 
   if (!open || !mounted) return null;
 
@@ -330,13 +382,18 @@ export default function ColorEditor({
               />
             </div>
           ) : (
-            <SneakerPreview hex={hex} hex2={hex2} hex3={hex3} className="mx-auto h-28 w-full max-w-[260px]" />
+            <SneakerPreview hex={hex} hex2={hex2} hex3={hex3} logoPattern={hasLogo ? logoPattern : undefined} className="mx-auto h-28 w-full max-w-[260px]" />
           )}
           <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px]">
             {parts.map((p) => (
               <span key={p.key} className="flex items-center gap-1.5">
                 <span className="h-3 w-3 rounded-full ring-1 ring-white/40" style={{ background: p.color }} />
-                {p.label}: <strong>{toneName(p.color)}</strong>
+                {p.label}:{' '}
+                <strong>
+                  {p.key === 'logo' && !pattern && logoPattern
+                    ? `${PATTERNS.find((x) => x.key === logoPattern)?.label} (fondo ${toneName(p.color).toLowerCase()})`
+                    : toneName(p.color)}
+                </strong>
               </span>
             ))}
             {pattern === 'foto' && <span className="text-white/70">La muestra usa un acercamiento de la foto del zapato</span>}
@@ -451,6 +508,43 @@ export default function ColorEditor({
           </div>
         )}
 
+        {/* Estampado solo del logo */}
+        {logoPart && (
+          <div className="mt-4">
+            <p className="mb-2 text-[10px] font-extrabold uppercase tracking-wider text-muted">Estampado del logo / detalles</p>
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {[{ key: undefined, label: 'Liso' }, ...LOGO_PATTERNS.map((p) => ({ key: p.key, label: p.label }))].map((p) => {
+                const selected = logoPattern === p.key;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => chooseLogoPattern(p.key)}
+                    className={classNames(
+                      'flex w-[68px] shrink-0 flex-col items-center gap-1 rounded-xl p-1.5 text-center text-[9px] font-bold leading-tight ring-2 transition-colors',
+                      selected ? 'bg-gold-50 text-ink ring-primary' : 'bg-white text-muted ring-border',
+                    )}
+                  >
+                    <span
+                      className="h-8 w-8 rounded-full shadow-[0_0_0_1px_rgba(0,0,0,0.15)]"
+                      style={{
+                        background: p.key
+                          ? (() => {
+                              const uri = logoPatternUri(p.key, selected && hex3 ? hex3 : PATTERNS.find((x) => x.key === p.key)!.defaults.hex);
+                              return uri ? `url("${uri}") center / ${p.key === 'serpiente' ? '9px 8px' : p.key === 'multicolor' || p.key === 'degradado' ? 'cover' : '16px 16px'} repeat` : '#eee';
+                            })()
+                          : hex3,
+                      }}
+                    />
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+            {logoPattern && <p className="mt-1 text-[10px] text-muted">El color que elijas abajo es el fondo del estampado del logo.</p>}
+          </div>
+        )}
+
         {/* Paleta */}
         {pattern !== 'foto' && (
         <>
@@ -536,6 +630,7 @@ export default function ColorEditor({
               } else {
                 if (twoTone && hex2 && hex2.toLowerCase() !== hex.toLowerCase()) result.hex2 = hex2;
                 if (hasLogo && hex3) result.hex3 = hex3;
+                if (hasLogo && hex3 && logoPattern) result.logoPattern = logoPattern;
               }
               if (value.image) result.image = value.image;
               onSave(result);
