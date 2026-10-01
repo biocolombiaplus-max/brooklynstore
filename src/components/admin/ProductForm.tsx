@@ -12,7 +12,7 @@ import { resizeForUpload } from '@/lib/imageCrop';
 import { detectShoeColors, type DetectedColor } from '@/lib/colorDetect';
 import { usSizeFor } from '@/lib/sizes';
 import ColorSwatch from '@/components/ColorSwatch';
-import ColorEditor, { ColorChipButton, type ColorValue } from '@/components/admin/ColorEditor';
+import ColorEditor, { ColorChipButton, toneSummary, type ColorValue } from '@/components/admin/ColorEditor';
 
 const COMMON_SIZES = ['34', '35', '36', '37', '38', '39', '40', '41', '42', '43', '44', '45'];
 const SIZE_PRESETS: { label: string; sizes: string[] }[] = [
@@ -126,12 +126,12 @@ export default function ProductForm({ product }: { product?: Product }) {
       if (colorEditing === 'new') {
         const exists = prev.some((x) => x.name.toLowerCase() === v.name.toLowerCase());
         return exists
-          ? prev.map((x) => (x.name.toLowerCase() === v.name.toLowerCase() ? stripHex2({ ...x, hex: v.hex, hex2: v.hex2 }) : x))
+          ? prev.map((x) => (x.name.toLowerCase() === v.name.toLowerCase() ? stripHex2({ ...x, hex: v.hex, hex2: v.hex2, hex3: v.hex3 }) : x))
           : [...prev, stripHex2({ ...v })];
       }
       const clash = prev.some((x) => x.name !== colorEditing && x.name.toLowerCase() === v.name.toLowerCase());
       return prev.map((x) =>
-        x.name === colorEditing ? stripHex2({ ...x, name: clash ? x.name : v.name, hex: v.hex, hex2: v.hex2 }) : x,
+        x.name === colorEditing ? stripHex2({ ...x, name: clash ? x.name : v.name, hex: v.hex, hex2: v.hex2, hex3: v.hex3 }) : x,
       );
     });
   }
@@ -494,7 +494,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                   colors.some((x) => x.name === c.name) ? 'border-primary bg-primary-light/20' : 'border-border'
                 }`}
               >
-                <ColorSwatch hex={c.hex} hex2={c.hex2} className="h-4 w-4" />
+                <ColorSwatch hex={c.hex} hex2={c.hex2} hex3={c.hex3} className="h-4 w-4" />
                 {c.name}
               </button>
             ))}
@@ -507,7 +507,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                   onClick={() => removeColor(c.name)}
                   className="flex items-center gap-2 rounded-full border-2 border-primary bg-primary-light/20 px-3 py-1.5 text-xs font-semibold"
                 >
-                  <ColorSwatch hex={c.hex} hex2={c.hex2} className="h-4 w-4" />
+                  <ColorSwatch hex={c.hex} hex2={c.hex2} hex3={c.hex3} className="h-4 w-4" />
                   {c.name} <span>✕</span>
                 </button>
               ))}
@@ -527,7 +527,7 @@ export default function ProductForm({ product }: { product?: Product }) {
                   <ColorChipButton value={c} onClick={() => setColorEditing(c.name)} />
                   <button type="button" onClick={() => setColorEditing(c.name)} className="min-w-0 flex-1 truncate text-left text-sm font-bold text-ink">
                     {c.name}
-                    <span className="block text-[10px] font-semibold text-muted">{c.hex2 ? 'Dos tonos · capellada / suela' : 'Un tono'} · toca para editar</span>
+                    <span className="block text-[10px] font-semibold text-muted">{toneSummary(c)} · toca para editar</span>
                   </button>
                   <button type="button" onClick={() => removeColor(c.name)} className="shrink-0 text-sm text-urgent" aria-label={`Quitar ${c.name}`}>
                     ✕

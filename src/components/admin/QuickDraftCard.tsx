@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import ColorEditor, { ColorChipButton, type ColorValue } from '@/components/admin/ColorEditor';
+import ColorEditor, { ColorChipButton, toneSummary, type ColorValue } from '@/components/admin/ColorEditor';
 import type { Gender, ProductColor } from '@/lib/types';
 import { classNames, formatPrice } from '@/lib/utils';
 
@@ -309,7 +309,7 @@ export default function QuickDraftCard({
                     <ColorChipButton value={c} onClick={() => setEditingColor({ kind: 'pub', index: i })} />
                     <button type="button" onClick={() => setEditingColor({ kind: 'pub', index: i })} className="min-w-0 flex-1 truncate text-left text-sm font-bold text-ink">
                       {c.name}
-                      <span className="block text-[10px] font-semibold text-muted">{c.hex2 ? 'Dos tonos' : 'Un tono'}</span>
+                      <span className="block text-[10px] font-semibold text-muted">{toneSummary(c)}</span>
                     </button>
                   </div>
                 ))}
@@ -337,7 +337,7 @@ export default function QuickDraftCard({
                           <ColorChipButton value={c} onClick={() => setEditingColor({ kind: 'photo', pid })} />
                           <button type="button" onClick={() => setEditingColor({ kind: 'photo', pid })} className="min-w-0 flex-1 truncate text-left text-sm font-bold text-ink">
                             {c.name}
-                            <span className="block text-[10px] font-semibold text-muted">{c.hex2 ? 'Dos tonos' : 'Un tono'}</span>
+                            <span className="block text-[10px] font-semibold text-muted">{toneSummary(c)}</span>
                           </button>
                         </>
                       ) : (

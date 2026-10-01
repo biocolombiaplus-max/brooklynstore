@@ -28,14 +28,14 @@ function defaultDescription(d: Draft, colorNames: string[]): string {
 }
 
 // Colores del borrador: uno por color distinto (según el nombre).
-function draftColorList(d: Draft, photo: (id: string) => Photo | undefined): { pid: string; name: string; hex: string; hex2?: string }[] {
-  const list: { pid: string; name: string; hex: string; hex2?: string }[] = [];
+function draftColorList(d: Draft, photo: (id: string) => Photo | undefined): { pid: string; name: string; hex: string; hex2?: string; hex3?: string }[] {
+  const list: { pid: string; name: string; hex: string; hex2?: string; hex3?: string }[] = [];
   for (const pid of d.photoIds) {
     const detected = photo(pid)?.color ?? null;
     const c = pid in d.colorEdits ? d.colorEdits[pid] : detected;
     if (!c) continue;
     const name = c.name.trim() || 'Color';
-    if (!list.some((x) => x.name.toLowerCase() === name.toLowerCase())) list.push({ pid, name, hex: c.hex, hex2: c.hex2 });
+    if (!list.some((x) => x.name.toLowerCase() === name.toLowerCase())) list.push({ pid, name, hex: c.hex, hex2: c.hex2, hex3: (c as { hex3?: string }).hex3 });
   }
   return list;
 }
@@ -223,11 +223,13 @@ export default function CargaRapidaPage() {
         images.push(url);
         urlByPhoto[pid] = url;
       }
-      const colors: ProductColor[] = draftColorList(draft, photoById).map((c) =>
-        c.hex2 && c.hex2.toLowerCase() !== c.hex.toLowerCase()
-          ? { name: c.name, hex: c.hex, hex2: c.hex2, image: urlByPhoto[c.pid] }
-          : { name: c.name, hex: c.hex, image: urlByPhoto[c.pid] },
-      );
+      // Solo se guardan los tonos usados (Firestore no acepta undefined).
+      const colors: ProductColor[] = draftColorList(draft, photoById).map((c) => {
+        const color: ProductColor = { name: c.name, hex: c.hex, image: urlByPhoto[c.pid] };
+        if (c.hex2 && c.hex2.toLowerCase() !== c.hex.toLowerCase()) color.hex2 = c.hex2;
+        if (c.hex3) color.hex3 = c.hex3;
+        return color;
+      });
 
       const input: ProductInput = {
         slug: base,

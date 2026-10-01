@@ -10,6 +10,8 @@ export interface ColorValue {
   name: string;
   hex: string;
   hex2?: string;
+  // Color del logo / detalles (opcional).
+  hex3?: string;
 }
 
 // Paleta de colores de zapatos (capellada y suela) con su nombre comercial.
@@ -62,11 +64,45 @@ function isDark(hex: string): boolean {
   return 0.299 * r + 0.587 * g + 0.114 * b < 140;
 }
 
-function suggestedName(hex: string, hex2?: string): string {
+function suggestedName(hex: string, hex2?: string, hex3?: string): string {
   const a = toneName(hex);
-  if (!hex2) return a;
-  const b = toneName(hex2);
-  return a === b ? a : `${a} / ${b}`;
+  const b = hex2 ? toneName(hex2) : a;
+  const base = a === b ? a : `${a} / ${b}`;
+  if (!hex3) return base;
+  const c = toneName(hex3);
+  return c === a ? base : `${base} con logo ${c.toLowerCase()}`;
+}
+
+// Zapatilla de referencia que se pinta con los colores elegidos.
+export function SneakerPreview({ hex, hex2, hex3, className }: { hex: string; hex2?: string; hex3?: string; className?: string }) {
+  const sole = hex2 ?? hex;
+  const stroke = isDark(hex) ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)';
+  return (
+    <svg viewBox="0 0 200 100" className={className} aria-hidden>
+      <ellipse cx="100" cy="92" rx="88" ry="5" fill="rgba(0,0,0,0.35)" />
+      {/* Capellada */}
+      <path d="M16 70 L20 48 Q23 36 40 35 L66 33 Q82 20 102 23 L118 29 Q150 40 175 52 Q192 59 190 71 Z" fill={hex} stroke={stroke} strokeWidth="1" />
+      {/* Cuello y lengüeta */}
+      <path d="M40 35 Q46 26 60 26 L68 33 Z" fill={hex} stroke={stroke} strokeWidth="1" />
+      {/* Cordones */}
+      {[0, 1, 2, 3].map((i) => (
+        <line key={i} x1={78 + i * 12} y1={30 + i * 3} x2={86 + i * 12} y2={38 + i * 3} stroke={stroke} strokeWidth="2.2" strokeLinecap="round" />
+      ))}
+      {/* Logo / detalles */}
+      <path d="M58 62 Q102 64 156 44 Q118 64 66 58 Z" fill={hex3 ?? 'transparent'} stroke={hex3 ? 'none' : stroke} strokeWidth="1" strokeDasharray={hex3 ? undefined : '3 3'} />
+      <circle cx="30" cy="56" r="4.5" fill={hex3 ?? 'transparent'} stroke={hex3 ? 'none' : stroke} strokeWidth="1" />
+      {/* Suela */}
+      <path d="M10 70 L192 70 L192 76 Q192 86 178 86 L24 86 Q10 86 10 76 Z" fill={sole} stroke={isDark(sole) ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.25)'} strokeWidth="1" />
+      <line x1="14" y1="78" x2="188" y2="78" stroke={isDark(sole) ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.15)'} strokeWidth="1" />
+    </svg>
+  );
+}
+
+// Descripción corta de los tonos de un color.
+export function toneSummary(c: { hex2?: string; hex3?: string }): string {
+  if (c.hex2 && c.hex3) return 'Capellada, suela y logo';
+  if (c.hex3) return 'Un tono + logo';
+  return c.hex2 ? 'Dos tonos · capellada / suela' : 'Un tono';
 }
 
 // Muestra redonda que abre el editor al tocarla.
@@ -80,7 +116,7 @@ export function ColorChipButton({ value, onClick, size = 'md' }: { value: ColorV
         'group relative shrink-0 rounded-full ring-2 ring-white shadow-[0_0_0_1px_rgba(0,0,0,0.15)] transition-transform hover:scale-110',
         size === 'sm' ? 'h-7 w-7' : 'h-10 w-10',
       )}
-      style={{ background: swatchBackground(value.hex, value.hex2) }}
+      style={{ background: swatchBackground(value.hex, value.hex2, value.hex3) }}
     >
       <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-ink text-[8px] text-white opacity-90 group-hover:opacity-100">
         ✎
@@ -90,8 +126,9 @@ export function ColorChipButton({ value, onClick, size = 'md' }: { value: ColorV
 }
 
 /**
- * Editor de color de un zapato: un tono o dos tonos (capellada + suela),
- * paleta con nombres, color personalizado y nombre sugerido automáticamente.
+ * Editor de color de un zapato: capellada, suela (opcional) y logo /
+ * detalles (opcional), con paleta, tono personalizado, vista previa de la
+ * zapatilla y nombre sugerido automáticamente.
  */
 export default function ColorEditor({
   open,
@@ -110,7 +147,8 @@ export default function ColorEditor({
 }) {
   const [hex, setHex] = useState(value.hex);
   const [hex2, setHex2] = useState<string | undefined>(value.hex2);
-  const [part, setPart] = useState<'upper' | 'sole'>('upper');
+  const [hex3, setHex3] = useState<string | undefined>(value.hex3);
+  const [part, setPart] = useState<'upper' | 'sole' | 'logo'>('upper');
   const [name, setName] = useState(value.name);
   const [nameTouched, setNameTouched] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -120,10 +158,11 @@ export default function ColorEditor({
     if (!open) return;
     setHex(value.hex);
     setHex2(value.hex2);
+    setHex3(value.hex3);
     setName(value.name);
     setPart('upper');
     // Si el nombre actual es el sugerido, lo seguimos actualizando solo.
-    setNameTouched(value.name.trim() !== '' && value.name !== suggestedName(value.hex, value.hex2));
+    setNameTouched(value.name.trim() !== '' && value.name !== suggestedName(value.hex, value.hex2, value.hex3));
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
@@ -134,10 +173,12 @@ export default function ColorEditor({
   }, [open, value, onClose]);
 
   const twoTone = hex2 !== undefined;
-  const effectiveName = nameTouched ? name : suggestedName(hex, hex2);
+  const hasLogo = hex3 !== undefined;
+  const effectiveName = nameTouched ? name : suggestedName(hex, hex2, hex3);
 
   function pick(color: string) {
-    if (twoTone && part === 'sole') setHex2(color);
+    if (part === 'sole' && twoTone) setHex2(color);
+    else if (part === 'logo' && hasLogo) setHex3(color);
     else setHex(color);
   }
 
@@ -151,7 +192,23 @@ export default function ColorEditor({
     }
   }
 
-  const activeHex = twoTone && part === 'sole' ? hex2! : hex;
+  function setLogo(on: boolean) {
+    if (on) {
+      setHex3((h) => h ?? (isDark(hex) ? '#FFFFFF' : '#111111'));
+      setPart('logo');
+    } else {
+      setHex3(undefined);
+      setPart('upper');
+    }
+  }
+
+  const activeHex = part === 'sole' && twoTone ? hex2! : part === 'logo' && hasLogo ? hex3! : hex;
+  const parts = [
+    { key: 'upper' as const, label: 'Capellada', color: hex },
+    ...(twoTone ? [{ key: 'sole' as const, label: 'Suela', color: hex2! }] : []),
+    ...(hasLogo ? [{ key: 'logo' as const, label: 'Logo / detalles', color: hex3! }] : []),
+  ];
+  const partLabel = part === 'sole' && twoTone ? 'de la suela' : part === 'logo' && hasLogo ? 'del logo / detalles' : 'de la capellada';
 
   if (!open || !mounted) return null;
 
@@ -175,23 +232,20 @@ export default function ColorEditor({
         </div>
 
         {/* Vista previa */}
-        <div className="mt-4 flex items-center gap-4 rounded-2xl bg-[#0a0a0a] p-4 text-white">
-          <span
-            className="h-16 w-16 shrink-0 rounded-full ring-4 ring-white/15"
-            style={{ background: swatchBackground(hex, hex2) }}
-          />
-          <div className="min-w-0 text-xs">
-            <p className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full ring-1 ring-white/40" style={{ background: hex }} /> Capellada:{' '}
-              <strong>{toneName(hex)}</strong>
-            </p>
-            {twoTone && (
-              <p className="mt-1 flex items-center gap-2">
-                <span className="h-3 w-3 rounded-full ring-1 ring-white/40" style={{ background: hex2 }} /> Suela / detalles:{' '}
-                <strong>{toneName(hex2!)}</strong>
-              </p>
-            )}
-            <p className="mt-1 text-white/50">Así se ve en la tienda</p>
+        <div className="mt-4 rounded-2xl bg-[radial-gradient(ellipse_at_50%_0%,#2a2a2a,#0a0a0a_70%)] p-4 text-white">
+          <SneakerPreview hex={hex} hex2={hex2} hex3={hex3} className="mx-auto h-28 w-full max-w-[260px]" />
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px]">
+            {parts.map((p) => (
+              <span key={p.key} className="flex items-center gap-1.5">
+                <span className="h-3 w-3 rounded-full ring-1 ring-white/40" style={{ background: p.color }} />
+                {p.label}: <strong>{toneName(p.color)}</strong>
+              </span>
+            ))}
+            <span
+              className="ml-1 h-5 w-5 rounded-full ring-2 ring-white/20"
+              style={{ background: swatchBackground(hex, hex2, hex3) }}
+              title="Así se ve la muestra en la tienda"
+            />
           </div>
         </div>
 
@@ -215,18 +269,30 @@ export default function ColorEditor({
           ))}
         </div>
 
-        {twoTone && (
-          <div className="mt-3 grid grid-cols-2 gap-2">
-            {[
-              { key: 'upper' as const, label: 'Capellada', color: hex },
-              { key: 'sole' as const, label: 'Suela / detalles', color: hex2! },
-            ].map((p) => (
+        {/* Logo / detalles */}
+        <button
+          type="button"
+          onClick={() => setLogo(!hasLogo)}
+          className={classNames(
+            'mt-2 flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-bold ring-1 transition-colors',
+            hasLogo ? 'bg-gold-50 text-ink ring-primary/50' : 'bg-white text-muted ring-border hover:text-ink',
+          )}
+        >
+          <span>🏷️ Color del logo / detalles (franjas, costuras, talón)</span>
+          <span className={classNames('relative h-5 w-9 shrink-0 rounded-full transition-colors', hasLogo ? 'bg-primary' : 'bg-border')}>
+            <span className={classNames('absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all', hasLogo ? 'left-[18px]' : 'left-0.5')} />
+          </span>
+        </button>
+
+        {parts.length > 1 && (
+          <div className={classNames('mt-3 grid gap-2', parts.length === 3 ? 'grid-cols-3' : 'grid-cols-2')}>
+            {parts.map((p) => (
               <button
                 key={p.key}
                 type="button"
                 onClick={() => setPart(p.key)}
                 className={classNames(
-                  'flex items-center gap-2 rounded-xl px-3 py-2.5 text-left text-xs font-bold ring-2 transition-colors',
+                  'flex items-center gap-2 rounded-xl px-2.5 py-2.5 text-left text-[11px] font-bold leading-tight ring-2 transition-colors',
                   part === p.key ? 'bg-gold-50 text-ink ring-primary' : 'bg-white text-muted ring-border',
                 )}
               >
@@ -239,7 +305,7 @@ export default function ColorEditor({
 
         {/* Paleta */}
         <p className="mb-2 mt-4 text-[10px] font-extrabold uppercase tracking-wider text-muted">
-          {twoTone ? `Elige el color de ${part === 'upper' ? 'la capellada' : 'la suela / detalles'}` : 'Elige el color'}
+          {parts.length > 1 ? `Elige el color ${partLabel}` : 'Elige el color'}
         </p>
         <div className="grid grid-cols-6 gap-2 sm:grid-cols-8">
           {SHOE_PALETTE.map((c) => {
@@ -308,9 +374,12 @@ export default function ColorEditor({
           <button
             type="button"
             onClick={() => {
-              const finalName = effectiveName.trim() || suggestedName(hex, hex2);
-              // Sin "hex2" cuando es de un solo tono (Firestore no acepta undefined).
-              onSave(twoTone && hex2 && hex2.toLowerCase() !== hex.toLowerCase() ? { name: finalName, hex, hex2 } : { name: finalName, hex });
+              const finalName = effectiveName.trim() || suggestedName(hex, hex2, hex3);
+              // Solo se guardan los tonos usados (Firestore no acepta undefined).
+              const result: ColorValue = { name: finalName, hex };
+              if (twoTone && hex2 && hex2.toLowerCase() !== hex.toLowerCase()) result.hex2 = hex2;
+              if (hasLogo && hex3) result.hex3 = hex3;
+              onSave(result);
               onClose();
             }}
             className="btn-primary btn-shine flex-1 py-3.5"

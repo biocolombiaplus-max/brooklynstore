@@ -1,9 +1,10 @@
 export interface ProductColor {
   name: string;
-  // Color principal (capellada) y, opcional, el segundo color (suela o
-  // detalles) para zapatos de dos tonos.
+  // Color principal (capellada) y, opcionales, el color de la suela (dos
+  // tonos) y el del logo / detalles del zapato.
   hex: string;
   hex2?: string;
+  hex3?: string;
   image?: string;
 }
 
