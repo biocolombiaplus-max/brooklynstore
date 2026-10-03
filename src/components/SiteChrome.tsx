@@ -7,6 +7,7 @@ import CartDrawer from './CartDrawer';
 import FloatingWhatsApp from './FloatingWhatsApp';
 import FloatingBadge from './FloatingBadge';
 import SpinWheel from './SpinWheel';
+import CouponActivator from './CouponActivator';
 import { SettingsProvider } from '@/lib/settings-context';
 import type { SiteSettings } from '@/lib/types';
 
@@ -27,6 +28,7 @@ export default function SiteChrome({
       <FloatingWhatsApp />
       <FloatingBadge />
       <SpinWheel />
+      <CouponActivator />
     </SettingsProvider>
   );
 }

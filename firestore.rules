@@ -55,5 +55,20 @@ service cloud.firestore {
       allow create, update: if isAdmin();
       allow delete: if isAdmin();
     }
+
+    // Fidelización (reseñas + cupón 10%): el código funciona como llave.
+    // El cliente puede leer su registro, enviar sus reseñas una sola vez y
+    // marcar su cupón como usado; todo lo demás es solo del administrador.
+    match /loyalty/{code} {
+      allow get: if true;
+      allow list, create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (resource.data.reviewStatus == 'pendiente'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reviews', 'reviewStatus', 'reviewSubmittedAt'])
+            && request.resource.data.reviewStatus == 'enviada')
+        || (resource.data.couponUsed == false
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['couponUsed', 'couponUsedOrder', 'couponUsedAt'])
+            && request.resource.data.couponUsed == true);
+    }
   }
 }

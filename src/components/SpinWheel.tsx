@@ -47,6 +47,8 @@ export default function SpinWheel() {
 
     function trigger() {
       if (shownRef.current) return;
+      // Nunca interrumpir el pago ni el envío del comprobante.
+      if (/^\/(checkout|pedido-confirmado|resena)/.test(window.location.pathname)) return;
       shownRef.current = true;
       setVisible(true);
       sessionStorage.setItem(SESSION_KEY, '1');

@@ -11,6 +11,7 @@ const LINKS = [
   { href: '/admin/productos', label: '👡 Productos' },
   { href: '/admin/productos/carga-rapida', label: '⚡ Carga rápida' },
   { href: '/admin/pedidos', label: '📦 Pedidos' },
+  { href: '/admin/fidelizacion', label: '⭐ Fidelización' },
   { href: '/admin/configuracion', label: '⚙️ Configuración' },
 ];
 

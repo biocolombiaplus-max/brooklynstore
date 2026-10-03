@@ -121,7 +121,7 @@ export function buildOrderWhatsAppMessage(order: {
   paymentMethod: PaymentMethod;
   couponCode?: string;
   customer: OrderCustomer;
-}): string {
+}, opts: { paid?: boolean } = {}): string {
   const itemsList = order.items
     .map(
       (i) =>
@@ -135,7 +135,7 @@ export function buildOrderWhatsAppMessage(order: {
       : `🏦 *Transferencia / depósito Banco Pichincha*\n➡️ Total a transferir: *${formatPrice(order.payNow)}*`;
 
   const c = order.customer;
-  return `🛍️ *NUEVO PEDIDO — ${order.orderNumber}*
+  return `${opts.paid ? '✅ *PEDIDO PAGADO' : '🛍️ *NUEVO PEDIDO'} — ${order.orderNumber}*
 Brooklyn Store
 
 📦 *Productos:*
@@ -156,7 +156,9 @@ ${paymentBlock}
 🏙️ ${c.city}, ${c.province}${c.locationUrl ? `\n🗺️ Ubicación: ${c.locationUrl}` : ''}${c.note ? `\n📝 Nota: ${c.note}` : ''}
 
 ${
-    order.paymentMethod === 'contra_entrega'
+    opts.paid
+      ? `🧾 Ya hice el pago de *${formatPrice(order.payNow)}*${order.paymentMethod === 'contra_entrega' ? ' del envío' : ''} en Banco Pichincha. Les adjunto el comprobante 📎 ¡Quedo atento/a a mi guía de Servientrega! 🙌`
+      : order.paymentMethod === 'contra_entrega'
       ? `Porfa, confírmenme el pedido para enviar el comprobante de los ${formatPrice(order.payNow)} que garantizan el envío. ¡Gracias! 🙌`
       : 'Porfa, confírmenme el pedido. Ya mismo les envío la foto del comprobante. ¡Gracias! 🙌'
   }`;

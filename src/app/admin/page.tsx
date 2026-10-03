@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { getAllProducts } from '@/lib/products';
 import { getAllOrders } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
+import CommissionBar from '@/components/admin/CommissionBar';
+import type { Order } from '@/lib/types';
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<{
@@ -14,11 +16,13 @@ export default function AdminDashboard() {
     pendingOrders: number;
     revenue: number;
   } | null>(null);
+  const [orders, setOrders] = useState<Order[] | null>(null);
 
   useEffect(() => {
     (async () => {
       try {
         const [products, orders] = await Promise.all([getAllProducts(), getAllOrders()]);
+        setOrders(orders);
         setStats({
           products: products.length,
           activeProducts: products.filter((p) => p.active).length,
@@ -28,6 +32,7 @@ export default function AdminDashboard() {
         });
       } catch {
         setStats({ products: 0, activeProducts: 0, orders: 0, pendingOrders: 0, revenue: 0 });
+        setOrders([]);
       }
     })();
   }, []);
@@ -52,6 +57,8 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+
+      <CommissionBar orders={orders} />
 
       <div className="mt-8 flex flex-wrap gap-3">
         <Link href="/admin/productos/nuevo" className="btn-primary">

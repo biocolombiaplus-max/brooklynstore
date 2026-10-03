@@ -22,6 +22,7 @@ function toOrder(id: string, data: any): Order {
     carrier: data.carrier || undefined,
     trackingNumber: data.trackingNumber || undefined,
     guideUrl: data.guideUrl || undefined,
+    loyaltyCode: data.loyaltyCode || undefined,
     guideType: data.guideType === 'pdf' ? 'pdf' : data.guideUrl ? 'image' : undefined,
     couponCode: data.couponCode || undefined,
     createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : Date.now(),

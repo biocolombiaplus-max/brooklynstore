@@ -48,7 +48,7 @@ export default function FloatingWhatsApp() {
   // En la ficha de producto el celular tiene la barra fija de compra abajo,
   // así que el botón sube para no taparla.
   const onProduct = pathname.startsWith('/producto/');
-  if (pathname.startsWith('/checkout')) return null;
+  if (pathname.startsWith('/checkout') || pathname.startsWith('/pedido-confirmado')) return null;
 
   return (
     <a

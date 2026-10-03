@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { getLocalOrder, getOrderById } from '@/lib/orders';
-import { bankAccountText, buildOrderWhatsAppMessage, buildReceiptMessage, classNames, formatPrice, paymentMethodLabel, whatsappLinkTo } from '@/lib/utils';
+import { bankAccountText, buildOrderWhatsAppMessage, classNames, formatPrice, paymentMethodLabel, whatsappLinkTo } from '@/lib/utils';
 import { useSiteSettings } from '@/lib/settings-context';
 import PostPurchaseUpsell from '@/components/product/PostPurchaseUpsell';
 import { WhatsAppIcon } from '@/components/icons';
@@ -97,10 +97,18 @@ function BankCard({ account, amount }: { account: BankAccount; amount: number })
   );
 }
 
+type Phase = 'pagar' | 'comprobante' | 'listo';
+
+const sentKey = (id: string) => `bs-comprobante-${id}`;
+
 export default function OrderConfirmationPage() {
   const params = useParams<{ id: string }>();
   const { whatsappCountryCode, whatsappNumber, payments, shipping, footer } = useSiteSettings();
   const [order, setOrder] = useState<Order | null | undefined>(undefined);
+  const [phase, setPhase] = useState<Phase>('pagar');
+  // Recordatorio suave si se queda en la página sin enviar el comprobante.
+  const [nudge, setNudge] = useState(false);
+  const [returned, setReturned] = useState(false);
 
   useEffect(() => {
     const local = getLocalOrder(params.id);
@@ -116,6 +124,52 @@ export default function OrderConfirmationPage() {
       cancelled = true;
     };
   }, [params.id]);
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(sentKey(params.id))) setPhase('listo');
+    } catch {
+      /* sin almacenamiento: empieza en el paso de pago */
+    }
+  }, [params.id]);
+
+  // Si sale a la app del banco y vuelve, le mostramos de una el botón de
+  // enviar el comprobante. Mientras está en otra pestaña, el título le
+  // recuerda que falta ese paso.
+  useEffect(() => {
+    if (phase === 'listo') return;
+    const original = document.title;
+    let hiddenAt = 0;
+    function onVisibility() {
+      if (document.hidden) {
+        hiddenAt = Date.now();
+        document.title = '⏰ Envía tu comprobante · Brooklyn Store';
+      } else {
+        document.title = original;
+        if (hiddenAt && Date.now() - hiddenAt > 4000) {
+          setReturned(true);
+          setPhase('comprobante');
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', onVisibility);
+    const timer = setTimeout(() => setNudge(true), 75_000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      clearTimeout(timer);
+      document.title = original;
+    };
+  }, [phase]);
+
+  // Pantalla de comprobante: sin scroll de fondo.
+  useEffect(() => {
+    if (phase !== 'comprobante') return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [phase]);
 
   if (order === undefined) {
     return <div className="container-page py-24 text-center text-muted">Cargando tu pedido...</div>;
@@ -135,109 +189,98 @@ export default function OrderConfirmationPage() {
 
   const firstName = order.customer.name.split(' ')[0];
   const isCod = order.paymentMethod === 'contra_entrega';
-  const orderMessage = buildOrderWhatsAppMessage(order);
-  const receiptMessage = buildReceiptMessage(order);
+  const paidMessage = buildOrderWhatsAppMessage(order, { paid: true });
+  const unpaidMessage = buildOrderWhatsAppMessage(order);
+  const sendUrl = whatsappLinkTo(whatsappNumber, paidMessage, whatsappCountryCode);
+
+  function markSent() {
+    try {
+      localStorage.setItem(sentKey(params.id), String(Date.now()));
+    } catch {
+      /* no pasa nada */
+    }
+    setNudge(false);
+    // Se deja abrir WhatsApp y luego pasamos a "listo".
+    setTimeout(() => setPhase('listo'), 400);
+  }
 
   return (
-    <div className="bg-cream-alt/50">
-      <div className="container-page max-w-3xl py-10 sm:py-14">
-        <div className="text-center">
-          <div className="mx-auto flex h-20 w-20 animate-popIn items-center justify-center rounded-full bg-gold-gradient text-4xl text-ink shadow-lift">
-            ✓
+    <div className="bg-cream-alt/50 pb-28">
+      <div className="container-page max-w-3xl py-6 sm:py-10">
+        {/* Encabezado según el paso */}
+        {phase === 'listo' ? (
+          <div className="text-center">
+            <div className="mx-auto flex h-20 w-20 animate-popIn items-center justify-center rounded-full bg-gold-gradient text-4xl text-ink shadow-lift">✓</div>
+            <h1 className="mt-5 font-heading text-3xl font-black uppercase text-ink sm:text-4xl">¡Gracias, {firstName}!</h1>
+            <p className="mt-2 text-muted">
+              Recibimos tu pedido <strong className="text-ink">{order.orderNumber}</strong> y tu comprobante. Apenas lo validamos despachamos con
+              Servientrega y te enviamos tu guía. Llega en {shipping.deliveryTime}.
+            </p>
+            <a
+              href={sendUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 text-xs font-bold text-muted underline decoration-whatsapp decoration-2 underline-offset-4"
+            >
+              <WhatsAppIcon size={14} /> ¿No se envió el comprobante? Envíalo otra vez
+            </a>
           </div>
-          <h1 className="mt-5 font-heading text-3xl font-black uppercase text-ink sm:text-4xl">¡Gracias, {firstName}!</h1>
-          <p className="mt-2 text-muted">
-            Recibimos tu pedido <strong className="text-ink">{order.orderNumber}</strong>. Ya mismo lo alistamos.
-          </p>
-        </div>
-
-        {/* Paso 1: WhatsApp */}
-        <div className="mt-8 rounded-3xl bg-white p-5 shadow-soft sm:p-7">
-          <p className="flex items-center gap-2 text-sm font-black uppercase text-ink">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs text-white">1</span>
-            Confirma tu pedido por WhatsApp
-          </p>
-          <p className="mt-2 text-sm text-muted">
-            Ya te abrimos WhatsApp con el resumen de tu pedido. Si no se abrió, toca el botón y envíanos el mensaje:
-          </p>
-          <a
-            href={whatsappLinkTo(whatsappNumber, orderMessage, whatsappCountryCode)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-whatsapp btn-shine mt-4 w-full py-4"
-          >
-            <WhatsAppIcon size={22} /> Enviar mi pedido por WhatsApp
-          </a>
-        </div>
-
-        {/* Paso 2: Pago */}
-        <div className="mt-4 rounded-3xl bg-white p-5 shadow-soft sm:p-7">
-          <p className="flex items-center gap-2 text-sm font-black uppercase text-ink">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs text-white">2</span>
-            {isCod ? `Paga hoy ${formatPrice(order.payNow)} del envío` : `Paga ${formatPrice(order.payNow)} por transferencia o depósito`}
-          </p>
-          <p className="mt-2 text-sm text-muted">
-            {isCod ? (
-              <>
-                Con este pago garantizas tu pedido. Tus zapatos (<strong className="text-ink">{formatPrice(order.payOnDelivery)}</strong>) los
-                pagas en efectivo cuando te los entregue Servientrega.
-              </>
-            ) : (
-              'Desde la app de cualquier banco o en ventanilla / agente Pichincha Mi Vecino. Toca “Copiar” y pega en tu banco.'
-            )}
-          </p>
-
-          <div className="mt-4 grid gap-3">
-            {payments.bankAccounts.map((account) => (
-              <BankCard key={account.bank + account.number} account={account} amount={order.payNow} />
-            ))}
-          </div>
-
-          {isCod && (
-            <div className="mt-3 grid grid-cols-2 gap-3 text-center">
-              <div className="rounded-2xl bg-gold-50 p-3 ring-1 ring-primary/30">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Hoy</p>
-                <p className="text-2xl font-black text-ink">{formatPrice(order.payNow)}</p>
-              </div>
-              <div className="rounded-2xl bg-cream-alt p-3">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Al recibir</p>
-                <p className="text-2xl font-black text-ink">{formatPrice(order.payOnDelivery)}</p>
-              </div>
+        ) : (
+          <>
+            <Stepper />
+            <div className="mt-5 text-center">
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary-dark">Pedido {order.orderNumber} reservado ✓</p>
+              <h1 className="mt-1 font-heading text-2xl font-black uppercase text-ink sm:text-3xl">
+                {firstName}, haz tu pago de <span className="text-gold-gradient">{formatPrice(order.payNow)}</span>
+              </h1>
+              <p className="mx-auto mt-1 max-w-md text-sm text-muted">
+                {isCod ? (
+                  <>
+                    Es el envío y garantiza tu pedido. Tus zapatos (<strong className="text-ink">{formatPrice(order.payOnDelivery)}</strong>) los pagas
+                    en efectivo al recibir.
+                  </>
+                ) : (
+                  'Desde la app de tu banco o en ventanilla / Pichincha Mi Vecino. Toca “Copiar” y pega en tu banco.'
+                )}
+              </p>
             </div>
-          )}
-          <p className="mt-3 text-center text-[11px] text-muted">🔒 Esta es nuestra única cuenta oficial. Nunca te pediremos pagar a otra.</p>
-        </div>
 
-        {/* Paso 3: Comprobante */}
-        <div className="relative mt-4 overflow-hidden rounded-3xl bg-white p-5 shadow-soft ring-2 ring-whatsapp/40 sm:p-7">
-          <p className="flex items-center gap-2 text-sm font-black uppercase text-ink">
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-whatsapp text-xs text-white">3</span>
-            ¿Ya pagaste? Envíanos el comprobante
-          </p>
-          <ol className="mt-4 grid grid-cols-3 gap-2 text-center">
-            {[
-              { icon: '👆', text: 'Toca el botón verde' },
-              { icon: '💬', text: 'Se abre WhatsApp con tu mensaje listo' },
-              { icon: '📎', text: 'Adjunta la foto o captura y envía' },
-            ].map((step) => (
-              <li key={step.text} className="rounded-2xl bg-cream-alt/70 px-2 py-3">
-                <span className="text-xl">{step.icon}</span>
-                <span className="mt-1 block text-[11px] font-bold leading-tight text-ink">{step.text}</span>
-              </li>
-            ))}
-          </ol>
-          <a
-            href={whatsappLinkTo(whatsappNumber, receiptMessage, whatsappCountryCode)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="btn-whatsapp btn-shine mt-4 w-full py-5 text-base"
-          >
-            <WhatsAppIcon size={22} /> Ya pagué · Enviar comprobante
-          </a>
-          <p className="mt-3 text-center text-xs text-muted">
-            Apenas lo recibimos despachamos con Servientrega y te mandamos tu número de guía. Llega en {shipping.deliveryTime}.
-          </p>
-        </div>
+            <div className="mt-5 grid gap-3">
+              {payments.bankAccounts.map((account) => (
+                <BankCard key={account.bank + account.number} account={account} amount={order.payNow} />
+              ))}
+            </div>
+
+            {isCod && (
+              <div className="mt-3 grid grid-cols-2 gap-3 text-center">
+                <div className="rounded-2xl bg-gold-50 p-3 ring-1 ring-primary/30">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Pagas hoy</p>
+                  <p className="text-2xl font-black text-ink">{formatPrice(order.payNow)}</p>
+                </div>
+                <div className="rounded-2xl bg-white p-3 ring-1 ring-border">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Al recibir</p>
+                  <p className="text-2xl font-black text-ink">{formatPrice(order.payOnDelivery)}</p>
+                </div>
+              </div>
+            )}
+
+            <button type="button" onClick={() => setPhase('comprobante')} className="btn-whatsapp btn-shine mt-4 w-full py-5 text-base">
+              ✓ Ya hice el pago · Enviar comprobante
+            </button>
+            <p className="mt-3 text-center text-[11px] text-muted">🔒 Esta es nuestra única cuenta oficial. Nunca te pediremos pagar a otra.</p>
+            <p className="mt-2 text-center text-[11px] text-muted">
+              ¿No puedes pagar ahora?{' '}
+              <a
+                href={whatsappLinkTo(whatsappNumber, unpaidMessage, whatsappCountryCode)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-bold text-ink underline"
+              >
+                Envíanos tu pedido y pagas luego
+              </a>
+            </p>
+          </>
+        )}
 
         {/* Resumen */}
         <div className="mt-4 rounded-3xl bg-white p-5 shadow-soft sm:p-7">
@@ -303,6 +346,103 @@ export default function OrderConfirmationPage() {
 
         <PostPurchaseUpsell excludeProductIds={order.items.map((i) => i.productId)} />
       </div>
+
+      {/* Barra fija: el siguiente paso siempre a la mano */}
+      {phase === 'pagar' && (
+        <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-ink/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur">
+          <div className="mx-auto flex max-w-3xl items-center gap-3">
+            <span className="min-w-0 flex-1 text-white">
+              <span className={classNames('block text-[10px] font-extrabold uppercase tracking-[0.18em]', nudge ? 'text-primary-light' : 'text-white/50')}>
+                {nudge ? '⏰ No olvides este paso' : `Paga ${formatPrice(order.payNow)} y luego`}
+              </span>
+              <span className="block truncate text-sm font-black">Envía tu comprobante para confirmar</span>
+            </span>
+            <button
+              type="button"
+              onClick={() => setPhase('comprobante')}
+              className={classNames('btn-whatsapp shrink-0 px-5 py-3 text-sm', nudge && 'animate-pulse')}
+            >
+              Ya pagué
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Pantalla única (sin scroll) para enviar el comprobante */}
+      {phase === 'comprobante' && (
+        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-ink/80 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
+          <div className="relative flex max-h-full w-full max-w-md animate-popIn flex-col overflow-hidden rounded-3xl bg-white shadow-dark">
+            <div className="bg-[#0a0a0a] px-5 pb-5 pt-6 text-center text-white">
+              <Stepper current={2} dark />
+              <p className="mt-4 text-4xl">📸</p>
+              <h2 className="mt-2 font-heading text-2xl font-black uppercase leading-tight">
+                {returned ? '¿Ya pagaste? ¡Último paso!' : 'Envía tu comprobante'}
+              </h2>
+              <p className="mt-1 text-sm text-white/65">
+                Tu pedido <strong className="text-primary-light">{order.orderNumber}</strong> se confirma cuando recibimos la foto de tu pago de{' '}
+                <strong className="text-white">{formatPrice(order.payNow)}</strong>.
+              </p>
+            </div>
+            <div className="p-5">
+              <ol className="grid grid-cols-3 gap-2 text-center">
+                {[
+                  { icon: '👆', text: 'Toca el botón verde' },
+                  { icon: '💬', text: 'Se abre WhatsApp con tu pedido listo' },
+                  { icon: '📎', text: 'Adjunta la captura y envía' },
+                ].map((step) => (
+                  <li key={step.text} className="rounded-2xl bg-cream-alt/70 px-2 py-3">
+                    <span className="text-xl">{step.icon}</span>
+                    <span className="mt-1 block text-[11px] font-bold leading-tight text-ink">{step.text}</span>
+                  </li>
+                ))}
+              </ol>
+              <a href={sendUrl} target="_blank" rel="noopener noreferrer" onClick={markSent} className="btn-whatsapp btn-shine mt-4 w-full py-5 text-base">
+                <WhatsAppIcon size={22} /> Enviar comprobante y confirmar
+              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setReturned(false);
+                  setPhase('pagar');
+                }}
+                className="mt-3 w-full text-center text-xs font-bold text-muted underline underline-offset-4 hover:text-ink"
+              >
+                ← Aún no pago · ver los datos bancarios
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+// Indicador de 2 pasos: pagar → enviar comprobante.
+function Stepper({ current = 1, dark = false }: { current?: 1 | 2; dark?: boolean }) {
+  const steps = ['Haz tu pago', 'Envía el comprobante'];
+  return (
+    <ol className="mx-auto flex max-w-xs items-center justify-center gap-2">
+      {steps.map((label, i) => {
+        const n = i + 1;
+        const done = n < current;
+        const active = n === current;
+        return (
+          <li key={label} className="flex items-center gap-2">
+            {i > 0 && <span className={classNames('h-px w-6', dark ? 'bg-white/25' : 'bg-border')} />}
+            <span
+              className={classNames(
+                'flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-black',
+                done ? 'bg-whatsapp text-white' : active ? 'bg-gold-gradient text-ink' : dark ? 'bg-white/10 text-white/50' : 'bg-white text-muted ring-1 ring-border',
+              )}
+            >
+              {done ? '✓' : n}
+            </span>
+            <span className={classNames('text-[11px] font-extrabold uppercase tracking-wide', active ? (dark ? 'text-white' : 'text-ink') : dark ? 'text-white/45' : 'text-muted')}>
+              {label}
+            </span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }

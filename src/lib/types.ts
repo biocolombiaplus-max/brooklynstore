@@ -21,6 +21,10 @@ export interface ProductReview {
   rating: number;
   text: string;
   date?: string;
+  // Reseña de una compra real (llegó por el link de reseña de un pedido).
+  verified?: boolean;
+  // Cómo le quedó la talla al cliente.
+  fit?: 'pequena' | 'perfecta' | 'grande';
 }
 
 // Para quién es el modelo — se usa en los filtros del catálogo y para
@@ -135,6 +139,8 @@ export interface Order {
   status: OrderStatus;
   carrier?: Carrier;
   trackingNumber?: string;
+  // Código de fidelización (reseña + cupón) creado al entregar el pedido.
+  loyaltyCode?: string;
   // Foto o PDF de la guía de envío (para enviársela al cliente).
   guideUrl?: string;
   guideType?: 'image' | 'pdf';
@@ -327,4 +333,43 @@ export interface SiteSettings {
     tiktok: string;
     copyrightText: string;
   };
+}
+
+// ——— Fidelización ———
+// Un registro por pedido entregado. Su id es el código del cupón (ej:
+// GRACIAS-ANA7K3), que también identifica el link de reseña.
+export interface LoyaltyItem {
+  productId: string;
+  slug: string;
+  title: string;
+  image: string;
+  size: string;
+  color: string;
+}
+
+export interface LoyaltyReview {
+  productId: string;
+  rating: number;
+  text: string;
+  fit?: 'pequena' | 'perfecta' | 'grande';
+}
+
+export interface LoyaltyRecord {
+  code: string;
+  orderId: string;
+  orderNumber: string;
+  customerName: string;
+  phone: string;
+  city: string;
+  items: LoyaltyItem[];
+  couponPercent: number;
+  couponMethod: PaymentMethod;
+  couponExpiresAt: number;
+  couponUsed: boolean;
+  couponUsedOrder?: string;
+  reviewStatus: 'pendiente' | 'enviada' | 'aprobada' | 'oculta';
+  reviews?: LoyaltyReview[];
+  reviewSubmittedAt?: number;
+  reminderSentAt?: number;
+  createdAt: number;
 }

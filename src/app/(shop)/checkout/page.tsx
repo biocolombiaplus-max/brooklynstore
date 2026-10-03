@@ -26,7 +26,7 @@ export default function CheckoutPage() {
     <div className="container-page py-8 sm:py-12">
       <p className="section-eyebrow">🔒 Compra segura</p>
       <h1 className="section-title mt-2">Finalizar compra</h1>
-      <p className="mt-2 text-sm text-muted">3 pasos rapidito y confirmas tu pedido por WhatsApp.</p>
+      <p className="mt-2 text-sm text-muted">3 pasos rapidito, pagas y nos envías el comprobante por WhatsApp.</p>
 
       <div className="mt-8 grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-12">
         <div className="order-2 lg:order-1">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import CopyGuideButton from '@/components/CopyGuideButton';
 
 // Guía de envío que recibe el cliente por WhatsApp: número de guía grande,
 // la foto o el PDF de la guía de Servientrega y botones para descargarla y
@@ -45,7 +46,7 @@ export default function GuiaPage({ searchParams }: Props) {
         {searchParams.g && (
           <div className="mt-6 rounded-3xl bg-gold-gradient p-5 text-center text-ink">
             <p className="text-[10px] font-extrabold uppercase tracking-[0.2em]">Número de guía Servientrega</p>
-            <p className="mt-1 font-mono text-3xl font-black tracking-wider">{searchParams.g}</p>
+            <CopyGuideButton value={searchParams.g} />
           </div>
         )}
 
@@ -69,7 +70,7 @@ export default function GuiaPage({ searchParams }: Props) {
             </a>
           )}
           <a href="https://www.servientrega.com.ec/" target="_blank" rel="noopener noreferrer" className="btn-dark w-full ring-1 ring-white/20">
-            🔎 Rastrear en Servientrega
+            🔎 Rastrear en Servientrega{searchParams.g ? ' (pega tu guía)' : ''}
           </a>
           <Link href="/" className="py-2 text-center text-xs font-bold text-white/50 underline underline-offset-4">
             Ir a la tienda

@@ -5,12 +5,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { createOrder, notifyOrderByEmail, notifyOrderByPush } from '@/lib/orders';
 import { getCantons, getProvinces } from '@/lib/ecuador';
 import { codUnitPrice, computeOrderTotals } from '@/lib/shipping';
-import { clearCoupon, getActiveCoupon, redeemCouponCode, type WonCoupon } from '@/lib/coupon';
+import { clearCoupon, couponPercentFor, getActiveCoupon, redeemAnyCouponCode, type WonCoupon } from '@/lib/coupon';
+import { markLoyaltyCouponUsed } from '@/lib/loyalty';
 import { useSiteSettings } from '@/lib/settings-context';
-import { buildOrderWhatsAppMessage, classNames, formatPrice, whatsappLinkTo } from '@/lib/utils';
+import { classNames, formatPrice } from '@/lib/utils';
 import type { CartItem, OrderCustomer, PaymentMethod } from '@/lib/types';
 import LocationCapture from '@/components/product/LocationCapture';
-import { CheckIcon, WhatsAppIcon } from '@/components/icons';
+import { CheckIcon } from '@/components/icons';
 
 const PROVINCES = getProvinces();
 
@@ -77,6 +78,7 @@ export default function CheckoutForm({
   onSuccess: (orderId: string) => void;
 }) {
   const settings = useSiteSettings();
+  const bank = settings.payments.bankAccounts[0];
   const codEnabled = settings.payments.codEnabled;
   const [method, setMethod] = useState<PaymentMethod>(codEnabled ? initialMethod : 'transferencia');
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -98,9 +100,11 @@ export default function CheckoutForm({
 
   const cantons = useMemo(() => getCantons(form.province), [form.province]);
   const subtotal = useMemo(() => items.reduce((sum, i) => sum + i.price * i.quantity, 0), [items]);
-  const totals = computeOrderTotals(settings, items, method, form.province, coupon?.percent ?? 0);
-  const transferTotals = computeOrderTotals(settings, items, 'transferencia', form.province, coupon?.percent ?? 0);
-  const codTotals = computeOrderTotals(settings, items, 'contra_entrega', form.province, coupon?.percent ?? 0);
+  const totals = computeOrderTotals(settings, items, method, form.province, couponPercentFor(coupon, method));
+  const transferTotals = computeOrderTotals(settings, items, 'transferencia', form.province, couponPercentFor(coupon, 'transferencia'));
+  const codTotals = computeOrderTotals(settings, items, 'contra_entrega', form.province, couponPercentFor(coupon, 'contra_entrega'));
+  // El cupón existe pero no aplica al método elegido (ej. 10% solo transferencia).
+  const couponBlocked = !!coupon && couponPercentFor(coupon, method) === 0;
 
   const errors = {
     name: form.name.trim().length < 3,
@@ -128,11 +132,11 @@ export default function CheckoutForm({
     };
   }
 
-  function applyCoupon() {
+  async function applyCoupon() {
     setCouponError('');
-    const result = redeemCouponCode(couponInput);
+    const { coupon: result, error: couponErr } = await redeemAnyCouponCode(couponInput);
     if (!result) {
-      setCouponError('Ese cupón no es válido o ya venció.');
+      setCouponError(couponErr ?? 'Ese cupón no es válido o ya venció.');
       return;
     }
     setCoupon(result);
@@ -148,9 +152,8 @@ export default function CheckoutForm({
       return;
     }
 
-    // La pestaña de WhatsApp se abre DENTRO del clic (antes de cualquier
-    // espera) para que el navegador no la bloquee como ventana emergente.
-    const waWindow = window.open('', '_blank');
+    // Primero se paga: el pedido queda registrado y pasamos a la pantalla
+    // con la cuenta bancaria. WhatsApp se abre después, con el comprobante.
     setSubmitting(true);
 
     try {
@@ -181,7 +184,7 @@ export default function CheckoutForm({
         customer,
         paymentMethod: method,
         status: 'pendiente' as const,
-        couponCode: coupon?.code,
+        couponCode: couponBlocked ? undefined : coupon?.code,
       };
 
       const { id, orderNumber } = await createOrder(orderData);
@@ -202,20 +205,14 @@ export default function CheckoutForm({
       });
       notifyOrderByPush({ orderNumber, total: totals.total, customerName: customer.name });
 
-      const waUrl = whatsappLinkTo(
-        settings.whatsappNumber,
-        buildOrderWhatsAppMessage({ ...orderData, orderNumber }),
-        settings.whatsappCountryCode,
-      );
-      if (waWindow) waWindow.location.href = waUrl;
-      else window.open(waUrl, '_blank');
-
       saveForm(form);
-      if (coupon) clearCoupon();
+      if (coupon && !couponBlocked) {
+        if (coupon.loyalty) markLoyaltyCouponUsed(coupon.code, orderNumber).catch(() => {});
+        clearCoupon();
+      }
       onSuccess(id);
     } catch (err) {
       console.error(err);
-      waWindow?.close();
       setError('Uy, no pudimos registrar tu pedido. Intenta otra vez o escríbenos directo por WhatsApp.');
       setSubmitting(false);
     }
@@ -233,11 +230,12 @@ export default function CheckoutForm({
           <PaymentOption
             selected={method === 'transferencia'}
             onSelect={() => setMethod('transferencia')}
+            badge={coupon?.onlyMethod === 'transferencia' ? `🎁 -${coupon.percent}% con tu cupón` : undefined}
             icon="🏦"
             title="Transferencia o depósito Pichincha"
             lines={[
               `${formatPrice(transferTotals.subtotal)} por transferencia o depósito en Banco Pichincha`,
-              'Te damos los datos bancarios al confirmar · Despacho el mismo día',
+              'Ves la cuenta al instante · Despacho el mismo día',
             ]}
           />
           {codEnabled && (
@@ -263,7 +261,9 @@ export default function CheckoutForm({
                   {
                     amount: formatPrice(codTotals.payNow),
                     title: 'Hoy: pagas el envío y garantizas tu pedido',
-                    text: 'Transferencia o depósito en Banco Pichincha. Te pasamos la cuenta por WhatsApp.',
+                    text: bank
+                      ? `${bank.bank} · ${bank.type} ${bank.number} · ${bank.holder}. Al continuar te mostramos la cuenta para copiarla.`
+                      : 'Transferencia o depósito. Al continuar te mostramos la cuenta para copiarla.',
                   },
                   { amount: '🚚', title: 'Despachamos tu pedido', text: `Llega a la dirección que nos indiques en ${settings.shipping.deliveryTime}.` },
                   {
@@ -400,7 +400,16 @@ export default function CheckoutForm({
 
         <div className="rounded-2xl border border-border bg-cream-alt/60 p-4 text-sm sm:p-5">
           <Row label={method === 'contra_entrega' ? 'Productos (pagas al recibir)' : 'Productos'} value={formatPrice(totals.subtotal)} />
-          {coupon ? (
+          {coupon && couponBlocked ? (
+            <div className="my-1 rounded-xl bg-gold-50 p-3 text-xs ring-1 ring-primary/40">
+              <p className="font-bold text-ink">
+                🎁 Tu cupón {coupon.code} ({coupon.percent}% OFF) aplica pagando por transferencia o depósito.
+              </p>
+              <button type="button" onClick={() => setMethod('transferencia')} className="mt-2 font-extrabold text-primary-hover underline">
+                Cambiar a transferencia y ahorrar {formatPrice(transferTotals.discount)} →
+              </button>
+            </div>
+          ) : coupon ? (
             <div className="flex items-center justify-between py-1 font-bold text-primary">
               <span>🎟️ Cupón {coupon.code} (-{coupon.percent}%)</span>
               <span className="flex items-center gap-2">
@@ -469,13 +478,12 @@ export default function CheckoutForm({
         {error && <p className="mt-4 rounded-xl bg-urgent/10 p-3 text-sm font-semibold text-urgent">{error}</p>}
 
         <button type="submit" disabled={submitting} className="btn-whatsapp btn-shine mt-5 w-full py-5 text-base">
-          <WhatsAppIcon size={22} />
-          {submitting ? 'Enviando tu pedido...' : 'Confirmar pedido por WhatsApp'}
+          🔒 {submitting ? 'Reservando tu pedido...' : `Continuar al pago de ${formatPrice(totals.payNow)}`}
         </button>
         <p className="mt-2 text-center text-xs text-muted">
           {method === 'contra_entrega'
-            ? `Se abre WhatsApp con tu pedido listo. Te pasamos la cuenta para adelantar los ${formatPrice(totals.payNow)} del envío.`
-            : 'Se abre WhatsApp con tu pedido listo. Te pasamos la cuenta de Banco Pichincha para tu transferencia o depósito.'}
+            ? `Te mostramos la cuenta al instante: pagas los ${formatPrice(totals.payNow)} del envío y nos envías el comprobante por WhatsApp.`
+            : 'Te mostramos la cuenta Banco Pichincha al instante: pagas y nos envías el comprobante por WhatsApp.'}
         </p>
         <div className="mt-4 flex flex-col items-center gap-2 border-t border-border pt-4">
           <PaymentLogos size="sm" className="justify-center" />
