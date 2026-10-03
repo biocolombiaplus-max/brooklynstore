@@ -50,7 +50,7 @@ export default function CommissionBar({ orders, now = new Date() }: { orders: Or
             {dayLabel(current.end)}
           </p>
         </div>
-        <div className="text-right">
+        <div className="sm:text-right">
           <p className="text-[10px] font-bold uppercase tracking-wider text-white/45">Se cobra el</p>
           <p className="text-lg font-black text-primary-light">{dayLabel(current.end)}</p>
           <p className="text-[11px] text-white/50">{daysLeft === 0 ? '¡Hoy es día de pago!' : `Faltan ${daysLeft} ${daysLeft === 1 ? 'día' : 'días'}`}</p>

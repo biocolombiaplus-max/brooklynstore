@@ -24,6 +24,11 @@ export default function ProductReviews({ reviews, totalCount }: { reviews: Produ
               {'★'.repeat(r.rating)}
               <span className="text-border">{'★'.repeat(5 - r.rating)}</span>
             </p>
+            {r.fit && (
+              <p className="mt-2 inline-block rounded-full bg-cream-alt px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted">
+                {r.fit === 'perfecta' ? '👟 Talla perfecta' : r.fit === 'pequena' ? '👟 Le quedó pequeño' : '👟 Le quedó grande'}
+              </p>
+            )}
             <p className="mt-3 text-sm leading-relaxed text-ink">&ldquo;{r.text}&rdquo;</p>
             <p className="mt-4 text-xs font-extrabold text-ink">
               {r.name}

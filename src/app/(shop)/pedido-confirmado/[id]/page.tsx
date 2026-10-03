@@ -355,7 +355,7 @@ export default function OrderConfirmationPage() {
               <span className={classNames('block text-[10px] font-extrabold uppercase tracking-[0.18em]', nudge ? 'text-primary-light' : 'text-white/50')}>
                 {nudge ? '⏰ No olvides este paso' : `Paga ${formatPrice(order.payNow)} y luego`}
               </span>
-              <span className="block truncate text-sm font-black">Envía tu comprobante para confirmar</span>
+              <span className="block truncate text-sm font-black">Envía el comprobante</span>
             </span>
             <button
               type="button"
@@ -421,7 +421,7 @@ export default function OrderConfirmationPage() {
 function Stepper({ current = 1, dark = false }: { current?: 1 | 2; dark?: boolean }) {
   const steps = ['Haz tu pago', 'Envía el comprobante'];
   return (
-    <ol className="mx-auto flex max-w-xs items-center justify-center gap-2">
+    <ol className="mx-auto flex items-center justify-center gap-2 whitespace-nowrap">
       {steps.map((label, i) => {
         const n = i + 1;
         const done = n < current;

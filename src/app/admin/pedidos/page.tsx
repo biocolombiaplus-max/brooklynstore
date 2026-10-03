@@ -7,6 +7,7 @@ import { getSiteSettings } from '@/lib/settings';
 import { CARRIERS, type Order, type OrderStatus, type Carrier, type BankAccount } from '@/lib/types';
 import { buildPaymentDataMessage, buildShippedMessage, formatPrice, guidePageUrl, orderPhotoUrl, whatsappLinkTo } from '@/lib/utils';
 import { uploadProductImage } from '@/lib/storage';
+import { buildReviewRequestMessage, ensureLoyaltyForOrder } from '@/lib/loyalty';
 import { uploadRawFileToFirestore } from '@/lib/firestoreImages';
 
 const STATUSES: { value: OrderStatus; label: string }[] = [
@@ -154,6 +155,27 @@ function OrderCard({
 }) {
   const [guideUploading, setGuideUploading] = useState(false);
   const [guideError, setGuideError] = useState('');
+  const [loyaltyBusy, setLoyaltyBusy] = useState(false);
+  const [loyaltyCode, setLoyaltyCode] = useState(order.loyaltyCode ?? '');
+
+  // Pide la reseña y regala el 10% OFF. La pestaña se abre dentro del clic
+  // para que el navegador no la bloquee.
+  async function sendReviewRequest() {
+    const tab = window.open('', '_blank');
+    setLoyaltyBusy(true);
+    try {
+      const record = await ensureLoyaltyForOrder({ ...order, loyaltyCode: loyaltyCode || order.loyaltyCode });
+      setLoyaltyCode(record.code);
+      const url = whatsappLinkTo(order.customer.phone, buildReviewRequestMessage(record, storeName));
+      if (tab) tab.location.href = url;
+      else window.open(url, '_blank');
+    } catch (err) {
+      tab?.close();
+      alert(err instanceof Error ? `No se pudo crear el link de reseña: ${err.message}` : 'No se pudo crear el link de reseña.');
+    } finally {
+      setLoyaltyBusy(false);
+    }
+  }
 
   async function handleGuideFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -391,6 +413,17 @@ function OrderCard({
           )}
         </div>
         <div className="flex flex-wrap gap-2">
+          {order.status === 'entregado' && (
+            <button
+              type="button"
+              onClick={sendReviewRequest}
+              disabled={loyaltyBusy}
+              className="flex items-center gap-2 rounded-lg bg-gold-gradient px-4 py-2.5 text-sm font-bold text-ink shadow-soft transition-transform hover:scale-[1.03] active:scale-[0.98] disabled:opacity-60"
+              title={loyaltyCode ? `Código ${loyaltyCode}` : 'Crea su link de reseña y su cupón de 10%'}
+            >
+              ⭐ {loyaltyBusy ? 'Preparando...' : loyaltyCode ? 'Reenviar reseña + 10% OFF' : 'Pedir reseña + 10% OFF'}
+            </button>
+          )}
           {order.status === 'pendiente' && bankAccounts.length > 0 && (
             <a
               href={whatsappLinkTo(order.customer.phone, buildPaymentDataMessage(order, bankAccounts))}
