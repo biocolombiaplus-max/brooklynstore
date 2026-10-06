@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useCartStore } from '@/lib/cart-store';
+import { getRecoverableCart } from '@/lib/visitorsAdmin';
 import { useSiteSettings } from '@/lib/settings-context';
 import { buildCartWhatsAppMessage, formatPrice, whatsappLinkTo } from '@/lib/utils';
 import SafeImage from '@/components/SafeImage';
@@ -15,6 +16,23 @@ export default function CarritoPage() {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   useEffect(() => setMounted(true), []);
+
+  // Link de recuperación enviado por WhatsApp (/carrito?recuperar=ID):
+  // arma de nuevo el carrito que el cliente dejó.
+  const replaceItems = useCartStore((s) => s.replaceItems);
+  useEffect(() => {
+    const id = new URLSearchParams(window.location.search).get('recuperar');
+    if (!id || !/^[a-f0-9]{24}$/.test(id)) return;
+    let cancelled = false;
+    getRecoverableCart(id)
+      .then((cart) => {
+        if (!cancelled && cart.length) replaceItems(cart);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [replaceItems]);
   if (!mounted) return null;
 
   if (items.length === 0) {

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { trackPixel } from '@/lib/pixel';
+import { trackVisitorCheckout } from '@/lib/visitor';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/cart-store';
 import { formatPrice } from '@/lib/utils';
@@ -23,6 +24,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!mounted || tracked.current || items.length === 0) return;
     tracked.current = true;
+    trackVisitorCheckout();
     trackPixel('InitiateCheckout', {
       content_ids: items.map((i) => i.metaId || i.productId),
       content_type: 'product',

@@ -10,6 +10,7 @@ import { markLoyaltyCouponUsed } from '@/lib/loyalty';
 import { useSiteSettings } from '@/lib/settings-context';
 import { classNames, formatPrice } from '@/lib/utils';
 import { trackPixel } from '@/lib/pixel';
+import { trackVisitorContact, trackVisitorPurchase } from '@/lib/visitor';
 import type { CartItem, OrderCustomer, PaymentMethod } from '@/lib/types';
 import LocationCapture from '@/components/product/LocationCapture';
 import { CheckIcon } from '@/components/icons';
@@ -116,6 +117,14 @@ export default function CheckoutForm({
   };
   const hasErrors = Object.values(errors).some(Boolean);
 
+  // Apenas tiene nombre y celular válidos se guardan para el panel de
+  // carritos abandonados (así se le puede ayudar si no termina la compra).
+  useEffect(() => {
+    if (form.name.trim().length < 3 || !isValidPhone(form.phone)) return;
+    const t = setTimeout(() => trackVisitorContact(form.name, form.phone), 1200);
+    return () => clearTimeout(t);
+  }, [form.name, form.phone]);
+
   useEffect(() => {
     if (!attempted || !hasErrors) return;
     document.querySelector('[data-invalid="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -190,6 +199,7 @@ export default function CheckoutForm({
 
       const { id, orderNumber } = await createOrder(orderData);
 
+      trackVisitorPurchase(orderNumber);
       // Píxel: compra registrada (el ID del pedido evita contarla dos veces).
       trackPixel(
         'Purchase',
@@ -339,6 +349,7 @@ export default function CheckoutForm({
               {...fieldProps('phone')}
             />
             {attempted && errors.phone && <p className="mt-1 text-xs text-urgent">Escribe un celular válido, ej: 0991234567.</p>}
+            <p className="mt-1 text-[11px] text-muted">Lo usamos solo para coordinar tu pedido por WhatsApp.</p>
           </div>
           <input
             inputMode="numeric"

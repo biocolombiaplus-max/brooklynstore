@@ -13,6 +13,8 @@ interface CartState {
   removeItem: (productId: string, size: string, color: string) => void;
   updateQuantity: (productId: string, size: string, color: string, quantity: number) => void;
   clear: () => void;
+  // Reemplaza el carrito completo (al recuperar un carrito abandonado).
+  replaceItems: (items: CartItem[]) => void;
   subtotal: () => number;
   totalItems: () => number;
 }
@@ -54,6 +56,7 @@ export const useCartStore = create<CartState>()(
             .filter((i) => i.quantity > 0),
         })),
       clear: () => set({ items: [] }),
+      replaceItems: (items) => set({ items }),
       subtotal: () => get().items.reduce((sum, i) => sum + i.price * i.quantity, 0),
       totalItems: () => get().items.reduce((sum, i) => sum + i.quantity, 0),
     }),

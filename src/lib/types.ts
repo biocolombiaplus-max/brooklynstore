@@ -378,3 +378,52 @@ export interface LoyaltyRecord {
   reminderSentAt?: number;
   createdAt: number;
 }
+
+// ——— Visitantes (analítica tipo Shopify) ———
+export type VisitorStage = 'visita' | 'producto' | 'carrito' | 'checkout' | 'compra';
+
+export interface VisitorProduct {
+  slug: string;
+  title: string;
+  image: string;
+}
+
+export interface VisitorCartItem {
+  productId: string;
+  slug: string;
+  title: string;
+  image: string;
+  size: string;
+  sizeUs?: string;
+  color: string;
+  quantity: number;
+  price: number;
+  codPrice?: number;
+  brand?: string;
+  metaId?: string;
+}
+
+export interface Visitor {
+  id: string;
+  firstSeen: number;
+  lastSeen: number;
+  visits: number;
+  pageviews: number;
+  lastPath: string;
+  landing: string;
+  source: string;
+  campaign: string;
+  device: string;
+  city: string;
+  region: string;
+  products: VisitorProduct[];
+  cart: VisitorCartItem[];
+  cartValue: number;
+  stage: VisitorStage;
+  stageAt: number;
+  name: string;
+  phone: string;
+  orderNumber: string;
+  recoveryAt?: number;
+  recoveryCount?: number;
+}

@@ -70,5 +70,23 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['couponUsed', 'couponUsedOrder', 'couponUsedAt'])
             && request.resource.data.couponUsed == true);
     }
+
+    // Visitantes de la tienda (panel "Visitantes en vivo"). La tienda guarda
+    // la actividad sin iniciar sesión; solo el administrador puede ver la
+    // lista. Leer un registro por su id (secreto) permite recuperar el
+    // carrito desde el link que se le envía al cliente por WhatsApp.
+    match /visitors/{vid} {
+      allow get: if true;
+      allow list, delete: if isAdmin();
+      allow create, update: if isAdmin() || (
+        vid.matches('^[a-f0-9]{24}$')
+        && request.resource.data.keys().hasOnly(['firstSeen', 'visits', 'lastPath', 'landing', 'source', 'campaign', 'device',
+             'products', 'cart', 'cartValue', 'stage', 'stageAt', 'name', 'phone', 'orderNumber', 'city', 'region',
+             'lastSeen', 'pageviews', 'recoveryAt', 'recoveryCount'])
+        && request.resource.data.get('cart', []).size() <= 15
+        && request.resource.data.get('products', []).size() <= 6
+        && request.resource.data.get('stage', 'visita') in ['visita', 'producto', 'carrito', 'checkout', 'compra']
+      );
+    }
   }
 }

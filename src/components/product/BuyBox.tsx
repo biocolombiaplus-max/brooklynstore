@@ -5,6 +5,7 @@ import { usSizeFor } from '@/lib/sizes';
 import { useEffect, useState, type RefObject } from 'react';
 import { trackPixel } from '@/lib/pixel';
 import { metaItemId } from '@/lib/metaCatalog';
+import { trackVisitorProduct } from '@/lib/visitor';
 import { productMessage, useWaContext } from '@/lib/wa-messages';
 import type { PaymentMethod, Product } from '@/lib/types';
 import { classNames, formatPrice, resolveColorImage, whatsappLinkTo } from '@/lib/utils';
@@ -66,6 +67,7 @@ export default function BuyBox({
   useEffect(() => {
     const fromLink = new URLSearchParams(window.location.search).get('color');
     const viewed = product.colors.find((c) => c.name.toLowerCase() === fromLink?.toLowerCase())?.name ?? color;
+    trackVisitorProduct(product);
     trackPixel('ViewContent', {
       content_ids: [metaItemId(product, viewed)],
       content_name: product.title,

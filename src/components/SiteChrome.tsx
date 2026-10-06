@@ -8,6 +8,7 @@ import FloatingWhatsApp from './FloatingWhatsApp';
 import FloatingBadge from './FloatingBadge';
 import CouponActivator from './CouponActivator';
 import MetaPixel from './MetaPixel';
+import VisitorTracker from './VisitorTracker';
 import { SettingsProvider } from '@/lib/settings-context';
 import type { SiteSettings } from '@/lib/types';
 
@@ -29,6 +30,7 @@ export default function SiteChrome({
       <FloatingBadge />
       <CouponActivator />
       <MetaPixel />
+      <VisitorTracker />
     </SettingsProvider>
   );
 }
