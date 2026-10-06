@@ -10,10 +10,9 @@ import { useSiteSettings } from '@/lib/settings-context';
 import { isStarBrand } from '@/lib/brand';
 import { classNames } from '@/lib/utils';
 
-export function discountPercentOf(product: Pick<Product, 'price' | 'compareAtPrice'>): number {
-  if (!product.compareAtPrice || product.compareAtPrice <= product.price) return 0;
-  return Math.round((1 - product.price / product.compareAtPrice) * 100);
-}
+import { discountPercentOf } from '@/lib/discount';
+
+export { discountPercentOf };
 
 export default function ProductCard({ product, priority = false }: { product: Product; priority?: boolean }) {
   const { featuredBrand } = useSiteSettings();

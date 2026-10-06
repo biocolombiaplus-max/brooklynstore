@@ -13,23 +13,16 @@ import ShoeStage from './brand/ShoeStage';
 import StarTag from './brand/StarTag';
 import { ChevronIcon, CloseIcon, SearchIcon, WhatsAppIcon } from './icons';
 
-const img = (id: string) => `https://images.unsplash.com/${id}?auto=format&fit=crop&w=500&q=70`;
-
-const CATEGORIES = [
-  { label: 'Hombre', href: '/catalogo?genero=hombre', image: img('photo-1491553895911-0055eca6402d') },
-  { label: 'Mujer', href: '/catalogo?genero=mujer', image: img('photo-1543163521-1bf539c55dd2') },
-  { label: 'Running', href: '/catalogo?estilo=running', image: img('photo-1542291026-7eec264c27ff') },
-  { label: 'Ofertas', href: '/catalogo?ofertas=1', image: img('photo-1556906781-9a412961c28c'), hot: true },
-];
-
 // Menú de celular pensado para vender: buscador, marca estrella, categorías
 // con foto, marcas, estilos, ayuda (tallas, pagos) y asesoría por WhatsApp.
 // Se monta en <body> con un portal: dentro del encabezado (que tiene
 // desenfoque de fondo) un elemento "fixed" queda atrapado y no se ve.
 export default function MobileMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
-  const { brands, collectionsMenu, featuredBrand, payments, shipping, whatsappNumber, whatsappCountryCode, storeName, logoUrl } =
+  const { brands, collectionsMenu, featuredBrand, payments, shipping, whatsappNumber, whatsappCountryCode, storeName, logoUrl, categoryTiles } =
     useSiteSettings();
+  // Las mismas tarjetas (foto, nombre y link) de "Compra por categoría" de la portada.
+  const categories = categoryTiles.tiles.filter((t) => t.label.trim());
   const [mounted, setMounted] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -111,19 +104,23 @@ export default function MobileMenu({ open, onClose }: { open: boolean; onClose: 
             </Link>
           )}
 
-          {/* Categorías con foto */}
-          <p className="mt-7 text-[11px] font-extrabold uppercase tracking-[0.22em] text-muted">Comprar por categoría</p>
-          <div className="mt-3 grid grid-cols-2 gap-2.5">
-            {CATEGORIES.map((c) => (
-              <Link key={c.label} href={c.href} onClick={onClose} className="group relative h-24 overflow-hidden rounded-2xl bg-ink">
-                <SafeImage src={c.image} alt={c.label} fill sizes="180px" className="object-cover opacity-75 transition-transform duration-500 group-active:scale-105" />
-                <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                <span className="absolute bottom-2.5 left-3 flex items-center gap-1 text-base font-black uppercase text-white">
-                  {c.label} {c.hot && '🔥'}
-                </span>
-              </Link>
-            ))}
-          </div>
+          {/* Categorías con foto: las mismas de la portada */}
+          {categories.length > 0 && (
+            <>
+              <p className="mt-7 text-[11px] font-extrabold uppercase tracking-[0.22em] text-muted">Comprar por categoría</p>
+              <div className="mt-3 grid grid-cols-2 gap-2.5">
+                {categories.map((c) => (
+                  <Link key={c.label + c.href} href={c.href || '/catalogo'} onClick={onClose} className="group relative h-24 overflow-hidden rounded-2xl bg-ink">
+                    {c.image && (
+                      <SafeImage src={c.image} alt={c.label} fill sizes="180px" className="object-cover opacity-80 transition-transform duration-500 group-active:scale-105" />
+                    )}
+                    <span className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                    <span className="absolute bottom-2.5 left-3 right-3 truncate text-base font-black uppercase text-white">{c.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </>
+          )}
           <Link
             href="/catalogo"
             onClick={onClose}

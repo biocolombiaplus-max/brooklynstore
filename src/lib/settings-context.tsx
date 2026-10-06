@@ -19,15 +19,20 @@ export function SettingsProvider({
 }) {
   const [settings, setSettings] = useState<SiteSettings>(initialSettings ?? DEFAULT_SETTINGS);
 
+  // La tienda ya recibe la configuración desde el servidor (en el HTML):
+  // no hace falta volver a pedirla a Firebase. Si no vino (panel), se
+  // consulta, y si esa consulta falla se conserva la que ya había en vez de
+  // volver a los valores de fábrica.
   useEffect(() => {
+    if (initialSettings) return;
     let cancelled = false;
     getSiteSettings()
-      .then((s) => !cancelled && setSettings(s))
+      .then((s) => !cancelled && s !== DEFAULT_SETTINGS && setSettings(s))
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialSettings]);
 
   useEffect(() => {
     const root = document.documentElement;

@@ -17,37 +17,12 @@ import { db } from './firebase';
 import type { Product, ProductInput } from './types';
 import { DEMO_PRODUCTS } from './demo-products';
 import { stripUndefined } from './utils';
+import { mapProduct } from './productMap';
 
 const COLLECTION = 'products';
 
 function toProduct(id: string, data: any): Product {
-  const toMillis = (value: unknown) => (value instanceof Timestamp ? value.toMillis() : undefined);
-  return {
-    id,
-    slug: data.slug,
-    title: data.title,
-    brand: data.brand ?? '',
-    line: data.line ?? '',
-    gender: ['hombre', 'mujer', 'unisex'].includes(data.gender) ? data.gender : 'unisex',
-    description: data.description ?? '',
-    price: data.price ?? 0,
-    compareAtPrice: data.compareAtPrice ?? null,
-    codPrice: data.codPrice ?? null,
-    images: data.images ?? [],
-    sizes: data.sizes ?? [],
-    colors: data.colors ?? [],
-    collection: data.collection ?? 'urbanos',
-    fit: data.fit ?? 'normal',
-    stock: data.stock ?? 0,
-    featured: !!data.featured,
-    isNew: !!data.isNew,
-    active: data.active !== false,
-    soldCount: data.soldCount ?? 0,
-    reviewsCount: data.reviewsCount ?? 0,
-    reviews: data.reviews ?? [],
-    createdAt: toMillis(data.createdAt),
-    updatedAt: toMillis(data.updatedAt),
-  };
+  return mapProduct(id, data, (value) => (value instanceof Timestamp ? value.toMillis() : undefined));
 }
 
 export async function getAllProducts(): Promise<Product[]> {
@@ -58,7 +33,23 @@ export async function getAllProducts(): Promise<Product[]> {
 // Productos que ve el público: los reales de Firestore, o el catálogo de
 // demostración mientras la tienda todavía no tiene ninguno publicado (o si
 // Firebase aún no está configurado).
-export async function getActiveProducts(): Promise<Product[]> {
+// En el navegador se piden a /api/products (en caché en la CDN, carga al
+// instante) y solo si falla se consulta Firestore directo.
+let activeProductsCache: Promise<Product[]> | null = null;
+
+export function getActiveProducts(): Promise<Product[]> {
+  if (typeof window === 'undefined') return getActiveProductsDirect();
+  activeProductsCache ??= fetch('/api/products')
+    .then((res) => (res.ok ? (res.json() as Promise<Product[]>) : Promise.reject(new Error(String(res.status)))))
+    .then((list) => (Array.isArray(list) && list.length > 0 ? list : getActiveProductsDirect()))
+    .catch(() => {
+      activeProductsCache = null;
+      return getActiveProductsDirect();
+    });
+  return activeProductsCache;
+}
+
+async function getActiveProductsDirect(): Promise<Product[]> {
   if (!db) return DEMO_PRODUCTS;
   try {
     const products = (await getAllProducts()).filter((p) => p.active);

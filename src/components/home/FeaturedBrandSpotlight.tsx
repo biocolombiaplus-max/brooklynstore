@@ -14,11 +14,12 @@ import StarSeal from '../brand/StarSeal';
 // Bloque premium de la marca estrella: nombre gigante, lema en serif
 // itálica dorada, zapato sobre un escenario con foco de luz y sello Nº1.
 // Todo se edita en /admin/configuracion → Marca estrella.
-export default function FeaturedBrandSpotlight() {
+export default function FeaturedBrandSpotlight({ initialProducts }: { initialProducts?: Product[] }) {
   const { featuredBrand: fb, payments } = useSiteSettings();
-  const [products, setProducts] = useState<Product[]>([]);
+  const [products, setProducts] = useState<Product[]>(initialProducts ?? []);
 
   useEffect(() => {
+    if (initialProducts) return;
     let cancelled = false;
     getActiveProducts()
       .then((list) => !cancelled && setProducts(list.filter((p) => isStarBrand(fb, p.brand))))
@@ -26,7 +27,7 @@ export default function FeaturedBrandSpotlight() {
     return () => {
       cancelled = true;
     };
-  }, [fb]);
+  }, [fb, initialProducts]);
 
   if (!fb.enabled || !fb.name) return null;
 

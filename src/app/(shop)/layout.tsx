@@ -16,6 +16,8 @@ export default async function ShopLayout({ children }: { children: React.ReactNo
           este mismo HTML — así el navegador empieza a descargarlos de una
           vez, sin esperar a un viaje extra a la base de datos desde el
           cliente antes de saber qué imagen mostrar. */}
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       <link rel="stylesheet" href={googleFontsHref([settings.fonts.headingFont, settings.fonts.bodyFont, 'Playfair Display'])} />
       <SiteChrome initialSettings={settings}>{children}</SiteChrome>
     </>

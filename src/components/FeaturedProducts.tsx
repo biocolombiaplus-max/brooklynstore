@@ -6,7 +6,7 @@ import { getActiveProducts } from '@/lib/products';
 import type { Product } from '@/lib/types';
 import { classNames } from '@/lib/utils';
 import ProductGrid, { ProductGridSkeleton } from './ProductGrid';
-import { discountPercentOf } from './ProductCard';
+import { featuredTabs } from '@/lib/featuredTabs';
 
 type Tab = 'vendidos' | 'nuevos' | 'ofertas';
 
@@ -16,11 +16,13 @@ const TABS: { value: Tab; label: string }[] = [
   { value: 'ofertas', label: 'Ofertas' },
 ];
 
-export default function FeaturedProducts() {
-  const [products, setProducts] = useState<Product[] | null>(null);
+export default function FeaturedProducts({ initialProducts }: { initialProducts?: Product[] }) {
+  // La portada ya trae los zapatos desde el servidor: se muestran al instante.
+  const [products, setProducts] = useState<Product[] | null>(initialProducts?.length ? initialProducts : null);
   const [tab, setTab] = useState<Tab>('vendidos');
 
   useEffect(() => {
+    if (initialProducts?.length) return;
     let cancelled = false;
     getActiveProducts()
       .then((list) => !cancelled && setProducts(list))
@@ -28,15 +30,9 @@ export default function FeaturedProducts() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [initialProducts]);
 
-  const shown = useMemo(() => {
-    if (!products) return [];
-    const list = [...products];
-    if (tab === 'nuevos') return list.sort((a, b) => Number(!!b.isNew) - Number(!!a.isNew) || (b.createdAt ?? 0) - (a.createdAt ?? 0)).slice(0, 8);
-    if (tab === 'ofertas') return list.filter((p) => discountPercentOf(p) > 0).sort((a, b) => discountPercentOf(b) - discountPercentOf(a)).slice(0, 8);
-    return list.sort((a, b) => Number(b.featured) - Number(a.featured) || (b.soldCount ?? 0) - (a.soldCount ?? 0)).slice(0, 8);
-  }, [products, tab]);
+  const shown = useMemo(() => (products ? featuredTabs(products)[tab] : []), [products, tab]);
 
   return (
     <section className="bg-white py-14 sm:py-20">
