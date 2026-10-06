@@ -7,12 +7,12 @@ import type { BankAccount, Order, OrderCustomer, PaymentMethod } from './types';
 // subieron en el mismo orden que los colores (ej: elegir "Negro" y que
 // aparezca la foto café), que es peor que simplemente no cambiar la foto.
 export function resolveColorImage(
-  product: { colors: { name: string; image?: string }[]; images: string[] },
+  product: { colors: { name: string; image?: string; images?: string[] }[]; images: string[] },
   colorName: string,
 ): string | undefined {
   const color = product.colors.find((c) => c.name === colorName);
   if (!color) return undefined;
-  return color.image || product.images[0];
+  return color.images?.[0] || color.image || product.images[0];
 }
 
 const PRICE_FORMAT = new Intl.NumberFormat('es-EC', {

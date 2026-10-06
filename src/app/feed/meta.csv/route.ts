@@ -1,6 +1,7 @@
 import { getActiveProductsServer } from '@/lib/productsServer';
 import type { Product } from '@/lib/types';
 import { metaItemId } from '@/lib/metaCatalog';
+import { photosForColor, sharedPhotos } from '@/lib/colorPhotos';
 
 // Catálogo de productos para Meta (Facebook / Instagram) y Google Merchant.
 // Se genera solo con los zapatos activos de la tienda: Meta lo descarga
@@ -96,7 +97,8 @@ function rows(p: Product): Row[] {
   const colors = (p.colors ?? []).filter((c) => c.name);
   if (colors.length > 1) {
     return colors.map((c) => {
-      const images = gallery(c.image);
+      const own = photosForColor(p, c.name);
+      const images = Array.from(new Set([...own, ...sharedPhotos(p), ...p.images])).map(jpgUrl).filter(Boolean);
       return {
         ...base,
         id: metaItemId(p, c.name),

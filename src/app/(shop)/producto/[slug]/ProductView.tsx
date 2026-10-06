@@ -2,11 +2,12 @@
 
 import ExchangePolicy from '@/components/ExchangePolicy';
 import StarTag from '@/components/brand/StarTag';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { getProductBySlug } from '@/lib/products';
 import { formatPrice, resolveColorImage } from '@/lib/utils';
+import { galleryForColor } from '@/lib/colorPhotos';
 import { useSiteSettings } from '@/lib/settings-context';
 import { GENDERS, type PaymentMethod, type Product } from '@/lib/types';
 import ProductGallery from '@/components/product/ProductGallery';
@@ -25,6 +26,7 @@ export default function ProductView({ initialProduct }: { initialProduct?: Produ
   const { payments, shipping, featuredBrand } = useSiteSettings();
   // La ficha llega desde el servidor ya con el zapato: se ve al instante.
   const [product, setProduct] = useState<Product | null | undefined>(initialProduct ?? undefined);
+  const [colorName, setColorName] = useState<string | undefined>(initialProduct?.colors[0]?.name);
   const [colorImage, setColorImage] = useState<string | undefined>(
     initialProduct?.colors[0] ? resolveColorImage(initialProduct, initialProduct.colors[0].name) : undefined,
   );
@@ -52,6 +54,7 @@ export default function ProductView({ initialProduct }: { initialProduct?: Produ
         if (cancelled) return;
         setProduct(p);
         setColorImage(p?.colors[0] ? resolveColorImage(p, p.colors[0].name) : undefined);
+        setColorName(p?.colors[0]?.name);
         if (p) document.title = `${p.title} — Brooklyn Store`;
       })
       .catch(() => !cancelled && setProduct(null));
@@ -59,6 +62,9 @@ export default function ProductView({ initialProduct }: { initialProduct?: Produ
       cancelled = true;
     };
   }, [params.slug, initialProduct]);
+
+  // Fotos del color elegido primero (memo: el carrusel no se reinicia al deslizar).
+  const gallery = useMemo(() => (product ? galleryForColor(product, colorName) : []), [product, colorName]);
 
   if (product === null) return notFound();
 
@@ -97,7 +103,7 @@ export default function ProductView({ initialProduct }: { initialProduct?: Produ
 
         <div className="grid grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:gap-14">
           <ProductGallery
-            images={product.images}
+            images={gallery}
             title={product.title}
             discountPercent={discountPercentOf(product)}
             isNew={product.isNew}
@@ -152,7 +158,10 @@ export default function ProductView({ initialProduct }: { initialProduct?: Produ
             <div id="comprar" className="mt-4 scroll-mt-24">
               <BuyBox
                 product={product}
-                onColorChange={(name) => setColorImage(resolveColorImage(product, name))}
+                onColorChange={(name) => {
+                  setColorName(name);
+                  setColorImage(resolveColorImage(product, name));
+                }}
                 ctaRef={ctaRef}
                 onRequestBuy={(open) => {
                   openBuyRef.current = open;

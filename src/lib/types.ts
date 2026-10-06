@@ -12,7 +12,10 @@ export interface ProductColor {
   pattern?: ColorPattern;
   // Estampado solo del logo / detalles (con hex3 como color base).
   logoPattern?: ColorPattern;
+  // Foto principal de este color (la primera de `images`).
   image?: string;
+  // Todas las fotos de este color (ángulos), en el orden de la galería.
+  images?: string[];
 }
 
 export interface ProductReview {

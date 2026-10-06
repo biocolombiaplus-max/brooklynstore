@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
+import { colorPhotoSet, groupImagesByColor, normalizeColorPhotos } from '@/lib/colorPhotos';
 import { FITS, GENDERS, type Fit, type Gender, type Product, type ProductColor, type ProductInput, type ProductReview } from '@/lib/types';
 import { useSiteSettings } from '@/lib/settings-context';
 import { slugify } from '@/lib/utils';
@@ -169,17 +170,42 @@ export default function ProductForm({ product }: { product?: Product }) {
     setColors((c) => c.filter((x) => x.name !== name));
   }
 
-  function updateColorImage(name: string, image: string) {
-    setColors((c) =>
-      c.map((x) => {
-        if (x.name !== name) return x;
-        if (!image) {
-          const { image: _unused, ...rest } = x;
-          return rest;
-        }
-        return { ...x, image };
-      }),
-    );
+  // Toca una foto para sumarla (o quitarla) de un color. Cada foto es de un
+  // solo color; al asignarla, la galería se reordena sola agrupando por color.
+  function toggleColorPhoto(name: string, url: string) {
+    const next = colors.map((x) => {
+      const set = colorPhotoSet(x);
+      if (x.name === name) {
+        const has = set.includes(url);
+        return { ...x, images: has ? set.filter((u) => u !== url) : [...set, url] };
+      }
+      return set.includes(url) ? { ...x, images: set.filter((u) => u !== url) } : x;
+    });
+    const normalized = normalizeColorPhotos(images, next);
+    setColors(normalized);
+    setImages((prev) => groupImagesByColor(prev, normalized));
+  }
+
+  function clearColorPhotos(name: string) {
+    setColors((prev) => normalizeColorPhotos(images, prev.map((x) => (x.name === name ? { ...x, images: [] } : x))));
+  }
+
+  // Mueve una foto dentro de la galería (la primera es la portada).
+  function moveImage(url: string, delta: number) {
+    const i = images.indexOf(url);
+    const j = delta === -Infinity ? 0 : Math.max(0, Math.min(images.length - 1, i + delta));
+    if (i === -1 || i === j) return;
+    const next = [...images];
+    next.splice(i, 1);
+    next.splice(j, 0, url);
+    setImages(next);
+    setColors((c) => normalizeColorPhotos(next, c));
+  }
+
+  function autoOrderByColor() {
+    const next = groupImagesByColor(images, colors);
+    setImages(next);
+    setColors((c) => normalizeColorPhotos(next, c));
   }
 
   function addReview() {
@@ -227,7 +253,9 @@ export default function ProductForm({ product }: { product?: Product }) {
   }
 
   async function handleRemoveImage(url: string) {
-    setImages((prev) => prev.filter((i) => i !== url));
+    const remaining = images.filter((i) => i !== url);
+    setImages(remaining);
+    setColors((prev) => normalizeColorPhotos(remaining, prev));
     deleteProductImage(url);
   }
 
@@ -255,7 +283,7 @@ export default function ProductForm({ product }: { product?: Product }) {
       codPrice: codPrice ? Number(codPrice) : null,
       images,
       sizes,
-      colors,
+      colors: normalizeColorPhotos(images, colors),
       collection: collectionName,
       stock: Number(stock) || 0,
       featured,
@@ -445,18 +473,41 @@ export default function ProductForm({ product }: { product?: Product }) {
           </p>
 
           <div className="mb-4 flex flex-wrap gap-3">
-            {images.map((url) => (
-              <div key={url} className="relative h-24 w-24 overflow-hidden rounded-lg border border-border">
-                <Image src={url} alt="" fill className="object-cover" />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveImage(url)}
-                  className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/80 text-xs text-white"
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+            {images.map((url, i) => {
+              const owner = colors.find((c) => colorPhotoSet(c).includes(url));
+              return (
+                <div key={url} className="relative h-28 w-28 overflow-hidden rounded-lg border border-border bg-white">
+                  <Image src={url} alt="" fill className="object-cover" />
+                  <span className="absolute left-1 top-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-ink/80 px-1 text-[10px] font-bold text-white">
+                    {i === 0 ? '★' : i + 1}
+                  </span>
+                  {owner && (
+                    <span className="absolute bottom-7 left-1 max-w-[100px] truncate rounded-full bg-white/90 px-1.5 py-0.5 text-[9px] font-bold text-ink shadow-soft">
+                      {owner.name}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveImage(url)}
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink/80 text-xs text-white"
+                    aria-label="Eliminar foto"
+                  >
+                    ✕
+                  </button>
+                  <div className="absolute inset-x-0 bottom-0 flex justify-between bg-ink/70 text-xs font-bold text-white">
+                    <button type="button" onClick={() => moveImage(url, -1)} disabled={i === 0} className="flex-1 py-1 disabled:opacity-30" aria-label="Mover antes">
+                      ◀
+                    </button>
+                    <button type="button" onClick={() => moveImage(url, -Infinity)} disabled={i === 0} className="flex-1 py-1 text-[10px] disabled:opacity-30" title="Poner de portada">
+                      ★
+                    </button>
+                    <button type="button" onClick={() => moveImage(url, 1)} disabled={i === images.length - 1} className="flex-1 py-1 disabled:opacity-30" aria-label="Mover después">
+                      ▶
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
             <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-xs text-muted hover:border-primary">
               {uploading ? 'Subiendo...' : '+ Agregar'}
               <input
@@ -622,53 +673,75 @@ export default function ProductForm({ product }: { product?: Product }) {
 
           {colors.length > 0 && images.length > 0 && (
             <div className="mt-4 space-y-4 border-t border-border pt-4">
-              <div>
-                <p className="text-sm font-semibold text-ink">Foto de cada color</p>
-                <p className="text-xs text-muted">
-                  Toca la foto que corresponde a cada color. Si dejas un color en &ldquo;Principal&rdquo;, se
-                  mostrará siempre la primera foto al elegirlo — así nunca se muestra el color equivocado.
-                </p>
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <p className="text-sm font-semibold text-ink">Fotos de cada color</p>
+                  <p className="text-xs text-muted">
+                    Toca todas las fotos de cada color (frente, lado, suela...). El número muestra el orden en que se verán. Al elegir
+                    ese color en la tienda, la galería muestra solo sus fotos. Las fotos sin color se muestran con todos.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={autoOrderByColor}
+                  className="shrink-0 rounded-full bg-ink px-3 py-1.5 text-[11px] font-bold text-white"
+                >
+                  ✨ Ordenar por color
+                </button>
               </div>
 
-              {colors.some((c) => !c.image) && colors.length > 1 && (
+              {colors.some((c) => !colorPhotoSet(c).length) && colors.length > 1 && (
                 <p className="rounded-lg bg-urgent/10 p-2.5 text-xs font-semibold text-urgent">
-                  ⚠️ Hay colores sin foto asignada — al elegirlos en la tienda se verá la foto principal en vez
-                  de la foto real de ese color. Asígnales una abajo para que el cambio de color se vea bien.
+                  ⚠️ Hay colores sin fotos asignadas: al elegirlos en la tienda se verán todas las fotos. Asígnales las suyas abajo.
                 </p>
               )}
 
-              {colors.map((c) => (
-                <div key={c.name}>
-                  <div className="mb-1.5 flex flex-wrap items-center gap-2">
-                    <ColorChipButton value={c} onClick={() => setColorEditing(c.name)} size="sm" />
-                    <span className="text-sm font-bold text-ink">{c.name}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => updateColorImage(c.name, '')}
-                      className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border-2 px-1 text-center text-[10px] font-semibold leading-tight text-muted ${
-                        !c.image ? 'border-primary bg-primary-light/10 text-primary' : 'border-border'
-                      }`}
-                    >
-                      Principal
-                    </button>
-                    {images.map((url, i) => (
+              {colors.map((c) => {
+                const mine = images.filter((u) => colorPhotoSet(c).includes(u));
+                return (
+                  <div key={c.name}>
+                    <div className="mb-1.5 flex flex-wrap items-center gap-2">
+                      <ColorChipButton value={c} onClick={() => setColorEditing(c.name)} size="sm" />
+                      <span className="text-sm font-bold text-ink">{c.name}</span>
+                      <span className="text-xs text-muted">· {mine.length ? `${mine.length} ${mine.length === 1 ? 'foto' : 'fotos'}` : 'sin fotos'}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
                       <button
-                        key={url}
                         type="button"
-                        onClick={() => updateColorImage(c.name, url)}
-                        aria-label={`Foto ${i + 1} para ${c.name}`}
-                        className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${
-                          c.image === url ? 'border-primary' : 'border-border'
+                        onClick={() => clearColorPhotos(c.name)}
+                        className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-lg border-2 px-1 text-center text-[10px] font-semibold leading-tight ${
+                          !mine.length ? 'border-primary bg-primary-light/10 text-primary' : 'border-border text-muted'
                         }`}
                       >
-                        <Image src={url} alt={`Foto ${i + 1}`} fill className="object-cover" />
+                        {mine.length ? 'Quitar todas' : 'Todas las fotos'}
                       </button>
-                    ))}
+                      {images.map((url, i) => {
+                        const pos = mine.indexOf(url);
+                        const other = pos === -1 ? colors.find((x) => x.name !== c.name && colorPhotoSet(x).includes(url)) : undefined;
+                        return (
+                          <button
+                            key={url}
+                            type="button"
+                            onClick={() => toggleColorPhoto(c.name, url)}
+                            aria-label={`Foto ${i + 1} para ${c.name}`}
+                            title={other ? `Ahora es de ${other.name}: tócala para pasarla a ${c.name}` : undefined}
+                            className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg border-2 ${
+                              pos !== -1 ? 'border-primary' : 'border-border'
+                            } ${other ? 'opacity-40' : ''}`}
+                          >
+                            <Image src={url} alt={`Foto ${i + 1}`} fill className="object-cover" />
+                            {pos !== -1 && (
+                              <span className="absolute right-0.5 top-0.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-black text-ink shadow-soft">
+                                {pos + 1}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
