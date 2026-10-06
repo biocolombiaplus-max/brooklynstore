@@ -49,6 +49,17 @@ export default function BuyBox({
     onColorChange?.(colorName);
   }
 
+  // Si llega desde un anuncio de un color (?color=Negro), se abre en ese color.
+  useEffect(() => {
+    const wanted = new URLSearchParams(window.location.search).get('color');
+    const match = wanted && product.colors.find((c) => c.name.toLowerCase() === wanted.toLowerCase());
+    if (match) {
+      setColor(match.name);
+      onColorChange?.(match.name);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
+
   function buildItem() {
     return {
       productId: product.id,

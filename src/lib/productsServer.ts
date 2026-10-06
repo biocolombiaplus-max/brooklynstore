@@ -52,8 +52,12 @@ async function fetchJson(url: string, init?: RequestInit) {
 
 // Todos los productos activos, más nuevos primero. Si la tienda aún no tiene
 // productos (o Firestore no responde) se usa el catálogo de demostración.
-export async function getActiveProductsServer(): Promise<Product[]> {
-  if (!FIREBASE_CONFIG.projectId) return DEMO_PRODUCTS;
+export async function getActiveProductsServer(opts: { demoFallback?: boolean } = {}): Promise<Product[]> {
+  const fallback = opts.demoFallback !== false;
+  if (!FIREBASE_CONFIG.projectId) {
+    if (fallback) return DEMO_PRODUCTS;
+    throw new Error('Firebase sin configurar');
+  }
   try {
     const all: Product[] = [];
     let pageToken = '';
@@ -64,8 +68,10 @@ export async function getActiveProductsServer(): Promise<Product[]> {
       if (!pageToken) break;
     }
     const active = all.filter((p) => p.active && p.slug).sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+    if (!fallback) return active;
     return active.length > 0 ? active : DEMO_PRODUCTS;
-  } catch {
+  } catch (err) {
+    if (!fallback) throw err;
     return DEMO_PRODUCTS;
   }
 }
