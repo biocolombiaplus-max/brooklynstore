@@ -14,6 +14,10 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   // WhatsApp oficial de la tienda: +593 99 873 5273
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '0998735273',
   notificationEmail: process.env.NEXT_PUBLIC_NOTIFICATION_EMAIL || 'brooklynstore.ec@gmail.com',
+  // Píxel de Brooklyn Store (cuenta publicitaria de Antonio Lopez). Se puede
+  // cambiar desde el panel: Configuración → Píxel de Meta.
+  metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || '4867176346845433',
+  metaDomainVerification: '',
   collectionsMenu: [
     { label: 'Deportivos', value: 'deportivos' },
     { label: 'Urbanos / Casual', value: 'urbanos' },
@@ -300,6 +304,8 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
     whatsappNumber: data.whatsappNumber || DEFAULT_SETTINGS.whatsappNumber,
     whatsappCountryCode: data.whatsappCountryCode || DEFAULT_SETTINGS.whatsappCountryCode,
     notificationEmail: data.notificationEmail || DEFAULT_SETTINGS.notificationEmail,
+    metaPixelId: (data.metaPixelId || DEFAULT_SETTINGS.metaPixelId).replace(/\D/g, ''),
+    metaDomainVerification: (data.metaDomainVerification ?? '').trim(),
     logoHeight: data.logoHeight ?? DEFAULT_SETTINGS.logoHeight,
     exchangeWindowHours: data.exchangeWindowHours || DEFAULT_SETTINGS.exchangeWindowHours,
     collectionsMenu: data.collectionsMenu ?? DEFAULT_SETTINGS.collectionsMenu,

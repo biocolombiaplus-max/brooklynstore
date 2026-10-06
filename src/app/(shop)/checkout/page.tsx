@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { trackPixel } from '@/lib/pixel';
 import { useRouter } from 'next/navigation';
 import { useCartStore } from '@/lib/cart-store';
 import { formatPrice } from '@/lib/utils';
@@ -16,6 +17,20 @@ export default function CheckoutPage() {
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
   useEffect(() => setMounted(true), []);
+
+  // Píxel: empezó el pago (una vez, al entrar con productos en el carrito).
+  const tracked = useRef(false);
+  useEffect(() => {
+    if (!mounted || tracked.current || items.length === 0) return;
+    tracked.current = true;
+    trackPixel('InitiateCheckout', {
+      content_ids: items.map((i) => i.metaId || i.productId),
+      content_type: 'product',
+      value: subtotal,
+      currency: 'USD',
+      num_items: items.reduce((n, i) => n + i.quantity, 0),
+    });
+  }, [mounted, items, subtotal]);
   useEffect(() => {
     if (mounted && !done && items.length === 0) router.replace('/carrito');
   }, [mounted, done, items.length, router]);

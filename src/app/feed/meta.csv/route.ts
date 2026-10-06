@@ -1,5 +1,6 @@
 import { getActiveProductsServer } from '@/lib/productsServer';
 import type { Product } from '@/lib/types';
+import { metaItemId } from '@/lib/metaCatalog';
 
 // Catálogo de productos para Meta (Facebook / Instagram) y Google Merchant.
 // Se genera solo con los zapatos activos de la tienda: Meta lo descarga
@@ -57,14 +58,6 @@ const clean = (text: string, max: number) =>
 
 const csvCell = (value: string) => (/[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value);
 
-const slugify = (s: string) =>
-  s
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
-
 const GENDER: Record<Product['gender'], string> = { hombre: 'male', mujer: 'female', unisex: 'unisex' };
 
 function rows(p: Product): Row[] {
@@ -106,7 +99,7 @@ function rows(p: Product): Row[] {
       const images = gallery(c.image);
       return {
         ...base,
-        id: `${p.id}-${slugify(c.name)}`.slice(0, 100),
+        id: metaItemId(p, c.name),
         item_group_id: p.id,
         title: clean(`${p.title} - ${c.name}`, 150),
         link: link(c.name),
@@ -120,7 +113,7 @@ function rows(p: Product): Row[] {
   return [
     {
       ...base,
-      id: p.id,
+      id: metaItemId(p),
       item_group_id: '',
       link: link(),
       image_link: images[0] ?? '',

@@ -4,6 +4,7 @@ import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { getActiveProducts } from '@/lib/products';
+import { trackPixel } from '@/lib/pixel';
 import { GENDERS, type Product } from '@/lib/types';
 import { useSiteSettings } from '@/lib/settings-context';
 import { classNames } from '@/lib/utils';
@@ -91,6 +92,11 @@ function CatalogoContent({ initialProducts }: { initialProducts?: Product[] }) {
   const price = searchParams.get('precio') ?? '';
   const onlyOffers = searchParams.get('ofertas') === '1';
   const q = searchParams.get('q') ?? '';
+
+  // Píxel: lo que buscan los clientes (ayuda a Meta a encontrar compradores).
+  useEffect(() => {
+    if (q.trim()) trackPixel('Search', { search_string: q.trim() });
+  }, [q]);
   const sort = (searchParams.get('orden') as SortOption) || 'relevancia';
 
   function setParam(key: string, value: string | null) {

@@ -499,6 +499,49 @@ export default function ConfiguracionPage() {
       </Section>
 
       <Section
+        title="📈 Píxel de Meta (Facebook / Instagram)"
+        description="Mide las ventas de tus anuncios y permite que Meta muestre a cada persona los zapatos que vio en tu web."
+      >
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="ID del Píxel (conjunto de datos)">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={settings.metaPixelId}
+              onChange={(e) => update('metaPixelId', e.target.value.replace(/\D/g, ''))}
+              className={inputClass}
+              placeholder="Ej: 1234567890123456"
+            />
+            <p className="mt-1 text-xs text-muted">
+              Administrador de eventos → tu conjunto de datos → Configuración → “Identificador”. Al guardar, el píxel queda activo en toda la tienda
+              con los eventos: Ver página, Ver producto, Buscar, Agregar al carrito, Iniciar pago y Compra.
+            </p>
+          </Field>
+          <Field label="Código de verificación del dominio (opcional)">
+            <input
+              type="text"
+              value={settings.metaDomainVerification}
+              onChange={(e) => {
+                // Acepta el código solo o la etiqueta <meta ... content="..."> completa.
+                const raw = e.target.value.trim();
+                const match = raw.match(/content=["']?([A-Za-z0-9]+)/);
+                update('metaDomainVerification', match ? match[1] : raw.replace(/[^A-Za-z0-9]/g, ''));
+              }}
+              className={inputClass}
+              placeholder="Pega la etiqueta meta o solo el código"
+            />
+            <p className="mt-1 text-xs text-muted">
+              Configuración del negocio → Seguridad de la marca → Dominios → Agregar → “Etiqueta meta”. Pega aquí lo que te da Meta, guarda y
+              luego toca “Verificar dominio” en Meta.
+            </p>
+          </Field>
+        </div>
+        {settings.metaPixelId && (
+          <p className="mt-3 rounded-xl bg-whatsapp/10 px-4 py-3 text-sm font-semibold text-ink">✓ Píxel {settings.metaPixelId} activo en la tienda</p>
+        )}
+      </Section>
+
+      <Section
         title="Formas de pago"
         description="Los dos métodos de la tienda. Todos los pedidos se confirman por WhatsApp y, en la página de confirmación, el cliente ve estas cuentas bancarias con botón para copiar el número."
       >

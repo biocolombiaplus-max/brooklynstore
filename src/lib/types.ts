@@ -94,6 +94,8 @@ export interface CartItem {
   sizeUs?: string;
   color: string;
   quantity: number;
+  // ID del artículo en el catálogo de Meta (para el píxel).
+  metaId?: string;
 }
 
 // Los dos únicos métodos de pago de la tienda. Ambos terminan confirmando
@@ -278,6 +280,9 @@ export interface SiteSettings {
   whatsappCountryCode: string;
   whatsappNumber: string;
   notificationEmail: string;
+  // Píxel de Meta (Facebook / Instagram) y verificación del dominio.
+  metaPixelId: string;
+  metaDomainVerification: string;
   collectionsMenu: CollectionMenuItem[];
   brands: string[];
   featuredBrand: FeaturedBrand;

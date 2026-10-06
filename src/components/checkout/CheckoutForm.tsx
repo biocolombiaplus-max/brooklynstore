@@ -9,6 +9,7 @@ import { clearCoupon, couponPercentFor, getActiveCoupon, redeemAnyCouponCode, ty
 import { markLoyaltyCouponUsed } from '@/lib/loyalty';
 import { useSiteSettings } from '@/lib/settings-context';
 import { classNames, formatPrice } from '@/lib/utils';
+import { trackPixel } from '@/lib/pixel';
 import type { CartItem, OrderCustomer, PaymentMethod } from '@/lib/types';
 import LocationCapture from '@/components/product/LocationCapture';
 import { CheckIcon } from '@/components/icons';
@@ -188,6 +189,20 @@ export default function CheckoutForm({
       };
 
       const { id, orderNumber } = await createOrder(orderData);
+
+      // Píxel: compra registrada (el ID del pedido evita contarla dos veces).
+      trackPixel(
+        'Purchase',
+        {
+          content_ids: items.map((i) => i.metaId || i.productId),
+          contents: items.map((i) => ({ id: i.metaId || i.productId, quantity: i.quantity, item_price: i.price })),
+          content_type: 'product',
+          num_items: items.reduce((n, i) => n + i.quantity, 0),
+          value: totals.total,
+          currency: 'USD',
+        },
+        orderNumber,
+      );
 
       notifyOrderByEmail({
         to: settings.notificationEmail,

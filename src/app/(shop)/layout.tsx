@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import SiteChrome from '@/components/SiteChrome';
 import { getSiteSettingsServer } from '@/lib/settingsServer';
 import { googleFontsHref } from '@/lib/fonts';
@@ -6,6 +7,12 @@ import { googleFontsHref } from '@/lib/fonts';
 // carrito, pedidos), así que se renderizan siempre en el momento de la
 // solicitud en lugar de generarse como HTML estático en el build.
 export const dynamic = 'force-dynamic';
+
+// Verificación del dominio en Meta (se pega el código en el panel).
+export async function generateMetadata(): Promise<Metadata> {
+  const { metaDomainVerification } = await getSiteSettingsServer();
+  return metaDomainVerification ? { other: { 'facebook-domain-verification': metaDomainVerification } } : {};
+}
 
 export default async function ShopLayout({ children }: { children: React.ReactNode }) {
   const settings = await getSiteSettingsServer();

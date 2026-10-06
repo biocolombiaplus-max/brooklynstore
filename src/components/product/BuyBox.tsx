@@ -3,6 +3,8 @@
 import ColorSwatch, { swatchBackground } from '../ColorSwatch';
 import { usSizeFor } from '@/lib/sizes';
 import { useEffect, useState, type RefObject } from 'react';
+import { trackPixel } from '@/lib/pixel';
+import { metaItemId } from '@/lib/metaCatalog';
 import { productMessage, useWaContext } from '@/lib/wa-messages';
 import type { PaymentMethod, Product } from '@/lib/types';
 import { classNames, formatPrice, resolveColorImage, whatsappLinkTo } from '@/lib/utils';
@@ -60,6 +62,21 @@ export default function BuyBox({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
+  // Píxel: la persona vio este zapato (con el ID del catálogo de Meta).
+  useEffect(() => {
+    const fromLink = new URLSearchParams(window.location.search).get('color');
+    const viewed = product.colors.find((c) => c.name.toLowerCase() === fromLink?.toLowerCase())?.name ?? color;
+    trackPixel('ViewContent', {
+      content_ids: [metaItemId(product, viewed)],
+      content_name: product.title,
+      content_category: product.brand,
+      content_type: 'product',
+      value: product.price,
+      currency: 'USD',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product.id]);
+
   function buildItem() {
     return {
       productId: product.id,
@@ -73,6 +90,7 @@ export default function BuyBox({
       ...(usSizeFor(size, product.gender) ? { sizeUs: usSizeFor(size, product.gender) } : {}),
       color,
       quantity,
+      metaId: metaItemId(product, color),
     };
   }
 
@@ -88,6 +106,13 @@ export default function BuyBox({
   function openBuy(method: PaymentMethod) {
     if (!ensureSize()) return;
     setBuyMethod(method);
+    trackPixel('InitiateCheckout', {
+      content_ids: [metaItemId(product, color)],
+      content_type: 'product',
+      value: product.price * quantity,
+      currency: 'USD',
+      num_items: quantity,
+    });
   }
 
   // La barra fija del celular usa esta misma función para abrir la compra.
@@ -96,6 +121,13 @@ export default function BuyBox({
   function handleAddToCart() {
     if (!ensureSize()) return;
     addItem(buildItem());
+    trackPixel('AddToCart', {
+      content_ids: [metaItemId(product, color)],
+      content_name: product.title,
+      content_type: 'product',
+      value: product.price * quantity,
+      currency: 'USD',
+    });
     setAdded(true);
     setTimeout(() => setAdded(false), 2200);
   }
