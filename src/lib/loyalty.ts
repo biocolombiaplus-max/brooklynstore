@@ -1,5 +1,6 @@
 import { collection, doc, getDoc, getDocs, serverTimestamp, setDoc, Timestamp, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { WA_LINE } from './utils';
 import { getProductById, updateProduct } from './products';
 import type { LoyaltyRecord, LoyaltyReview, Order, ProductReview } from './types';
 
@@ -165,31 +166,37 @@ export function expiryLabel(record: LoyaltyRecord): string {
 // Mensaje al entregar: pedir reseña y regalar el 10% OFF.
 export function buildReviewRequestMessage(record: LoyaltyRecord, storeName: string): string {
   const product = record.items[0]?.title ?? 'tus zapatos';
-  return `¡Hola ${record.customerName}! 🙌 Qué gusto que ya tengas tus *${product}*${record.items.length > 1 ? ' y demás' : ''}.
+  return `¡Hola ${record.customerName}! Qué gusto que ya tengas tus *${product}*${record.items.length > 1 ? ' y demás' : ''}.
 
-⭐ ¿Nos regalas tu opinión? Te toma 30 segundos y nos ayuda muchísimo:
+*¿Nos regalas tu opinión?*
+Te toma 30 segundos y nos ayuda muchísimo:
 ${reviewUrl(record.code)}
 
-🎁 Y como gracias por confiar en ${storeName}, tienes *${record.couponPercent}% OFF* en tu próxima compra pagando por transferencia o depósito.
-🔑 Tu código: *${record.code}*
-📅 Válido hasta el *${expiryLabel(record)}* (${LOYALTY_DAYS} días)
+*TU REGALO: ${record.couponPercent}% OFF*
+${WA_LINE}
+Código: *${record.code}*
+Válido hasta: *${expiryLabel(record)}* (${LOYALTY_DAYS} días)
+Aplica pagando por transferencia o depósito.
+${WA_LINE}
 
-🛍️ Mira el catálogo con tu descuento ya activado:
-${couponCatalogUrl(record.code)}`;
+Mira el catálogo con tu descuento ya activado:
+${couponCatalogUrl(record.code)}
+
+Gracias por confiar en ${storeName}.`;
 }
 
 // Recordatorio del día 14.
 export function buildReminderMessage(record: LoyaltyRecord): string {
   const left = Math.max(1, daysLeft(record));
-  return `¡Hola ${record.customerName}! ⏰ Te recordamos que tu *${record.couponPercent}% OFF* vence ${
+  return `¡Hola ${record.customerName}! Te recordamos que tu *${record.couponPercent}% OFF* vence ${
     left <= 1 ? '*mañana*' : `en *${left} días*`
   } (${expiryLabel(record)}).
 
-🔑 Código: *${record.code}*
-💳 Aplica pagando por transferencia o depósito.
+Código: *${record.code}*
+Aplica pagando por transferencia o depósito.
 
-👟 Aprovecha y estrena otra vez:
+Aprovecha y estrena otra vez:
 ${couponCatalogUrl(record.code)}${
-    record.reviewStatus === 'pendiente' ? `\n\n⭐ Y si aún no nos dejas tu reseña, aquí está el link:\n${reviewUrl(record.code)}` : ''
+    record.reviewStatus === 'pendiente' ? `\n\nY si aún no nos dejas tu reseña, aquí está el link:\n${reviewUrl(record.code)}` : ''
   }`;
 }

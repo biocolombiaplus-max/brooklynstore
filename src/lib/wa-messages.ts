@@ -6,7 +6,7 @@ import { formatPrice } from './utils';
 // Mensajes de WhatsApp personalizados según desde dónde escribe el cliente,
 // para que la tienda sepa de inmediato qué necesita y pueda responder rápido.
 
-const HELLO = '¡Hola Brooklyn Store! 👋';
+const HELLO = '¡Hola Brooklyn Store!';
 
 function pageUrl(): string {
   return typeof window !== 'undefined' ? window.location.href.split('#')[0] : '';
@@ -17,23 +17,23 @@ export function generalMessage(topic = 'Quiero información sobre sus zapatos.')
 }
 
 export function catalogMessage(): string {
-  return `${HELLO}\nQuiero ver el catálogo y los modelos disponibles. ¿Me ayudan? 👟`;
+  return `${HELLO}\nQuiero ver el catálogo y los modelos disponibles. ¿Me ayudan?`;
 }
 
 export function adviceMessage(): string {
-  return `${HELLO}\nQuiero asesoría para elegir mis zapatos 👟\n\n• Para: (hombre / mujer)\n• Uso: (diario / correr / gym / formal)\n• Mi talla: \n• Presupuesto aprox.: `;
+  return `${HELLO}\nQuiero asesoría para elegir mis zapatos.\n\n• Para: (hombre / mujer)\n• Uso: (diario / correr / gym / formal)\n• Mi talla: \n• Presupuesto aprox.: `;
 }
 
 export function sizeHelpMessage(): string {
-  return `${HELLO}\nNecesito ayuda con mi talla 📏\n\n• Largo de mi pie: ___ cm\n• Modelo que me interesa: \n• Talla que uso normalmente: `;
+  return `${HELLO}\nNecesito ayuda con mi talla.\n\n• Largo de mi pie: ___ cm\n• Modelo que me interesa: \n• Talla que uso normalmente: `;
 }
 
 export function exchangeMessage(hours = 48): string {
-  return `${HELLO}\nQuiero solicitar un *cambio de talla* 🔄 (dentro de las ${hours} h de recibido)\n\n• N.º de pedido: \n• Modelo: \n• Talla que recibí: \n• Talla que necesito: \n• Fecha en que lo recibí: \n\nTe envío fotos del zapato sin uso y con su caja. 📸`;
+  return `${HELLO}\nQuiero solicitar un *cambio de talla* (dentro de las ${hours} h de recibido)\n\n• N.º de pedido: \n• Modelo: \n• Talla que recibí: \n• Talla que necesito: \n• Fecha en que lo recibí: \n\nTe envío fotos del zapato sin uso y con su caja.`;
 }
 
 export function brandMessage(brand: string): string {
-  return `${HELLO}\nMe interesan los zapatos *${brand}* ⭐ ¿Qué modelos y tallas tienen disponibles?\n\n${pageUrl()}`;
+  return `${HELLO}\nMe interesan los zapatos *${brand}*. ¿Qué modelos y tallas tienen disponibles?\n\n${pageUrl()}`;
 }
 
 export function filteredCatalogMessage(filters: string[]): string {
@@ -48,12 +48,12 @@ export function productMessage(
   extra?: string,
 ): string {
   const lines = [
-    `🛍️ *${p.title}*${p.brand ? ` (${p.brand})` : ''}`,
-    `💲 Precio: ${formatPrice(p.price)}`,
-    p.size ? `📏 Talla: ${p.size}` : '📏 Talla: (por confirmar)',
-    p.color ? `🎨 Color: ${p.color}` : '',
+    `▸ *${p.title}*${p.brand ? ` (${p.brand})` : ''}`,
+    `Precio: ${formatPrice(p.price)}`,
+    p.size ? `Talla: ${p.size}` : 'Talla: (por confirmar)',
+    p.color ? `Color: ${p.color}` : '',
   ].filter(Boolean);
-  return `${HELLO}\nMe interesa este modelo:\n\n${lines.join('\n')}\n\n${extra ?? '¿Está disponible? 🙌'}\n${SITE_URL}/producto/${p.slug}`;
+  return `${HELLO}\nMe interesa este modelo:\n\n${lines.join('\n')}\n\n${extra ?? '¿Está disponible?'}\n${SITE_URL}/producto/${p.slug}`;
 }
 
 // La ficha de producto guarda aquí el modelo que el cliente está viendo,

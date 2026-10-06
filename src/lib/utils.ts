@@ -58,13 +58,32 @@ const WA_COUNTRY = process.env.NEXT_PUBLIC_WHATSAPP_COUNTRY_CODE || '593';
  * el código de país ya incluido). Si todavía no hay número configurado, abre
  * WhatsApp con el mensaje listo para que el cliente elija el contacto.
  */
+// Algunos celulares, WhatsApp Business y WhatsApp Web convierten los emojis
+// que viajan dentro de un link en "�". Por eso todo mensaje sale limpio:
+// sin emojis, con el formato propio de WhatsApp (*negrita*, _cursiva_),
+// separadores y viñetas que siempre se ven bien.
+export function waSafeText(message: string): string {
+  return message
+    .replace(/[\u{1F1E6}-\u{1F1FF}\u{1F3FB}-\u{1F3FF}\u200D\uFE0E\uFE0F\u20E3]/gu, '')
+    .replace(/\p{Extended_Pictographic}[ \t]?/gu, '')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]{2,}/g, (m, i) => (i === 0 ? m : ' ')).replace(/^ (?=\S)/, '').trimEnd())
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 export function whatsappLinkTo(phone: string, message: string, countryCode?: string): string {
   const cc = (countryCode || WA_COUNTRY).replace(/\D/g, '');
   const digits = (phone || '').replace(/\D/g, '').replace(/^0+/, '');
-  if (!digits) return `https://wa.me/?text=${encodeURIComponent(message)}`;
+  const text = encodeURIComponent(waSafeText(message));
+  if (!digits) return `https://wa.me/?text=${text}`;
   const fullNumber = cc && !digits.startsWith(cc) ? `${cc}${digits}` : digits;
-  return `https://wa.me/${fullNumber}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${fullNumber}?text=${text}`;
 }
+
+// Separador para los mensajes de WhatsApp.
+export const WA_LINE = '━━━━━━━━━━━━━━━';
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore-six.vercel.app').replace(/\/$/, '');
 
@@ -82,7 +101,7 @@ export function orderPhotoUrl(item: { slug?: string; color?: string; size?: stri
 
 function photoLine(item: { slug?: string; color?: string; size?: string; quantity?: number }): string {
   const url = orderPhotoUrl(item);
-  return url ? `\n   📸 Foto: ${url}` : '';
+  return url ? `\n   Foto: ${url}` : '';
 }
 
 export function buildCartWhatsAppMessage(
@@ -91,15 +110,20 @@ export function buildCartWhatsAppMessage(
   const lines = items
     .map(
       (i) =>
-        `• ${i.title}\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity}${
-          i.price !== undefined ? ` — ${formatPrice(i.price * i.quantity)}` : ''
+        `▸ *${i.title}*\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity}${
+          i.price !== undefined ? `\n   Valor: ${formatPrice(i.price * i.quantity)}` : ''
         }${photoLine(i)}`,
     )
-    .join('\n');
+    .join('\n\n');
   const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.quantity, 0);
-  return `¡Hola Brooklyn Store! 👋 Quiero terminar mi compra:\n\n🛒 *Mi carrito:*\n${lines}${
-    subtotal > 0 ? `\n\n*Subtotal: ${formatPrice(subtotal)}*` : ''
-  }\n\n¿Me ayudan a confirmar el pedido? Pago por: (transferencia / contra entrega)`;
+  return `Hola Brooklyn Store, quiero terminar mi compra.
+
+*MI CARRITO*
+${WA_LINE}
+${lines}${subtotal > 0 ? `\n${WA_LINE}\n*Subtotal: ${formatPrice(subtotal)}*` : ''}
+
+¿Me ayudan a confirmar el pedido?
+Forma de pago: (transferencia / contra entrega)`;
 }
 
 export function paymentMethodLabel(method: PaymentMethod): string {
@@ -122,46 +146,61 @@ export function buildOrderWhatsAppMessage(order: {
   couponCode?: string;
   customer: OrderCustomer;
 }, opts: { paid?: boolean } = {}): string {
+  const cod = order.paymentMethod === 'contra_entrega';
   const itemsList = order.items
     .map(
       (i) =>
-        `• ${i.title}\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity} — ${formatPrice(i.price * i.quantity)}${photoLine(i)}`,
+        `▸ *${i.title}*\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity}\n   Valor: ${formatPrice(
+          i.price * i.quantity,
+        )}${photoLine(i)}`,
     )
-    .join('\n');
+    .join('\n\n');
 
-  const paymentBlock =
-    order.paymentMethod === 'contra_entrega'
-      ? `💵 *Pago contra entrega*\n➡️ Hoy, para garantizar el envío (transferencia/depósito Banco Pichincha): *${formatPrice(order.payNow)}*\n➡️ Pago al recibir en mi dirección: *${formatPrice(order.payOnDelivery)}*`
-      : `🏦 *Transferencia / depósito Banco Pichincha*\n➡️ Total a transferir: *${formatPrice(order.payNow)}*`;
+  const paymentBlock = cod
+    ? `*FORMA DE PAGO*\nPago contra entrega\n• Hoy, para garantizar el envío: *${formatPrice(order.payNow)}*\n   (transferencia o depósito Banco Pichincha)\n• Al recibir, en efectivo: *${formatPrice(order.payOnDelivery)}*`
+    : `*FORMA DE PAGO*\nTransferencia o depósito Banco Pichincha\n• Total a pagar: *${formatPrice(order.payNow)}*`;
 
   const c = order.customer;
-  return `${opts.paid ? '✅ *PEDIDO PAGADO' : '🛍️ *NUEVO PEDIDO'} — ${order.orderNumber}*
-Brooklyn Store
+  const delivery = [
+    `Nombre: ${c.name}`,
+    c.cedula ? `C.I.: ${c.cedula}` : '',
+    `Celular: ${c.phone}`,
+    `Dirección: ${c.address}`,
+    c.reference ? `Referencia: ${c.reference}` : '',
+    `Ciudad: ${c.city}, ${c.province}`,
+    c.locationUrl ? `Ubicación: ${c.locationUrl}` : '',
+    c.note ? `Nota: ${c.note}` : '',
+  ]
+    .filter(Boolean)
+    .join('\n');
 
-📦 *Productos:*
+  const closing = opts.paid
+    ? `✓ *Pago realizado:* ${formatPrice(order.payNow)}${cod ? ' (envío)' : ''} en Banco Pichincha.\nAdjunto la foto del comprobante. Quedo atento/a a mi guía de Servientrega. ¡Gracias!`
+    : cod
+    ? `Por favor confírmenme el pedido para enviar el comprobante de los ${formatPrice(order.payNow)} que garantizan el envío. ¡Gracias!`
+    : 'Por favor confírmenme el pedido. En seguida les envío la foto del comprobante. ¡Gracias!';
+
+  return `*${opts.paid ? 'PEDIDO PAGADO' : 'NUEVO PEDIDO'} · ${order.orderNumber}*
+_Brooklyn Store_
+${WA_LINE}
+
+*PRODUCTOS*
 ${itemsList}
 
+${WA_LINE}
 Subtotal: ${formatPrice(order.subtotal)}${
     order.discount ? `\nDescuento${order.couponCode ? ` (${order.couponCode})` : ''}: -${formatPrice(order.discount)}` : ''
   }
 Envío Servientrega: ${order.shipping === 0 ? 'Sin costo' : formatPrice(order.shipping)}
 *TOTAL: ${formatPrice(order.total)}*
+${WA_LINE}
 
 ${paymentBlock}
 
-📍 *Datos de entrega:*
-👤 ${c.name}${c.cedula ? `\n🪪 C.I. ${c.cedula}` : ''}
-📱 ${c.phone}
-🏠 ${c.address}${c.reference ? `\n🧭 Referencia: ${c.reference}` : ''}
-🏙️ ${c.city}, ${c.province}${c.locationUrl ? `\n🗺️ Ubicación: ${c.locationUrl}` : ''}${c.note ? `\n📝 Nota: ${c.note}` : ''}
+*DATOS DE ENTREGA*
+${delivery}
 
-${
-    opts.paid
-      ? `🧾 Ya hice el pago de *${formatPrice(order.payNow)}*${order.paymentMethod === 'contra_entrega' ? ' del envío' : ''} en Banco Pichincha. Les adjunto el comprobante 📎 ¡Quedo atento/a a mi guía de Servientrega! 🙌`
-      : order.paymentMethod === 'contra_entrega'
-      ? `Porfa, confírmenme el pedido para enviar el comprobante de los ${formatPrice(order.payNow)} que garantizan el envío. ¡Gracias! 🙌`
-      : 'Porfa, confírmenme el pedido. Ya mismo les envío la foto del comprobante. ¡Gracias! 🙌'
-  }`;
+${closing}`;
 }
 
 export function generateOrderNumber(): string {
@@ -211,7 +250,7 @@ export function hexToRgbChannels(hex: string): string {
 // Datos de una cuenta en texto, listos para copiar o mandar por WhatsApp.
 export function bankAccountText(account: BankAccount, amount?: number): string {
   return [
-    `🏦 ${account.bank}`,
+    `${account.bank}`,
     `${account.type}`,
     `N.º ${account.number}`,
     `Titular: ${account.holder}`,
@@ -225,26 +264,30 @@ export function bankAccountText(account: BankAccount, amount?: number): string {
 // Mensaje del cliente a la tienda cuando ya pagó: la foto la adjunta él.
 export function buildReceiptMessage(order: Order): string {
   const cod = order.paymentMethod === 'contra_entrega';
-  return `🧾 *COMPROBANTE DE PAGO*
+  return `*COMPROBANTE DE PAGO*
+${WA_LINE}
 Pedido: *${order.orderNumber}*
 Nombre: ${order.customer.name}
-Valor pagado: *${formatPrice(order.payNow)}*${cod ? ' (envío — el resto lo pago al recibir)' : ''}
+Valor pagado: *${formatPrice(order.payNow)}*${cod ? ' (envío; el resto lo pago al recibir)' : ''}
 Banco: Pichincha
-
-Les adjunto la foto del comprobante 📎 ¡Quedo atento/a a la guía de Servientrega! 🙌`;
+${WA_LINE}
+Adjunto la foto del comprobante. Quedo atento/a a la guía de Servientrega. ¡Gracias!`;
 }
 
 // Mensaje de la tienda al cliente con los datos para pagar (desde el panel).
 export function buildPaymentDataMessage(order: Order, accounts: BankAccount[]): string {
   const firstName = order.customer.name.split(' ')[0];
   const cod = order.paymentMethod === 'contra_entrega';
-  return `¡Hola ${firstName}! 👋 Gracias por tu pedido *${order.orderNumber}* en Brooklyn Store.
+  return `¡Hola ${firstName}! Gracias por tu pedido *${order.orderNumber}* en Brooklyn Store.
 
 ${cod ? `Para garantizar tu envío, transfiere o deposita *${formatPrice(order.payNow)}*. Los *${formatPrice(order.payOnDelivery)}* restantes los pagas en efectivo al recibir.` : `Para despachar tu pedido, transfiere o deposita *${formatPrice(order.payNow)}*.`}
 
-${accounts.map((a) => bankAccountText(a)).join('\n\n')}
+*DATOS PARA EL PAGO*
+${WA_LINE}
+${accounts.map((a) => bankAccountText(a)).join(`\n${WA_LINE}\n`)}
+${WA_LINE}
 
-📸 Cuando pagues, mándanos por aquí la foto del comprobante y despachamos ese mismo día con Servientrega. 🚚`;
+Cuando pagues, envíanos por aquí la foto del comprobante y despachamos ese mismo día con Servientrega.`;
 }
 
 // Link a la página de la guía de envío (foto o PDF) de un pedido.
@@ -262,12 +305,18 @@ export function guidePageUrl(order: { orderNumber: string; trackingNumber?: stri
 export function buildShippedMessage(order: Order, storeName: string): string {
   const firstName = order.customer.name.split(' ')[0];
   const link = guidePageUrl(order);
-  return `¡Hola ${firstName}! 👋 Tu pedido *${order.orderNumber}* de ${storeName} ya va en camino 🚚
+  const lines = [
+    `Transportadora: *${order.carrier || 'Servientrega'}*`,
+    order.trackingNumber ? `Número de guía: *${order.trackingNumber}*` : '',
+    `Destino: ${order.customer.city}, ${order.customer.province}`,
+    order.paymentMethod === 'contra_entrega' ? `Al recibir pagas: *${formatPrice(order.payOnDelivery)}* en efectivo` : '',
+  ].filter(Boolean);
+  return `¡Hola ${firstName}! Tu pedido *${order.orderNumber}* de ${storeName} ya va en camino.
 
-📦 *Transportadora:* ${order.carrier || 'Servientrega'}${order.trackingNumber ? `\n🔢 *Número de guía:* ${order.trackingNumber}` : ''}
-🏠 *Destino:* ${order.customer.city}, ${order.customer.province}${
-    order.paymentMethod === 'contra_entrega' ? `\n💵 *Al recibir pagas:* ${formatPrice(order.payOnDelivery)} en efectivo` : ''
-  }
-${link ? `\n📄 *Tu guía${order.guideType === 'pdf' ? ' (PDF)' : ''}:*\n${link}\n` : ''}
-Con el número de guía puedes rastrear tu paquete en servientrega.com.ec. Cualquier novedad, escríbenos por aquí. ¡Gracias por tu compra! 🙌`;
+*DATOS DEL ENVÍO*
+${WA_LINE}
+${lines.join('\n')}
+${WA_LINE}
+${link ? `\n*Tu guía${order.guideType === 'pdf' ? ' (PDF)' : ''}:*\n${link}\n` : ''}
+Con el número de guía puedes rastrear tu paquete en servientrega.com.ec. Cualquier novedad, escríbenos por aquí. ¡Gracias por tu compra!`;
 }
