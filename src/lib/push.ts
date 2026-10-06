@@ -12,6 +12,22 @@ export function isPushSupported(): boolean {
   );
 }
 
+// Qué falta para que las notificaciones funcionen en ESTE dispositivo.
+export type PushSetupState = 'no-keys' | 'ios-install' | 'unsupported' | 'ready';
+
+export function pushSetupState(): PushSetupState {
+  if (typeof window === 'undefined') return 'unsupported';
+  if (!VAPID_PUBLIC_KEY) return 'no-keys';
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const standalone =
+    window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+  // En iPhone, Apple solo permite notificaciones si el panel está instalado
+  // en la pantalla de inicio (iOS 16.4 o superior).
+  if (ios && !standalone) return 'ios-install';
+  if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) return 'unsupported';
+  return 'ready';
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');

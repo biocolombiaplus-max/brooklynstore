@@ -173,13 +173,26 @@ export function notifyOrderByEmail(payload: {
 // sistema (con sonido y vibración) aunque la tienda no esté abierta, igual
 // que la app de Shopify. Si nadie activó las notificaciones o faltan las
 // llaves VAPID en el servidor, no pasa nada (el checkout sigue normal).
-export function notifyOrderByPush(payload: { orderNumber: string; total: number; customerName: string }): void {
+export function notifyOrderByPush(payload: {
+  orderNumber: string;
+  total: number;
+  customerName: string;
+  city?: string;
+  pairs?: number;
+  method?: 'transferencia' | 'contra_entrega';
+}): void {
+  const details = [
+    payload.customerName.split(' ').slice(0, 2).join(' '),
+    payload.city,
+    payload.pairs ? `${payload.pairs} ${payload.pairs === 1 ? 'par' : 'pares'}` : '',
+    payload.method ? (payload.method === 'contra_entrega' ? 'Contra entrega' : 'Transferencia') : '',
+  ].filter(Boolean);
   fetch('/api/send-push', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      title: '🎉 ¡Nuevo pedido!',
-      bodyText: `${payload.orderNumber} · ${formatPrice(payload.total)} · ${payload.customerName}`,
+      title: `🛍️ Nuevo pedido · ${formatPrice(payload.total)}`,
+      bodyText: `${details.join(' · ')}\n${payload.orderNumber} — toca para verlo`,
       url: '/admin/pedidos',
     }),
   }).catch(() => {});

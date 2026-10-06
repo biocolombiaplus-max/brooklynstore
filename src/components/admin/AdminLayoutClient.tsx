@@ -1,6 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
 import AdminAuthGuard from './AdminAuthGuard';
 import AdminSidebar from './AdminSidebar';
 import OrderAlertListener from './OrderAlertListener';
@@ -8,6 +9,19 @@ import OrderAlertListener from './OrderAlertListener';
 export default function AdminLayoutClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isLoginPage = pathname === '/admin/login';
+
+  // Al instalar el panel en la pantalla de inicio (obligatorio en iPhone
+  // para recibir avisos) se usa el manifiesto del admin: ícono "Brooklyn
+  // Admin" que abre directo en Pedidos, como la app de Shopify.
+  useEffect(() => {
+    const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+    if (!link) return;
+    const original = link.href;
+    link.href = '/admin.webmanifest';
+    return () => {
+      link.href = original;
+    };
+  }, []);
 
   if (isLoginPage) return <>{children}</>;
 

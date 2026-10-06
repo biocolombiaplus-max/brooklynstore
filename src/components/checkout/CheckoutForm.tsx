@@ -228,7 +228,14 @@ export default function CheckoutForm({
         paymentMethod: method,
         customer,
       });
-      notifyOrderByPush({ orderNumber, total: totals.total, customerName: customer.name });
+      notifyOrderByPush({
+        orderNumber,
+        total: totals.total,
+        customerName: customer.name,
+        city: customer.city,
+        pairs: orderItems.reduce((n, i) => n + i.quantity, 0),
+        method,
+      });
 
       saveForm(form);
       if (coupon && !couponBlocked) {

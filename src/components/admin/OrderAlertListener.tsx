@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { subscribeToNewOrders } from '@/lib/orders';
 import { playCashRegisterSound, unlockAudio } from '@/lib/cashRegisterSound';
-import { getActivePushSubscription, isPushSupported, subscribeToPushNotifications } from '@/lib/push';
+import { getActivePushSubscription, isPushSupported, pushSetupState, subscribeToPushNotifications, type PushSetupState } from '@/lib/push';
 import { formatPrice } from '@/lib/utils';
 import type { Order } from '@/lib/types';
 
@@ -23,6 +23,7 @@ export default function OrderAlertListener() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<string | null>(null);
   const [toastOrder, setToastOrder] = useState<Order | null>(null);
+  const [setup, setSetup] = useState<PushSetupState>('ready');
   const soundEnabledRef = useRef(false);
   const toastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -34,6 +35,7 @@ export default function OrderAlertListener() {
     if (localStorage.getItem(SOUND_STORAGE_KEY) === '1') {
       unlockAudio().then((ok) => setSoundEnabled(ok));
     }
+    setSetup(pushSetupState());
     getActivePushSubscription().then((sub) => {
       setPushEnabled(!!sub);
       setPushChecked(true);
@@ -70,6 +72,8 @@ export default function OrderAlertListener() {
       if (isPushSupported()) {
         const result = await subscribeToPushNotifications();
         setPushEnabled(result === 'granted');
+        if (result !== 'granted')
+          setTestResult('⚠️ El celular no dio permiso. Ve a Ajustes → Notificaciones → Brooklyn Admin y actívalas, luego toca otra vez el botón.');
       }
     } finally {
       setActivating(false);
@@ -113,13 +117,54 @@ export default function OrderAlertListener() {
     }
   }
 
-  const fullyActive = soundEnabled && (pushEnabled || !isPushSupported());
+  // Con todo listo: sonido + push. Si el dispositivo aún no admite push, basta el sonido.
+  const fullyActive = setup === 'ready' ? soundEnabled && pushEnabled : soundEnabled;
   // Antes de saber si ya hay una suscripción push guardada, no mostramos
   // nada para no parpadear el botón de "activar" un instante de más.
   if (!pushChecked) return null;
 
+  const guide =
+    setup === 'no-keys'
+      ? {
+          title: 'Falta un paso en Vercel para activar los avisos',
+          steps: [
+            'Vercel → tu proyecto → Settings → Environment Variables.',
+            'Agrega NEXT_PUBLIC_VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY y VAPID_SUBJECT (te las pasamos listas).',
+            'Deployments → los 3 puntos del último → Redeploy.',
+          ],
+        }
+      : setup === 'ios-install'
+      ? {
+          title: 'En iPhone, instala el panel como app para recibir avisos',
+          steps: [
+            'Abre este panel en Safari y toca el botón Compartir (cuadrado con flecha ↑).',
+            'Elige “Agregar a pantalla de inicio” → Agregar. Se crea el ícono “Brooklyn Admin”.',
+            'Abre el panel desde ese ícono, inicia sesión y toca “Activar notificaciones de pedidos”.',
+          ],
+        }
+      : setup === 'unsupported'
+      ? {
+          title: 'Este navegador no permite notificaciones',
+          steps: ['Usa Chrome en Android o Windows, o Safari instalado como app en iPhone (iOS 16.4 o superior).'],
+        }
+      : null;
+
   return (
     <>
+      {guide && (
+        <div className="mb-4 rounded-card bg-[#0a0a0a] p-4 text-white shadow-soft ring-1 ring-primary/40 sm:p-5">
+          <p className="text-sm font-black">🔔 {guide.title}</p>
+          <ol className="mt-2 space-y-1.5 text-xs text-white/75">
+            {guide.steps.map((step, i) => (
+              <li key={step} className="flex gap-2">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gold-gradient text-[10px] font-black text-ink">{i + 1}</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-2 text-[11px] text-white/45">Mientras tanto, con el panel abierto igual suena la caja registradora y aparece el aviso del pedido.</p>
+        </div>
+      )}
       <div className="mb-4 flex flex-wrap items-center justify-end gap-2">
         {!fullyActive ? (
           <button
@@ -129,14 +174,14 @@ export default function OrderAlertListener() {
             title="Activa el sonido y las notificaciones push de pedidos nuevos (solo se hace una vez)"
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-urgent px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.01] disabled:opacity-70 sm:w-auto sm:rounded-full"
           >
-            {activating ? 'Activando...' : '🔔 Activar notificaciones de pedidos'}
+            {activating ? 'Activando...' : setup === 'ready' ? '🔔 Activar notificaciones de pedidos' : '🔊 Activar sonido de pedidos'}
           </button>
         ) : (
           <span
             title="Sonido y notificaciones push activos en este dispositivo"
             className="flex items-center gap-1.5 rounded-full bg-primary/15 px-3 py-1.5 text-xs font-bold text-primary-hover ring-1 ring-primary/30"
           >
-            <span className="h-2 w-2 rounded-full bg-whatsapp" /> Notificaciones activas
+            <span className="h-2 w-2 rounded-full bg-whatsapp" /> {setup === 'ready' ? 'Avisos de pedidos activos' : 'Sonido activo · falta activar avisos'}
           </span>
         )}
         <button
