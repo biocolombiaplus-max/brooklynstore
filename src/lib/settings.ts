@@ -18,6 +18,9 @@ export const DEFAULT_SETTINGS: SiteSettings = {
   // cambiar desde el panel: Configuración → Píxel de Meta.
   metaPixelId: process.env.NEXT_PUBLIC_META_PIXEL_ID || '4867176346845433',
   metaDomainVerification: '',
+  // Inicio oficial de ventas (6 de octubre de 2026): lo anterior fueron pruebas.
+  statsResetAt: 1791323146000,
+  commissionPaid: [],
   collectionsMenu: [
     { label: 'Deportivos', value: 'deportivos' },
     { label: 'Urbanos / Casual', value: 'urbanos' },
@@ -306,6 +309,8 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
     notificationEmail: data.notificationEmail || DEFAULT_SETTINGS.notificationEmail,
     metaPixelId: (data.metaPixelId || DEFAULT_SETTINGS.metaPixelId).replace(/\D/g, ''),
     metaDomainVerification: (data.metaDomainVerification ?? '').trim(),
+    statsResetAt: typeof data.statsResetAt === 'number' ? data.statsResetAt : DEFAULT_SETTINGS.statsResetAt,
+    commissionPaid: Array.isArray(data.commissionPaid) ? data.commissionPaid : [],
     logoHeight: data.logoHeight ?? DEFAULT_SETTINGS.logoHeight,
     exchangeWindowHours: data.exchangeWindowHours || DEFAULT_SETTINGS.exchangeWindowHours,
     collectionsMenu: data.collectionsMenu ?? DEFAULT_SETTINGS.collectionsMenu,
@@ -341,6 +346,11 @@ export async function getSiteSettings(): Promise<SiteSettings> {
   } catch {
     return DEFAULT_SETTINGS;
   }
+}
+
+// Guarda solo algunos campos (sin tocar el resto de la configuración).
+export async function updateSiteSettingsFields(fields: Partial<SiteSettings>): Promise<void> {
+  await setDoc(doc(db, DOC_PATH.collection, DOC_PATH.id), fields, { merge: true });
 }
 
 export async function updateSiteSettings(settings: SiteSettings): Promise<void> {

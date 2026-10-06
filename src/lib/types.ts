@@ -283,6 +283,10 @@ export interface SiteSettings {
   // Píxel de Meta (Facebook / Instagram) y verificación del dominio.
   metaPixelId: string;
   metaDomainVerification: string;
+  // Las estadísticas del panel cuentan pedidos desde esta fecha (ms).
+  statsResetAt: number;
+  // Quincenas de Juan Carlos ya pagadas (ej: "2026-10-1", "2026-10-2").
+  commissionPaid: string[];
   collectionsMenu: CollectionMenuItem[];
   brands: string[];
   featuredBrand: FeaturedBrand;
