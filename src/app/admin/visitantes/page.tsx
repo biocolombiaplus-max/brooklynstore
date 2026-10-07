@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import SafeImage from '@/components/SafeImage';
 import { getSiteSettings } from '@/lib/settings';
-import { buildRecoveryMessage, markRecoverySent, subscribeVisitors } from '@/lib/visitorsAdmin';
+import { buildRecoveryStepMessage, markRecoverySent, RECOVERY_STEPS, recoveryStatus, subscribeVisitors } from '@/lib/visitorsAdmin';
 import { classNames, formatPrice, whatsappLinkTo } from '@/lib/utils';
 import type { SiteSettings, Visitor, VisitorStage } from '@/lib/types';
 
@@ -80,9 +80,19 @@ export default function VisitorsPage() {
   const all = visitors ?? [];
   const inRange = range === 'hoy' ? all.filter((v) => v.lastSeen >= startOfDay) : all;
   const online = all.filter((v) => Date.now() - v.lastSeen < ONLINE_MS);
+  // Orden de trabajo: primero los que ya toca escribir, luego los próximos,
+  // luego secuencias terminadas y al final quienes no dejaron celular.
+  const priority = (v: Visitor) => {
+    if (!v.phone) return 4;
+    const st = recoveryStatus(v);
+    if (st.due) return 0;
+    if (st.next && !st.expired) return 1;
+    return 3;
+  };
   const abandoned = all
     .filter(isAbandoned)
-    .sort((a, b) => Number(!!b.phone) - Number(!!a.phone) || Number(!a.recoveryAt) - Number(!b.recoveryAt) || b.cartValue - a.cartValue);
+    .sort((a, b) => priority(a) - priority(b) || recoveryStatus(a).dueAt - recoveryStatus(b).dueAt || b.cartValue - a.cartValue);
+  const dueQueue = abandoned.filter((v) => v.phone && recoveryStatus(v).due);
 
   const reached = (stage: VisitorStage) => inRange.filter((v) => RANK[v.stage] >= RANK[stage] || (stage !== 'compra' && !!v.orderNumber)).length;
   const funnel: { stage: VisitorStage; label: string; count: number }[] = [
@@ -232,7 +242,7 @@ export default function VisitorsPage() {
         {(
           [
             ['vivo', `● En la tienda ahora (${online.length})`],
-            ['abandonados', `🛒 Carritos abandonados (${abandoned.length})`],
+            ['abandonados', `🛒 Carritos abandonados (${abandoned.length})${dueQueue.length ? ` · ${dueQueue.length} por escribir` : ''}`],
             ['todos', `Todos (${inRange.length})`],
           ] as [Tab, string][]
         ).map(([key, label]) => (
@@ -248,11 +258,7 @@ export default function VisitorsPage() {
       </div>
 
       {tab === 'abandonados' && abandoned.length > 0 && (
-        <p className="mt-3 rounded-xl bg-gold-50 px-4 py-3 text-sm text-ink ring-1 ring-primary/30">
-          <strong>{formatPrice(pendingValue)}</strong> en carritos sin terminar. Los que dejaron su celular aparecen primero: envíales el mensaje
-          y les llega un link que <strong>arma su carrito automáticamente</strong>. Los que no lo dejaron verán tu anuncio otra vez gracias al
-          Píxel de Meta.
-        </p>
+        <RecoveryQueue queue={dueQueue} settings={settings} pendingValue={pendingValue} />
       )}
 
       <div className="mt-3 space-y-3">
@@ -270,21 +276,71 @@ export default function VisitorsPage() {
   );
 }
 
+function stepMessage(v: Visitor, step: 1 | 2 | 3, settings: SiteSettings) {
+  return buildRecoveryStepMessage(v, step, {
+    codAdvance: settings.payments.codAdvance,
+    deliveryTime: settings.shipping.deliveryTime,
+    exchangeHours: settings.exchangeWindowHours,
+    storeName: settings.storeName,
+  });
+}
+
+function inTime(ms: number): string {
+  const m = Math.max(1, Math.round((ms - Date.now()) / 60000));
+  if (m < 60) return `en ${m} min`;
+  const h = Math.round(m / 60);
+  return h < 24 ? `en ${h} h` : `en ${Math.round(h / 24)} d`;
+}
+
+// Cola del día: uno tras otro, con un toque cada uno.
+function RecoveryQueue({ queue, settings, pendingValue }: { queue: Visitor[]; settings: SiteSettings | null; pendingValue: number }) {
+  const next = queue[0];
+  const st = next ? recoveryStatus(next) : null;
+  return (
+    <div className="mt-3 overflow-hidden rounded-card bg-[#0a0a0a] text-white shadow-soft ring-1 ring-primary/40">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+        <div>
+          <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary-light">Seguimiento de carritos</p>
+          <p className="mt-1 text-lg font-black">
+            {queue.length ? `${queue.length} ${queue.length === 1 ? 'mensaje listo' : 'mensajes listos'} para enviar` : 'Al día ✓ Nada por enviar ahora'}
+          </p>
+          <p className="text-xs text-white/55">{formatPrice(pendingValue)} en carritos sin terminar</p>
+        </div>
+        {next && st?.next && settings && (
+          <a
+            href={whatsappLinkTo(next.phone, stepMessage(next, st.next.step, settings))}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => markRecoverySent(next.id).catch(() => {})}
+            className="rounded-xl bg-whatsapp px-5 py-3 text-sm font-black text-white shadow-soft transition-transform hover:scale-[1.03]"
+          >
+            💬 Enviar siguiente · {next.name.split(' ')[0] || 'cliente'} (mensaje {st.next.step})
+          </a>
+        )}
+      </div>
+      <div className="grid grid-cols-3 border-t border-white/10 text-center text-[11px]">
+        {RECOVERY_STEPS.map((s) => (
+          <div key={s.step} className="border-r border-white/10 px-2 py-2.5 last:border-r-0">
+            <p className="font-extrabold text-primary-light">
+              {s.step}. {s.when}
+            </p>
+            <p className="text-white/60">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function VisitorCard({ v, settings }: { v: Visitor; settings: SiteSettings | null }) {
-  const [sent, setSent] = useState(!!v.recoveryAt);
+  const [preview, setPreview] = useState(false);
   const live = Date.now() - v.lastSeen < ONLINE_MS;
   const abandoned = isAbandoned(v);
-  const message =
-    settings && v.phone
-      ? buildRecoveryMessage(v, {
-          codAdvance: settings.payments.codAdvance,
-          deliveryTime: settings.shipping.deliveryTime,
-          exchangeHours: settings.exchangeWindowHours,
-        })
-      : '';
+  const st = recoveryStatus(v);
+  const message = settings && v.phone && st.next ? stepMessage(v, st.next.step, settings) : '';
 
   return (
-    <div className={classNames('rounded-card bg-white p-4 shadow-soft sm:p-5', abandoned && v.phone && !sent && 'ring-2 ring-primary/50')}>
+    <div className={classNames('rounded-card bg-white p-4 shadow-soft sm:p-5', abandoned && v.phone && st.due && 'ring-2 ring-whatsapp/60')}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ink text-sm font-black text-white">
@@ -335,26 +391,61 @@ function VisitorCard({ v, settings }: { v: Visitor; settings: SiteSettings | nul
       )}
 
       {abandoned && (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {v.phone ? (
-            <a
-              href={whatsappLinkTo(v.phone, message)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => {
-                setSent(true);
-                markRecoverySent(v.id).catch(() => {});
-              }}
-              className="rounded-lg bg-whatsapp px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.03]"
-            >
-              {sent ? '↻ Escribirle otra vez' : '💬 Recuperar por WhatsApp'}
-            </a>
-          ) : (
-            <span className="rounded-lg bg-cream-alt px-3 py-2 text-xs font-semibold text-muted">
-              No dejó su celular · Meta le volverá a mostrar tu anuncio
-            </span>
+        <div className="mt-3 rounded-xl bg-cream-alt/60 p-3">
+          {/* Línea de tiempo de los 3 mensajes */}
+          <div className="flex items-center gap-1.5">
+            {RECOVERY_STEPS.map((s) => {
+              const done = st.sent >= s.step;
+              const isNext = st.next?.step === s.step;
+              return (
+                <div key={s.step} className="flex flex-1 items-center gap-1.5">
+                  <span
+                    className={classNames(
+                      'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black',
+                      done ? 'bg-whatsapp text-white' : isNext && st.due ? 'bg-gold-gradient text-ink' : 'bg-white text-muted ring-1 ring-border',
+                    )}
+                  >
+                    {done ? '✓' : s.step}
+                  </span>
+                  <span className="hidden truncate text-[10px] font-bold text-muted sm:block">{s.label}</span>
+                  {s.step < 3 && <span className="h-px flex-1 bg-border" />}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {!v.phone ? (
+              <span className="text-xs font-semibold text-muted">No dejó su celular · Meta le volverá a mostrar tu anuncio</span>
+            ) : !st.next ? (
+              <span className="text-xs font-semibold text-muted">✓ Secuencia completa (3 mensajes enviados)</span>
+            ) : st.expired ? (
+              <span className="text-xs font-semibold text-muted">Pasaron más de 7 días: mejor no insistir</span>
+            ) : (
+              <>
+                <a
+                  href={message ? whatsappLinkTo(v.phone, message) : undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => markRecoverySent(v.id).catch(() => {})}
+                  className={classNames(
+                    'rounded-lg px-4 py-2.5 text-sm font-bold shadow-soft transition-transform hover:scale-[1.03]',
+                    st.due ? 'bg-whatsapp text-white' : 'bg-white text-ink ring-1 ring-border',
+                  )}
+                >
+                  💬 {st.due ? `Enviar mensaje ${st.next.step}` : `Adelantar mensaje ${st.next.step}`} · {st.next.label}
+                </a>
+                <span className="text-xs text-muted">{st.due ? 'Toca ahora ✓' : `Toca ${inTime(st.dueAt)}`}</span>
+                <button type="button" onClick={() => setPreview((p) => !p)} className="text-xs font-bold text-muted underline underline-offset-4">
+                  {preview ? 'Ocultar mensaje' : 'Ver mensaje'}
+                </button>
+              </>
+            )}
+            {v.recoveryAt && <span className="text-xs text-muted">· último enviado {ago(v.recoveryAt)}</span>}
+          </div>
+          {preview && message && (
+            <pre className="mt-3 whitespace-pre-wrap rounded-lg bg-white p-3 font-body text-xs text-ink ring-1 ring-border">{message}</pre>
           )}
-          {sent && v.recoveryAt && <span className="text-xs text-muted">Mensaje enviado {ago(v.recoveryAt)}</span>}
         </div>
       )}
     </div>

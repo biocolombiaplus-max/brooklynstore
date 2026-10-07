@@ -62,6 +62,144 @@ export function recoveryUrl(id: string): string {
   return `${SITE_URL}/carrito?recuperar=${id}&utm_source=whatsapp&utm_campaign=recuperar-carrito`;
 }
 
+// ——— Secuencia de recuperación de carrito (estándar de Shopify/Klaviyo) ———
+// 1) ~1 hora después: recordatorio amable y ayuda con la talla.
+// 2) ~24 horas después del 1.º: confianza (pago al recibir, cambios, envío).
+// 3) ~24 horas después del 2.º: última oportunidad con 5% OFF por 24 h.
+// Cada paso tiene varias versiones: cada cliente recibe un texto distinto.
+
+const HOUR = 60 * 60 * 1000;
+export const RECOVERY_COUPON = 'VUELVE5';
+export const RECOVERY_STEPS = [
+  { step: 1, label: 'Recordatorio y ayuda', wait: 1 * HOUR, when: '1 h después' },
+  { step: 2, label: 'Confianza y garantía', wait: 23 * HOUR, when: '1 día después' },
+  { step: 3, label: 'Última oportunidad · 5% OFF', wait: 24 * HOUR, when: '2 días después' },
+] as const;
+const RECOVERY_MAX_AGE = 7 * 24 * HOUR;
+
+export interface RecoveryStatus {
+  sent: number; // mensajes ya enviados
+  next: (typeof RECOVERY_STEPS)[number] | null; // siguiente paso (null = secuencia terminada)
+  dueAt: number; // cuándo toca el siguiente
+  due: boolean; // ¿toca enviarlo ya?
+  expired: boolean; // más de 7 días: ya no se insiste
+}
+
+export function recoveryStatus(v: Visitor, now = Date.now()): RecoveryStatus {
+  const sent = Math.min(3, v.recoveryCount ?? (v.recoveryAt ? 1 : 0));
+  const expired = now - v.lastSeen > RECOVERY_MAX_AGE;
+  const next = sent >= RECOVERY_STEPS.length ? null : RECOVERY_STEPS[sent];
+  const base = sent === 0 ? v.lastSeen : v.recoveryAt || v.lastSeen;
+  const dueAt = next ? base + next.wait : 0;
+  return { sent, next, dueAt, due: !!next && !expired && now >= dueAt, expired };
+}
+
+function variantOf(id: string, step: number, count: number): number {
+  let h = step * 31;
+  for (const ch of id) h = (h * 33 + ch.charCodeAt(0)) >>> 0;
+  return h % count;
+}
+
+function cartLines(v: Visitor): string {
+  return v.cart
+    .slice(0, 4)
+    .map((i) => `▸ *${i.title}*\n   Talla ${i.size}${i.color ? ` · ${i.color}` : ''}${i.quantity > 1 ? ` · x${i.quantity}` : ''}`)
+    .join('\n');
+}
+
+export function buildRecoveryStepMessage(
+  v: Visitor,
+  step: 1 | 2 | 3,
+  opts: { codAdvance: number; deliveryTime: string; exchangeHours: number; storeName?: string },
+): string {
+  const name = v.name.split(' ')[0] || '';
+  const hola = `¡Hola${name ? ` ${name}` : ''}!`;
+  const store = opts.storeName || 'Brooklyn Store';
+  const first = v.cart[0]?.title ?? 'tus zapatos';
+  const lines = cartLines(v);
+  const link = recoveryUrl(v.id) + (step === 3 ? `&cupon=${RECOVERY_COUPON}` : '');
+  const cod = formatPrice(opts.codAdvance);
+
+  const variants: Record<1 | 2 | 3, string[]> = {
+    1: [
+      `${hola} Te escribe ${store}.
+
+Vimos que te gustaron estos zapatos:
+${lines}
+
+¿Te quedó alguna duda con la talla o el pago? Respóndeme por aquí y te ayudo en un minuto.
+
+Tu carrito sigue guardado, termínalo aquí:
+${link}`,
+      `${hola} Soy de ${store}.
+
+Te guardamos tu carrito con:
+${lines}
+
+Si no sabes qué talla pedir, mándame la talla que usas normalmente y te digo cuál te queda perfecta.
+
+Para terminar tu compra en 1 minuto:
+${link}`,
+      `${hola} Gracias por visitar ${store}.
+
+Dejaste tu *${first}* en el carrito. ¿Te ayudo a terminar el pedido?
+
+Recuerda que puedes pagar solo *${cod}* hoy y el resto cuando lo recibas.
+
+Tu carrito está listo aquí:
+${link}`,
+    ],
+    2: [
+      `${hola} Te escribo de ${store} por tus *${first}*.
+
+Para que compres con total tranquilidad:
+${WA_LINE}
+• Pagas solo *${cod}* hoy y el resto *al recibir*
+• Envío con Servientrega a todo Ecuador (${opts.deliveryTime})
+• ¿No te quedó? Cambio de talla en ${opts.exchangeHours} horas
+${WA_LINE}
+
+Tu carrito sigue guardado:
+${link}`,
+      `${hola} Seguimos guardando tu pedido en ${store}:
+${lines}
+
+Muchos clientes nos preguntan si es seguro: por eso puedes *pagar al recibir*, adelantando solo ${cod} para el envío. Te llega con número de guía de Servientrega.
+
+Retoma tu compra aquí:
+${link}`,
+      `${hola} ¿Sigues pensando en tus *${first}*?
+
+En ${store} recibes tus zapatos en casa y los pagas al recibir (hoy solo ${cod}). Y si la talla no te queda, te lo cambiamos en ${opts.exchangeHours} horas.
+
+Tu carrito te espera:
+${link}`,
+    ],
+    3: [
+      `${hola} Último aviso de ${store}: tu carrito vence hoy.
+
+${lines}
+
+Para que te animes, te regalamos *5% OFF* con el código *${RECOVERY_COUPON}* (válido 24 horas). Ya viene activado en este link:
+${link}`,
+      `${hola} No queremos que te quedes sin tus *${first}*: esa talla se está agotando.
+
+Solo por hoy tienes *5% de descuento* con el código *${RECOVERY_COUPON}*. Entra aquí y ya se aplica solo:
+${link}
+
+Cualquier duda, respóndeme por aquí.`,
+      `${hola} Te escribe ${store} por última vez sobre tu pedido.
+
+Te dejamos un *5% OFF* exclusivo para que termines tu compra hoy (código *${RECOVERY_COUPON}*, 24 horas):
+${link}
+
+Pagas al recibir y te llega con Servientrega a todo Ecuador.`,
+    ],
+  };
+  const list = variants[step];
+  return list[variantOf(v.id, step, list.length)];
+}
+
 // Mensaje premium para quien dejó zapatos en el carrito.
 export function buildRecoveryMessage(v: Visitor, opts: { codAdvance: number; deliveryTime: string; exchangeHours: number }): string {
   const firstName = v.name.split(' ')[0] || '';

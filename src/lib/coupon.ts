@@ -46,6 +46,8 @@ export async function redeemAnyCouponCode(rawCode: string): Promise<{ coupon: Wo
 // ejemplo si la clienta lo recibió por WhatsApp o redes sociales).
 export const COUPON_CODES: Record<string, number> = {
   BROOKLYN5: 5,
+  // Último mensaje de la secuencia de carrito abandonado.
+  VUELVE5: 5,
 };
 
 // Valida un código escrito a mano y, si es válido, lo guarda como el cupón
