@@ -21,7 +21,7 @@ import HowItWorks from '@/components/HowItWorks';
 import { discountPercentOf } from '@/components/ProductCard';
 import { isStarBrand } from '@/lib/brand';
 
-export default function ProductView({ initialProduct }: { initialProduct?: Product | null }) {
+export default function ProductView({ initialProduct, related }: { initialProduct?: Product | null; related?: Product[] }) {
   const params = useParams<{ slug: string }>();
   const { payments, shipping, featuredBrand } = useSiteSettings();
   // La ficha llega desde el servidor ya con el zapato: se ve al instante.
@@ -147,7 +147,7 @@ export default function ProductView({ initialProduct }: { initialProduct?: Produ
                     <span className="text-primary">★★★★★</span> <span className="text-ink">{product.reviewsCount} reseñas</span>
                   </a>
                 )}
-                {!!product.soldCount && <span>· 🛍️ +{product.soldCount} vendidos</span>}
+                {!!product.soldCount && <span>{product.reviewsCount ? '· ' : ''}🛍️ +{product.soldCount} vendidos</span>}
               </div>
             )}
 
@@ -211,7 +211,7 @@ export default function ProductView({ initialProduct }: { initialProduct?: Produ
       </div>
 
       <HowItWorks />
-      <RelatedProducts product={product} />
+      <RelatedProducts product={product} initialProducts={related} />
 
       {/* Barra fija de compra en celular */}
       {!ctaVisible && product.stock > 0 && (

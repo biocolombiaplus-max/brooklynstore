@@ -5,10 +5,11 @@ import { getRelatedProducts } from '@/lib/products';
 import type { Product } from '@/lib/types';
 import ProductGrid, { ProductGridSkeleton } from '../ProductGrid';
 
-export default function RelatedProducts({ product }: { product: Product }) {
-  const [products, setProducts] = useState<Product[] | null>(null);
+export default function RelatedProducts({ product, initialProducts }: { product: Product; initialProducts?: Product[] }) {
+  const [products, setProducts] = useState<Product[] | null>(initialProducts?.length ? initialProducts : null);
 
   useEffect(() => {
+    if (initialProducts?.length) return;
     let cancelled = false;
     getRelatedProducts(product, 4)
       .then((list) => !cancelled && setProducts(list))
@@ -16,7 +17,7 @@ export default function RelatedProducts({ product }: { product: Product }) {
     return () => {
       cancelled = true;
     };
-  }, [product]);
+  }, [product, initialProducts]);
 
   if (products !== null && products.length === 0) return null;
 

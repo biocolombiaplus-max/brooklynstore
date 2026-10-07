@@ -8,7 +8,14 @@ import { slimProduct } from '@/lib/productMap';
 export const revalidate = 60;
 
 export async function GET() {
-  const products = (await getActiveProductsServer()).map(slimProduct);
+  let list;
+  try {
+    list = await getActiveProductsServer({ demoFallback: false });
+  } catch {
+    // Error temporal: no se guarda en caché, el navegador reintenta directo.
+    return NextResponse.json({ error: 'temporal' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
+  }
+  const products = list.map(slimProduct);
   return NextResponse.json(products, {
     headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=86400' },
   });

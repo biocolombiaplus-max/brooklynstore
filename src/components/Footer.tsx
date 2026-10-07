@@ -3,6 +3,7 @@
 import { generalMessage } from '@/lib/wa-messages';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSiteSettings } from '@/lib/settings-context';
 import { formatPrice, whatsappLinkTo } from '@/lib/utils';
 import PaymentBadges from '@/components/PaymentBadges';
@@ -19,6 +20,32 @@ const SOCIALS: { key: 'instagram' | 'facebook' | 'tiktok'; label: string }[] = [
 export default function Footer() {
   const { storeName, logoUrl, whatsappCountryCode, whatsappNumber, footer, brands, payments, shipping } = useSiteSettings();
   const socialLinks = SOCIALS.filter((s) => footer[s.key]);
+  const pathname = usePathname() ?? '';
+
+  // En el pago y la confirmación, pie mínimo: nada que distraiga de comprar.
+  if (pathname.startsWith('/checkout') || pathname.startsWith('/pedido-confirmado')) {
+    return (
+      <footer className="border-t border-border bg-white py-6 text-center text-xs text-muted">
+        <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 font-semibold">
+          <span>🔒 Compra segura</span>
+          <span>🚚 Envío con Servientrega</span>
+          <span>🔄 Cambio de talla en 48 h</span>
+        </p>
+        <p className="mt-2">
+          ¿Dudas?{' '}
+          <a
+            href={whatsappLinkTo(whatsappNumber, generalMessage('Tengo una duda con mi compra.'), whatsappCountryCode)}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold text-ink underline"
+          >
+            Escríbenos por WhatsApp
+          </a>{' '}
+          · © {new Date().getFullYear()} {storeName}
+        </p>
+      </footer>
+    );
+  }
 
   return (
     <footer className="bg-ink text-white">

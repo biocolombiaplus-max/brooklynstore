@@ -52,10 +52,11 @@ export function getActiveProducts(): Promise<Product[]> {
 async function getActiveProductsDirect(): Promise<Product[]> {
   if (!db) return DEMO_PRODUCTS;
   try {
-    const products = (await getAllProducts()).filter((p) => p.active);
-    return products.length > 0 ? products : DEMO_PRODUCTS;
+    // Con la tienda configurada nunca se muestran zapatos de demostración:
+    // si algo falla, mejor no mostrar nada que mostrar productos falsos.
+    return (await getAllProducts()).filter((p) => p.active);
   } catch {
-    return DEMO_PRODUCTS;
+    return [];
   }
 }
 

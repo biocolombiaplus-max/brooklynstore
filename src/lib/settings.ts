@@ -179,7 +179,7 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     {
       icon: '⚡',
       title: 'Despacho ya mismo',
-      text: 'Confirmas por WhatsApp y despachamos el mismo día. Llega en 24 a 72 horas a todo el país.',
+      text: 'Pagas, nos envías el comprobante y despachamos el mismo día. Llega en 24 a 72 horas a todo el país.',
     },
   ],
   testimonialsHeading: 'Lo que dicen nuestros clientes',

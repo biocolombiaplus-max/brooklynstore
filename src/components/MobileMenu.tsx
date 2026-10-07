@@ -181,7 +181,7 @@ export default function MobileMenu({ open, onClose }: { open: boolean; onClose: 
                 title: 'Pago contra entrega',
                 sub: `Adelantas ${formatPrice(payments.codAdvance)} y el resto al recibir`,
               },
-              { href: '/#como-comprar', icon: '🛍️', title: 'Cómo comprar', sub: 'En 4 pasos, confirmas por WhatsApp' },
+              { href: '/#como-comprar', icon: '🛍️', title: 'Cómo comprar', sub: 'En 4 pasos, rápido y seguro' },
               { href: '/ayuda/rastrear-pedido', icon: '📦', title: 'Rastrear mi pedido', sub: 'Estado y guía Servientrega' },
               { href: '/ayuda', icon: '❓', title: 'Centro de ayuda', sub: `Envíos en ${shipping.deliveryTime}, cambios y garantía` },
             ].map((item) => (

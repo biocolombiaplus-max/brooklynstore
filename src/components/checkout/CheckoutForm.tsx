@@ -86,6 +86,7 @@ export default function CheckoutForm({
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [locationUrl, setLocationUrl] = useState('');
   const [attempted, setAttempted] = useState(false);
+  const [showNote, setShowNote] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [coupon, setCoupon] = useState<WonCoupon | null>(null);
@@ -414,12 +415,20 @@ export default function CheckoutForm({
           onChange={(e) => update('reference', e.target.value)}
           className="input"
         />
-        <input
-          placeholder="Nota para tu pedido (opcional)"
-          value={form.note}
-          onChange={(e) => update('note', e.target.value)}
-          className="input"
-        />
+        {/* Menos campos a la vista = compra más rápida: la nota es opcional. */}
+        {showNote || form.note ? (
+          <input
+            placeholder="Nota para tu pedido (opcional)"
+            value={form.note}
+            onChange={(e) => update('note', e.target.value)}
+            className="input"
+            autoFocus={showNote && !form.note}
+          />
+        ) : (
+          <button type="button" onClick={() => setShowNote(true)} className="text-left text-xs font-bold text-muted underline underline-offset-4 hover:text-ink">
+            + Agregar una nota (opcional)
+          </button>
+        )}
 
         <LocationCapture value={locationUrl} onCapture={setLocationUrl} />
       </fieldset>

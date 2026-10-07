@@ -42,7 +42,9 @@ async function fetchJson(url: string, init?: RequestInit) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 4000);
   try {
-    const res = await fetch(url, { ...init, signal: controller.signal, next: { revalidate: PRODUCTS_REVALIDATE, tags: ['products'] } });
+    let res = await fetch(url, { ...init, signal: controller.signal, next: { revalidate: PRODUCTS_REVALIDATE, tags: ['products'] } });
+    // Un reintento rápido si Firestore falla por un instante.
+    if (!res.ok && res.status >= 500) res = await fetch(url, { ...init, signal: controller.signal, next: { revalidate: PRODUCTS_REVALIDATE, tags: ['products'] } });
     if (!res.ok) throw new Error(`Firestore ${res.status}`);
     return await res.json();
   } finally {
@@ -68,11 +70,11 @@ export async function getActiveProductsServer(opts: { demoFallback?: boolean } =
       if (!pageToken) break;
     }
     const active = all.filter((p) => p.active && p.slug).sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
-    if (!fallback) return active;
-    return active.length > 0 ? active : DEMO_PRODUCTS;
+    return active;
   } catch (err) {
+    // Nunca productos de demostración en la tienda real: mejor vacío.
     if (!fallback) throw err;
-    return DEMO_PRODUCTS;
+    return [];
   }
 }
 

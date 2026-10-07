@@ -57,10 +57,11 @@ export default async function HomePage() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
       <Hero />
       <TrustBar />
+      {/* Los zapatos primero: quien llega del anuncio ve productos de inmediato. */}
+      <FeaturedProducts initialProducts={featured} />
+      <CategoryTiles />
       <FeaturedBrandSpotlight initialProducts={starProducts} />
       <BrandStrip />
-      <CategoryTiles />
-      <FeaturedProducts initialProducts={featured} />
       <PaymentMethods />
       <HowItWorks />
       <SizeGuidePromo />

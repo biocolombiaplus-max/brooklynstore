@@ -145,6 +145,8 @@ export default function BuyBox({
   useEffect(() => () => setWaContext(null), [setWaContext]);
 
   const lineTotal = product.price * quantity;
+  // El envío se muestra desde el inicio: nada de sorpresas al pagar.
+  const shippingFee = settings.shipping.defaultRate;
   const cod = computeOrderTotals(settings, [{ price: product.price, codPrice: product.codPrice ?? undefined, quantity }], 'contra_entrega', '');
 
   return (
@@ -164,7 +166,10 @@ export default function BuyBox({
             </>
           )}
         </div>
-        <p className="mt-1 text-xs text-muted">IVA incluido · Precio en dólares</p>
+        <p className="mt-1.5 text-[13px] font-semibold text-ink">
+          + {formatPrice(shippingFee)} de envío a todo Ecuador
+          <span className="font-normal text-muted"> · IVA incluido</span>
+        </p>
       </div>
 
       <UrgencyTimer />
@@ -329,7 +334,7 @@ export default function BuyBox({
               <span className="flex flex-col gap-1">
                 <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">🏦 Pago por transferencia</span>
                 <span className="text-[12px] font-bold opacity-80">
-                  Depósito o transferencia Banco Pichincha
+                  Pichincha · total con envío {formatPrice(lineTotal + shippingFee)}
                 </span>
               </span>
               <span className="shrink-0 text-right">
@@ -401,23 +406,6 @@ export default function BuyBox({
         </div>
       </div>
 
-      {/* Mini explicación del pago contra entrega — genera confianza */}
-      {payments.codEnabled && !soldOut && (
-        <div className="rounded-2xl bg-gold-50 p-4 ring-1 ring-primary/30">
-          <p className="text-sm font-black text-ink">💵 ¿Cómo funciona el pago contra entrega?</p>
-          <ol className="mt-2 space-y-1 text-xs leading-relaxed text-muted">
-            <li>
-              <strong className="text-ink">1.</strong> Confirmas tu pedido por WhatsApp.
-            </li>
-            <li>
-              <strong className="text-ink">2.</strong> Adelantas solo {formatPrice(cod.payNow)} por transferencia o depósito en Banco Pichincha para garantizar tu envío.
-            </li>
-            <li>
-              <strong className="text-ink">3.</strong> Recibes tus zapatos en tu dirección y pagas {formatPrice(cod.payOnDelivery)} en efectivo al recibir. ¡Así de fácil!
-            </li>
-          </ol>
-        </div>
-      )}
 
       <div className="grid grid-cols-3 gap-2 text-center">
         {[

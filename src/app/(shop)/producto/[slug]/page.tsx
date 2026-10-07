@@ -1,12 +1,22 @@
 import ProductView from './ProductView';
-import { getProductBySlugServer } from '@/lib/productsServer';
+import { getActiveProductsServer, getProductBySlugServer } from '@/lib/productsServer';
+import { slimProduct } from '@/lib/productMap';
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore-six.vercel.app').replace(/\/$/, '');
 
 const absolute = (url: string) => (url.startsWith('http') ? url : `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`);
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
-  const product = await getProductBySlugServer(params.slug);
+  const [product, all] = await Promise.all([getProductBySlugServer(params.slug), getActiveProductsServer()]);
+  // Recomendados: mismo estilo, luego misma marca, luego los más vendidos.
+  const related = product
+    ? all
+        .filter((p) => p.id !== product.id)
+        .map((p) => ({ p, score: (p.collection === product.collection ? 2 : 0) + (p.brand === product.brand ? 1 : 0) }))
+        .sort((a, b) => b.score - a.score || (b.p.soldCount ?? 0) - (a.p.soldCount ?? 0))
+        .slice(0, 4)
+        .map(({ p }) => slimProduct(p))
+    : [];
   const active = product && product.active ? product : null;
 
   // Ficha de producto para Google (precio, disponibilidad, reseñas, fotos):
@@ -49,7 +59,7 @@ export default async function ProductPage({ params }: { params: { slug: string }
   return (
     <>
       {jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />}
-      <ProductView initialProduct={product} />
+      <ProductView initialProduct={product} related={related} />
     </>
   );
 }
