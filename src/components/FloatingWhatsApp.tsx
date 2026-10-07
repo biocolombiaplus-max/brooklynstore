@@ -14,6 +14,7 @@ import {
   useWaContext,
 } from '@/lib/wa-messages';
 import { WhatsAppIcon } from './icons';
+import { trackPixel } from '@/lib/pixel';
 
 // El mensaje cambia según la página: el modelo que está viendo, los filtros
 // del catálogo, su carrito, ayuda con la talla... así la tienda responde
@@ -54,12 +55,13 @@ export default function FloatingWhatsApp() {
     <a
       href={whatsappLinkTo(whatsappNumber, generalMessage(), whatsappCountryCode)}
       onClick={(e) => {
+        trackPixel('Contact', { content_name: pathname });
         e.currentTarget.href = whatsappLinkTo(whatsappNumber, messageForCurrentPage(pathname, productMessage, cart), whatsappCountryCode);
       }}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Escríbenos por WhatsApp"
-      className={`group fixed right-4 z-30 flex items-center gap-2 sm:right-6 ${onProduct ? 'bottom-24 lg:bottom-6' : 'bottom-[max(1.25rem,env(safe-area-inset-bottom))] sm:bottom-6'}`}
+      className={`group fixed right-4 z-30 flex items-center gap-2 sm:right-6 ${onProduct ? 'hidden lg:flex lg:bottom-6' : 'bottom-[max(1.25rem,env(safe-area-inset-bottom))] sm:bottom-6'}`}
     >
       <span className="hidden rounded-full bg-white px-4 py-2 text-xs font-extrabold text-ink shadow-dark transition-all group-hover:translate-x-0 sm:block sm:translate-x-2 sm:opacity-0 sm:group-hover:opacity-100">
         ¿Te ayudamos? 👋

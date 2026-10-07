@@ -17,7 +17,7 @@ import { CartIcon, RulerIcon, WhatsAppIcon } from '../icons';
 import { discountPercentOf } from '../ProductCard';
 import SizeGuideModal from '../sizes/SizeGuideModal';
 import LabelScanner from '../sizes/LabelScanner';
-import UrgencyTimer from './UrgencyTimer';
+import DeliveryEstimate from './DeliveryEstimate';
 import QuickBuyModal from './QuickBuyModal';
 import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 
@@ -172,7 +172,7 @@ export default function BuyBox({
         </p>
       </div>
 
-      <UrgencyTimer />
+      <DeliveryEstimate />
 
       {product.stock > 0 && product.stock <= 10 && (
         <div>
@@ -253,6 +253,7 @@ export default function BuyBox({
                 onClick={() => {
                   setSize(s);
                   setSizeError(false);
+                  trackPixel('CustomizeProduct', { content_ids: [metaItemId(product, color)], content_name: `${product.title} talla ${s}` });
                 }}
                 className={classNames(
                   'flex h-14 flex-col items-center justify-center rounded-xl border-2 leading-none transition-all duration-150 active:scale-95',
@@ -393,6 +394,7 @@ export default function BuyBox({
           href={whatsappLinkTo(whatsappNumber, waMessage, whatsappCountryCode)}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={() => trackPixel('Contact', { content_name: product.title })}
           className="flex items-center justify-center gap-2 rounded-full py-2 text-sm font-bold text-ink transition-colors hover:text-whatsapp"
         >
           <WhatsAppIcon className="text-whatsapp" /> ¿Dudas? Pregúntanos por WhatsApp

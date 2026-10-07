@@ -6,13 +6,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
 import { getProductBySlug } from '@/lib/products';
-import { formatPrice, resolveColorImage } from '@/lib/utils';
+import { formatPrice, resolveColorImage, whatsappLinkTo } from '@/lib/utils';
+import { productMessage } from '@/lib/wa-messages';
+import { trackPixel } from '@/lib/pixel';
+import { WhatsAppIcon } from '@/components/icons';
 import { galleryForColor } from '@/lib/colorPhotos';
 import { useSiteSettings } from '@/lib/settings-context';
 import { GENDERS, type PaymentMethod, type Product } from '@/lib/types';
 import ProductGallery from '@/components/product/ProductGallery';
 import BuyBox from '@/components/product/BuyBox';
-import SocialProofTicker from '@/components/product/SocialProofTicker';
 import SizeGuide from '@/components/sizes/SizeGuide';
 import Accordion, { AccordionItem } from '@/components/product/Accordion';
 import ProductReviews from '@/components/product/ProductReviews';
@@ -23,7 +25,7 @@ import { isStarBrand } from '@/lib/brand';
 
 export default function ProductView({ initialProduct, related }: { initialProduct?: Product | null; related?: Product[] }) {
   const params = useParams<{ slug: string }>();
-  const { payments, shipping, featuredBrand } = useSiteSettings();
+  const { payments, shipping, featuredBrand, whatsappNumber, whatsappCountryCode } = useSiteSettings();
   // La ficha llega desde el servidor ya con el zapato: se ve al instante.
   const [product, setProduct] = useState<Product | null | undefined>(initialProduct ?? undefined);
   const [colorName, setColorName] = useState<string | undefined>(initialProduct?.colors[0]?.name);
@@ -151,9 +153,15 @@ export default function ProductView({ initialProduct, related }: { initialProduc
               </div>
             )}
 
-            <div className="mt-4">
-              <SocialProofTicker productTitle={product.title} />
-            </div>
+            {/* Lo que promete el anuncio, visible apenas llega: pago al
+                recibir, envío y cambio de talla (datos reales de la tienda). */}
+            <ul className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold text-ink sm:text-xs">
+              {payments.codEnabled && (
+                <li className="rounded-full bg-gold-50 px-3 py-1.5 ring-1 ring-primary/30">💵 Hoy solo {formatPrice(payments.codAdvance)} · el resto al recibir</li>
+              )}
+              <li className="rounded-full bg-cream-alt px-3 py-1.5">🚚 Envío a todo Ecuador</li>
+              <li className="rounded-full bg-cream-alt px-3 py-1.5">🔄 Cambio de talla en 48 h</li>
+            </ul>
 
             <div id="comprar" className="mt-4 scroll-mt-24">
               <BuyBox
@@ -213,17 +221,36 @@ export default function ProductView({ initialProduct, related }: { initialProduc
       <HowItWorks />
       <RelatedProducts product={product} initialProducts={related} />
 
-      {/* Barra fija de compra en celular */}
+      {/* Barra fija de compra en celular: lo que vende el anuncio (pagar al
+          recibir) a un toque, y WhatsApp para quien prefiere preguntar. */}
       {!ctaVisible && product.stock > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 animate-slideUp border-t border-border bg-white/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-dark backdrop-blur lg:hidden">
-          <div className="flex items-center gap-3">
-            <div className="min-w-0">
-              <p className="truncate text-[11px] font-bold text-muted">{product.title}</p>
-              <p className="text-lg font-black text-ink">{formatPrice(product.price)}</p>
-            </div>
-            <button onClick={() => openBuyRef.current?.('transferencia')} className="btn-primary btn-shine flex-1 px-4 py-3.5 text-xs">
-              Comprar ahora
-            </button>
+        <div className="fixed inset-x-0 bottom-0 z-30 animate-slideUp border-t border-border bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-dark backdrop-blur lg:hidden">
+          <div className="flex items-center gap-2">
+            <a
+              href={whatsappLinkTo(whatsappNumber, productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price }), whatsappCountryCode)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => trackPixel('Contact', { content_name: product.title })}
+              aria-label="Preguntar por WhatsApp"
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-whatsapp text-white shadow-soft"
+            >
+              <WhatsAppIcon size={24} />
+            </a>
+            {payments.codEnabled ? (
+              <button
+                onClick={() => openBuyRef.current?.('contra_entrega')}
+                className="btn-primary btn-shine flex-1 flex-col gap-0 px-3 py-2 text-xs leading-tight"
+              >
+                <span>Pedir · paga al recibir</span>
+                <span className="text-[10px] font-bold normal-case tracking-normal opacity-75">
+                  Hoy solo {formatPrice(payments.codAdvance)} · {formatPrice(product.price)} transferencia
+                </span>
+              </button>
+            ) : (
+              <button onClick={() => openBuyRef.current?.('transferencia')} className="btn-primary btn-shine flex-1 px-4 py-3.5 text-xs">
+                Comprar ahora · {formatPrice(product.price)}
+              </button>
+            )}
           </div>
         </div>
       )}
