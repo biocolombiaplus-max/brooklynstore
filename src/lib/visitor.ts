@@ -149,6 +149,12 @@ function detectSource(): { source: string; campaign: string } {
   return { source: host.replace(/^www\./, '').slice(0, 40), campaign };
 }
 
+// Nombre y celular que el cliente ya escribió (para la API de conversiones).
+export function visitorContact(): { name: string; phone: string } {
+  const p = loadProfile();
+  return { name: p.name, phone: p.phone };
+}
+
 let pending: ReturnType<typeof setTimeout> | null = null;
 let pendingPageview = false;
 
