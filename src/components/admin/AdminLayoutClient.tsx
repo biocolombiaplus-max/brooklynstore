@@ -2,6 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import { STAFF_KEY } from '@/lib/visitor';
 import AdminAuthGuard from './AdminAuthGuard';
 import AdminSidebar from './AdminSidebar';
 import OrderAlertListener from './OrderAlertListener';
@@ -13,6 +14,16 @@ export default function AdminLayoutClient({ children }: { children: React.ReactN
   // Al instalar el panel en la pantalla de inicio (obligatorio en iPhone
   // para recibir avisos) se usa el manifiesto del admin: ícono "Brooklyn
   // Admin" que abre directo en Pedidos, como la app de Shopify.
+  // Este celular es del equipo: sus visitas a la tienda no se cuentan en
+  // las estadísticas ni en el Píxel de Meta.
+  useEffect(() => {
+    try {
+      localStorage.setItem(STAFF_KEY, '1');
+    } catch {
+      /* nada */
+    }
+  }, []);
+
   useEffect(() => {
     const link = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
     if (!link) return;

@@ -44,7 +44,13 @@ function pageLabel(path: string): string {
   return path;
 }
 
-const isAbandoned = (v: Visitor) => v.cart.length > 0 && v.stage !== 'compra' && Date.now() - v.lastSeen > ABANDON_MS;
+// Abandonó: tenía zapatos en el carrito (o dejó su celular en el pago) y se
+// fue sin comprar hace más de 15 minutos.
+const isAbandoned = (v: Visitor) =>
+  (v.cart.length > 0 || (!!v.phone && RANK[v.stage] >= RANK.carrito)) && v.stage !== 'compra' && Date.now() - v.lastSeen > ABANDON_MS;
+// Tiene zapatos en el carrito o está pagando AHORA (aún no cuenta como abandonado).
+const inProgress = (v: Visitor) =>
+  (v.cart.length > 0 || RANK[v.stage] >= RANK.carrito) && v.stage !== 'compra' && Date.now() - v.lastSeen <= ABANDON_MS;
 
 export default function VisitorsPage() {
   const [visitors, setVisitors] = useState<Visitor[] | null>(null);
@@ -93,6 +99,7 @@ export default function VisitorsPage() {
     .filter(isAbandoned)
     .sort((a, b) => priority(a) - priority(b) || recoveryStatus(a).dueAt - recoveryStatus(b).dueAt || b.cartValue - a.cartValue);
   const dueQueue = abandoned.filter((v) => v.phone && recoveryStatus(v).due);
+  const live = all.filter(inProgress);
 
   const reached = (stage: VisitorStage) => inRange.filter((v) => RANK[v.stage] >= RANK[stage] || (stage !== 'compra' && !!v.orderNumber)).length;
   const funnel: { stage: VisitorStage; label: string; count: number }[] = [
@@ -257,6 +264,13 @@ export default function VisitorsPage() {
         ))}
       </div>
 
+      {tab === 'abandonados' && live.length > 0 && (
+        <p className="mt-3 flex items-center gap-2 rounded-xl bg-whatsapp/10 px-4 py-3 text-sm font-semibold text-ink ring-1 ring-whatsapp/30">
+          <span className="h-2.5 w-2.5 shrink-0 animate-pulse rounded-full bg-whatsapp" />
+          {live.length === 1 ? '1 persona tiene' : `${live.length} personas tienen`} zapatos en el carrito o está pagando ahora mismo. Si se va sin
+          comprar, aparecerá aquí a los 15 minutos para que le escribas.
+        </p>
+      )}
       {tab === 'abandonados' && abandoned.length > 0 && (
         <RecoveryQueue queue={dueQueue} settings={settings} pendingValue={pendingValue} />
       )}

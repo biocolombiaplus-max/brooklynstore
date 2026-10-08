@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { useSiteSettings } from '@/lib/settings-context';
 import { trackPixel } from '@/lib/pixel';
+import { isStaffDevice } from '@/lib/visitor';
 
 // Píxel de Meta: se activa solo cuando hay un ID guardado en el panel
 // (Configuración → Píxel de Meta). Registra cada página vista, también al
@@ -23,7 +24,8 @@ export default function MetaPixel() {
     trackPixel('PageView');
   }, [pathname, metaPixelId]);
 
-  if (!metaPixelId) return null;
+  // El equipo (celulares que entran al panel) no cuenta para Meta.
+  if (!metaPixelId || (typeof window !== 'undefined' && isStaffDevice())) return null;
 
   return (
     <>

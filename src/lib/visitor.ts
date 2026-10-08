@@ -86,8 +86,25 @@ function saveProfile(p: Profile) {
   }
 }
 
+// Celulares del equipo (quien entra al panel admin): sus visitas no se
+// cuentan, para que las estadísticas sean solo de clientes reales.
+export const STAFF_KEY = 'bs-staff-device';
+
+export function isStaffDevice(): boolean {
+  try {
+    return window.localStorage.getItem(STAFF_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
 function isBot(): boolean {
-  return typeof navigator === 'undefined' || navigator.webdriver || /bot|crawler|spider|facebookexternalhit|preview/i.test(navigator.userAgent);
+  return (
+    typeof navigator === 'undefined' ||
+    navigator.webdriver ||
+    /bot|crawler|spider|facebookexternalhit|preview/i.test(navigator.userAgent) ||
+    isStaffDevice()
+  );
 }
 
 function detectDevice(): string {
@@ -197,9 +214,8 @@ export function trackVisitorProduct(product: { slug: string; title: string; imag
   });
 }
 
-export function trackVisitorCart(items: CartItem[]) {
-  update((p) => {
-    p.cart = items.slice(0, 15).map((i) => ({
+function toVisitorCart(items: CartItem[]): VisitorCartItem[] {
+  return items.slice(0, 15).map((i) => ({
       productId: i.productId,
       slug: i.slug,
       title: i.title.slice(0, 120),
@@ -212,10 +228,30 @@ export function trackVisitorCart(items: CartItem[]) {
       ...(i.codPrice ? { codPrice: i.codPrice } : {}),
       ...(i.brand ? { brand: i.brand } : {}),
       ...(i.metaId ? { metaId: i.metaId } : {}),
-    }));
+  }));
+}
+
+export function trackVisitorCart(items: CartItem[]) {
+  update((p) => {
+    p.cart = toVisitorCart(items);
     p.cartValue = Math.round(items.reduce((s, i) => s + i.price * i.quantity, 0) * 100) / 100;
     if (items.length > 0) raise(p, 'carrito');
   });
+}
+
+// Formulario de pago abierto (página de pago o compra rápida desde la
+// ficha): se guardan los zapatos que está comprando, así si no termina
+// aparece en "Carritos abandonados" con su pedido.
+export function trackVisitorCheckoutItems(items: CartItem[]) {
+  if (!items.length) return;
+  update(
+    (p) => {
+      p.cart = toVisitorCart(items);
+      p.cartValue = Math.round(items.reduce((s, i) => s + i.price * i.quantity, 0) * 100) / 100;
+      raise(p, 'checkout');
+    },
+    { immediate: true },
+  );
 }
 
 export function trackVisitorCheckout() {

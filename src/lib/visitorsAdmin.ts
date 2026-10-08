@@ -101,6 +101,7 @@ function variantOf(id: string, step: number, count: number): number {
 }
 
 function cartLines(v: Visitor): string {
+  if (!v.cart.length) return v.products.slice(0, 3).map((p) => `▸ *${p.title}*`).join('\n');
   return v.cart
     .slice(0, 4)
     .map((i) => `▸ *${i.title}*\n   Talla ${i.size}${i.color ? ` · ${i.color}` : ''}${i.quantity > 1 ? ` · x${i.quantity}` : ''}`)
@@ -115,7 +116,7 @@ export function buildRecoveryStepMessage(
   const name = v.name.split(' ')[0] || '';
   const hola = `¡Hola${name ? ` ${name}` : ''}!`;
   const store = opts.storeName || 'Brooklyn Store';
-  const first = v.cart[0]?.title ?? 'tus zapatos';
+  const first = v.cart[0]?.title ?? v.products[0]?.title ?? 'tus zapatos';
   const lines = cartLines(v);
   const link = recoveryUrl(v.id) + (step === 3 ? `&cupon=${RECOVERY_COUPON}` : '');
   const cod = formatPrice(opts.codAdvance);

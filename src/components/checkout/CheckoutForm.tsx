@@ -9,7 +9,7 @@ import { clearCoupon, couponPercentFor, getActiveCoupon, redeemAnyCouponCode, ty
 import { useSiteSettings } from '@/lib/settings-context';
 import { classNames, formatPrice } from '@/lib/utils';
 import { trackPixel } from '@/lib/pixel';
-import { trackVisitorContact, trackVisitorPurchase } from '@/lib/visitor';
+import { trackVisitorCheckoutItems, trackVisitorContact, trackVisitorPurchase } from '@/lib/visitor';
 import type { CartItem, OrderCustomer, PaymentMethod } from '@/lib/types';
 import LocationCapture from '@/components/product/LocationCapture';
 import { CheckIcon } from '@/components/icons';
@@ -98,6 +98,13 @@ export default function CheckoutForm({
   useEffect(() => {
     setForm(loadSavedForm());
     setCoupon(getActiveCoupon());
+  }, []);
+
+  // Registra los zapatos que está comprando (también en la compra rápida
+  // desde la ficha, que no pasa por el carrito).
+  useEffect(() => {
+    trackVisitorCheckoutItems(items);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // La base de datos se carga en segundo plano mientras el cliente llena
