@@ -321,6 +321,8 @@ export interface SiteSettings {
   // Plazo (en horas desde que recibe el pedido) para pedir cambio de talla.
   exchangeWindowHours: number;
   categoryTiles: CategoryTilesSettings;
+  // Fotos reales de clientes y paquetes despachados (prueba social).
+  realDeliveries: { enabled: boolean; heading: string; photos: string[] };
   trustItems: TrustItem[];
   benefitsHeading: string;
   benefits: BenefitItem[];

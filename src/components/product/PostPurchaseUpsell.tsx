@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getFeaturedProducts } from '@/lib/products';
+import { getFeaturedProducts } from '@/lib/productsClient';
 import type { Product } from '@/lib/types';
 import ProductGrid from '../ProductGrid';
 

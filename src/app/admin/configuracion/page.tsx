@@ -1298,6 +1298,34 @@ export default function ConfiguracionPage() {
         />
       </Section>
 
+      <Section
+        title="📸 Entregas reales (prueba social)"
+        description="Fotos reales de tus clientes con sus zapatos, paquetes listos o guías de Servientrega. Es lo que más confianza da a quien no conoce la tienda. Se muestran en la portada y en cada zapato apenas subas al menos 3."
+      >
+        <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+          <input
+            type="checkbox"
+            checked={settings.realDeliveries.enabled}
+            onChange={(e) => update('realDeliveries', { ...settings.realDeliveries, enabled: e.target.checked })}
+          />
+          Mostrar la sección en la tienda
+        </label>
+        <Field label="Título">
+          <input
+            value={settings.realDeliveries.heading}
+            onChange={(e) => update('realDeliveries', { ...settings.realDeliveries, heading: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
+        <MultiImageUploadField
+          label="Fotos reales (sube entre 4 y 12)"
+          help="Pide permiso a tus clientes antes de publicar su foto. Puedes tapar la dirección de las guías."
+          values={settings.realDeliveries.photos}
+          folder="entregas"
+          onChange={(urls) => update('realDeliveries', { ...settings.realDeliveries, photos: urls })}
+        />
+      </Section>
+
       <Section title="Testimonios">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Título de la sección">

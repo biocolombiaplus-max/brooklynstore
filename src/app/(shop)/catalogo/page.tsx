@@ -6,7 +6,7 @@ import { slimProduct } from '@/lib/productMap';
 export function generateMetadata({ searchParams }: { searchParams: { marca?: string; genero?: string } }): Metadata {
   const brand = searchParams.marca;
   const gender = searchParams.genero === 'hombre' ? 'hombre' : searchParams.genero === 'mujer' ? 'mujer' : '';
-  const title = brand ? `${brand} originales en Ecuador` : gender ? `Zapatos de ${gender} en Ecuador` : 'Catálogo de zapatos en Ecuador';
+  const title = brand ? `Zapatos ${brand} en Ecuador` : gender ? `Zapatos de ${gender} en Ecuador` : 'Catálogo de zapatos en Ecuador';
   const description = `${brand ? `Todos los modelos ${brand}` : 'On Cloud, Nike, Adidas, Jordan, New Balance, Hoka y más'}${
     gender ? ` para ${gender}` : ''
   }. Envío a todo el Ecuador con Servientrega y pago contra entrega.`;

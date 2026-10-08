@@ -6,7 +6,7 @@ import ExchangePolicy from '@/components/ExchangePolicy';
 import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 import { WhatsAppIcon } from '@/components/icons';
 import { HELP_UPDATED } from '@/lib/help-pages';
-import { getLastLocalOrder } from '@/lib/orders';
+import { getLastLocalOrder } from '@/lib/localOrders';
 import { useSiteSettings } from '@/lib/settings-context';
 import type { Order } from '@/lib/types';
 import { classNames, formatPrice, paymentMethodLabel, whatsappLinkTo } from '@/lib/utils';

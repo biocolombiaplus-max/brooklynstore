@@ -5,7 +5,7 @@ import StarTag from '@/components/brand/StarTag';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { notFound, useParams } from 'next/navigation';
-import { getProductBySlug } from '@/lib/products';
+import { getProductBySlug } from '@/lib/productsClient';
 import { formatPrice, resolveColorImage, whatsappLinkTo } from '@/lib/utils';
 import { productMessage } from '@/lib/wa-messages';
 import { trackPixel } from '@/lib/pixel';
@@ -18,6 +18,7 @@ import BuyBox from '@/components/product/BuyBox';
 import SizeGuide from '@/components/sizes/SizeGuide';
 import Accordion, { AccordionItem } from '@/components/product/Accordion';
 import ProductReviews from '@/components/product/ProductReviews';
+import RealDeliveries from '@/components/RealDeliveries';
 import RelatedProducts from '@/components/product/RelatedProducts';
 import HowItWorks from '@/components/HowItWorks';
 import { discountPercentOf } from '@/components/ProductCard';
@@ -216,6 +217,7 @@ export default function ProductView({ initialProduct, related }: { initialProduc
         </div>
 
         <ProductReviews reviews={product.reviews ?? []} totalCount={product.reviewsCount} />
+        <RealDeliveries compact />
       </div>
 
       <HowItWorks />

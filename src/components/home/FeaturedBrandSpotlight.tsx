@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { getActiveProducts } from '@/lib/products';
+import { getActiveProducts } from '@/lib/productsClient';
 import { useSiteSettings } from '@/lib/settings-context';
 import { brandHref, brandTagline, isStarBrand } from '@/lib/brand';
 import { formatPrice } from '@/lib/utils';

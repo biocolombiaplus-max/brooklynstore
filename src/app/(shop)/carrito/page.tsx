@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useCartStore } from '@/lib/cart-store';
-import { getRecoverableCart } from '@/lib/visitorsAdmin';
 import { useSiteSettings } from '@/lib/settings-context';
 import { buildCartWhatsAppMessage, formatPrice, whatsappLinkTo } from '@/lib/utils';
 import SafeImage from '@/components/SafeImage';
@@ -24,7 +23,8 @@ export default function CarritoPage() {
     const id = new URLSearchParams(window.location.search).get('recuperar');
     if (!id || !/^[a-f0-9]{24}$/.test(id)) return;
     let cancelled = false;
-    getRecoverableCart(id)
+    import('@/lib/visitorsAdmin')
+      .then(({ getRecoverableCart }) => getRecoverableCart(id))
       .then((cart) => {
         if (!cancelled && cart.length) replaceItems(cart);
       })

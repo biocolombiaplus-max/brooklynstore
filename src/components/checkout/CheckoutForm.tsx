@@ -2,11 +2,10 @@
 
 import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 import { useEffect, useMemo, useState } from 'react';
-import { createOrder, notifyOrderByEmail, notifyOrderByPush } from '@/lib/orders';
+import { notifyOrderByEmail, notifyOrderByPush } from '@/lib/localOrders';
 import { getCantons, getProvinces } from '@/lib/ecuador';
 import { codUnitPrice, computeOrderTotals } from '@/lib/shipping';
 import { clearCoupon, couponPercentFor, getActiveCoupon, redeemAnyCouponCode, type WonCoupon } from '@/lib/coupon';
-import { markLoyaltyCouponUsed } from '@/lib/loyalty';
 import { useSiteSettings } from '@/lib/settings-context';
 import { classNames, formatPrice } from '@/lib/utils';
 import { trackPixel } from '@/lib/pixel';
@@ -99,6 +98,15 @@ export default function CheckoutForm({
   useEffect(() => {
     setForm(loadSavedForm());
     setCoupon(getActiveCoupon());
+  }, []);
+
+  // La base de datos se carga en segundo plano mientras el cliente llena
+  // sus datos (no frena la página): al confirmar, el pedido se guarda al instante.
+  useEffect(() => {
+    const preload = () => import('@/lib/orders').catch(() => {});
+    const w = window as Window & { requestIdleCallback?: (cb: () => void) => number };
+    if (w.requestIdleCallback) w.requestIdleCallback(preload);
+    else setTimeout(preload, 1500);
   }, []);
 
   const cantons = useMemo(() => getCantons(form.province), [form.province]);
@@ -198,6 +206,7 @@ export default function CheckoutForm({
         couponCode: couponBlocked ? undefined : coupon?.code,
       };
 
+      const { createOrder } = await import('@/lib/orders');
       const { id, orderNumber } = await createOrder(orderData);
 
       trackVisitorPurchase(orderNumber);
@@ -240,7 +249,10 @@ export default function CheckoutForm({
 
       saveForm(form);
       if (coupon && !couponBlocked) {
-        if (coupon.loyalty) markLoyaltyCouponUsed(coupon.code, orderNumber).catch(() => {});
+        if (coupon.loyalty)
+          import('@/lib/loyalty')
+            .then(({ markLoyaltyCouponUsed }) => markLoyaltyCouponUsed(coupon.code, orderNumber))
+            .catch(() => {});
         clearCoupon();
       }
       onSuccess(id);

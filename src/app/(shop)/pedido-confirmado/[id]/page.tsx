@@ -4,7 +4,7 @@ import ExchangePolicy from '@/components/ExchangePolicy';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { getLocalOrder, getOrderById } from '@/lib/orders';
+import { getLocalOrder } from '@/lib/localOrders';
 import { bankAccountText, buildOrderWhatsAppMessage, classNames, formatPrice, paymentMethodLabel, whatsappLinkTo } from '@/lib/utils';
 import { useSiteSettings } from '@/lib/settings-context';
 import PostPurchaseUpsell from '@/components/product/PostPurchaseUpsell';
@@ -117,7 +117,8 @@ export default function OrderConfirmationPage() {
       return;
     }
     let cancelled = false;
-    getOrderById(params.id)
+    import('@/lib/orders')
+      .then(({ getOrderById }) => getOrderById(params.id))
       .then((o) => !cancelled && setOrder(o))
       .catch(() => !cancelled && setOrder(null));
     return () => {

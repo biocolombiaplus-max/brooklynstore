@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { getRelatedProducts } from '@/lib/products';
+import { getRelatedProducts } from '@/lib/productsClient';
 import type { Product } from '@/lib/types';
 import ProductGrid, { ProductGridSkeleton } from '../ProductGrid';
 

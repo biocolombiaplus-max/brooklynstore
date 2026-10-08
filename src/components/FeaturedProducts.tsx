@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { getActiveProducts } from '@/lib/products';
+import { getActiveProducts } from '@/lib/productsClient';
 import type { Product } from '@/lib/types';
 import { classNames } from '@/lib/utils';
 import ProductGrid, { ProductGridSkeleton } from './ProductGrid';

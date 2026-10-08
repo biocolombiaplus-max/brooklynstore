@@ -8,7 +8,7 @@
 // de Firestore que src/lib/branding.ts, porque el SDK de cliente de
 // Firebase está deliberadamente deshabilitado fuera del navegador.
 import { FIREBASE_CONFIG } from '@/lib/firebase-config';
-import { DEFAULT_SETTINGS, mergeWithDefaults } from './settings';
+import { DEFAULT_SETTINGS, mergeWithDefaults } from './settingsDefaults';
 import type { SiteSettings } from './types';
 
 function unwrapValue(value: any): any {

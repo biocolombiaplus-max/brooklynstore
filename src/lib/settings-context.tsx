@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { DEFAULT_SETTINGS, getSiteSettings } from './settings';
+import { DEFAULT_SETTINGS } from './settingsDefaults';
 import { hexToRgbChannels } from './utils';
 import { googleFontsHref, fontFamilyValue } from './fonts';
 import type { SiteSettings } from './types';
@@ -26,7 +26,9 @@ export function SettingsProvider({
   useEffect(() => {
     if (initialSettings) return;
     let cancelled = false;
-    getSiteSettings()
+    // Solo sin configuración del servidor (panel): se carga la base de datos.
+    import('./settings')
+      .then(({ getSiteSettings }) => getSiteSettings())
       .then((s) => !cancelled && s !== DEFAULT_SETTINGS && setSettings(s))
       .catch(() => {});
     return () => {

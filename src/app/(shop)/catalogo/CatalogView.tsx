@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { getActiveProducts } from '@/lib/products';
+import { getActiveProducts } from '@/lib/productsClient';
 import { trackPixel } from '@/lib/pixel';
 import { GENDERS, type Product } from '@/lib/types';
 import { useSiteSettings } from '@/lib/settings-context';

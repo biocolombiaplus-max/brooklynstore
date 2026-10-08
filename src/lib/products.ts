@@ -30,26 +30,8 @@ export async function getAllProducts(): Promise<Product[]> {
   return snap.docs.map((d) => toProduct(d.id, d.data()));
 }
 
-// Productos que ve el público: los reales de Firestore, o el catálogo de
-// demostración mientras la tienda todavía no tiene ninguno publicado (o si
-// Firebase aún no está configurado).
-// En el navegador se piden a /api/products (en caché en la CDN, carga al
-// instante) y solo si falla se consulta Firestore directo.
-let activeProductsCache: Promise<Product[]> | null = null;
-
-export function getActiveProducts(): Promise<Product[]> {
-  if (typeof window === 'undefined') return getActiveProductsDirect();
-  activeProductsCache ??= fetch('/api/products')
-    .then((res) => (res.ok ? (res.json() as Promise<Product[]>) : Promise.reject(new Error(String(res.status)))))
-    .then((list) => (Array.isArray(list) && list.length > 0 ? list : getActiveProductsDirect()))
-    .catch(() => {
-      activeProductsCache = null;
-      return getActiveProductsDirect();
-    });
-  return activeProductsCache;
-}
-
-async function getActiveProductsDirect(): Promise<Product[]> {
+// Productos activos leídos directo de Firestore (respaldo de /api/products).
+export async function getActiveProductsDirect(): Promise<Product[]> {
   if (!db) return DEMO_PRODUCTS;
   try {
     // Con la tienda configurada nunca se muestran zapatos de demostración:
@@ -60,11 +42,7 @@ async function getActiveProductsDirect(): Promise<Product[]> {
   }
 }
 
-export async function getFeaturedProducts(max = 8): Promise<Product[]> {
-  const products = await getActiveProducts();
-  const featured = products.filter((p) => p.featured);
-  return (featured.length > 0 ? featured : products).slice(0, max);
-}
+export { getActiveProducts, getFeaturedProducts, getRelatedProducts } from './productsClient';
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
   if (db) {
@@ -85,12 +63,6 @@ export async function getProductById(id: string): Promise<Product | null> {
   return toProduct(snap.id, snap.data());
 }
 
-// Primero del mismo estilo, luego de la misma marca y, si faltan, cualquiera.
-export async function getRelatedProducts(current: Product, max = 4): Promise<Product[]> {
-  const products = (await getActiveProducts()).filter((p) => p.id !== current.id);
-  const score = (p: Product) => (p.collection === current.collection ? 2 : 0) + (p.brand === current.brand ? 1 : 0);
-  return [...products].sort((a, b) => score(b) - score(a) || (b.soldCount ?? 0) - (a.soldCount ?? 0)).slice(0, max);
-}
 
 // Dos productos con la misma URL (slug) rompen la tienda: al abrir esa URL,
 // Firestore devuelve cualquiera de los dos (el que encuentre primero) sin
