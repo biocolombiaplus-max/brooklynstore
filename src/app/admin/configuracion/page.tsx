@@ -1151,31 +1151,17 @@ export default function ConfiguracionPage() {
           </Field>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
-          <Field label="Botón 1 — texto">
+          <Field label="Botón principal — texto">
             <input
               value={settings.hero.button1Text}
               onChange={(e) => updateNested('hero', 'button1Text', e.target.value)}
               className={inputClass}
             />
           </Field>
-          <Field label="Botón 1 — enlace">
+          <Field label="Botón principal — enlace">
             <input
               value={settings.hero.button1Url}
               onChange={(e) => updateNested('hero', 'button1Url', e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Botón 2 — texto">
-            <input
-              value={settings.hero.button2Text}
-              onChange={(e) => updateNested('hero', 'button2Text', e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Botón 2 — enlace">
-            <input
-              value={settings.hero.button2Url}
-              onChange={(e) => updateNested('hero', 'button2Url', e.target.value)}
               className={inputClass}
             />
           </Field>

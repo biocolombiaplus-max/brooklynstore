@@ -87,6 +87,46 @@ body {
     @apply btn-base bg-whatsapp text-white shadow-[0_12px_28px_rgba(37,211,102,0.35)] hover:-translate-y-0.5 hover:brightness-105;
   }
 
+  /* CTA principal del hero: oro en movimiento + halo que respira + flecha que invita. */
+  .btn-hero-wrap {
+    @apply relative block w-full sm:inline-block sm:w-auto;
+  }
+  .btn-hero-wrap::before {
+    content: '';
+    position: absolute;
+    inset: -6px;
+    border-radius: 999px;
+    background: var(--gold-gradient);
+    filter: blur(16px);
+    opacity: 0.55;
+    animation: hero-halo 2.6s ease-in-out infinite;
+    pointer-events: none;
+  }
+  .btn-hero {
+    @apply btn-base w-full gap-3 py-[1.15rem] pl-8 pr-2.5 text-[15px] text-ink sm:w-auto sm:text-base;
+    letter-spacing: 0.14em;
+    background: linear-gradient(110deg, #a8822c 0%, #e2c877 22%, #f6e7b0 34%, #c9a646 50%, #a8822c 66%, #e2c877 84%, #a8822c 100%);
+    background-size: 250% 100%;
+    animation: hero-gold 5s linear infinite;
+    box-shadow:
+      0 14px 36px rgba(184, 146, 58, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+  }
+  .btn-hero:hover {
+    transform: translateY(-2px);
+    box-shadow:
+      0 20px 48px rgba(184, 146, 58, 0.6),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6),
+      inset 0 -2px 0 rgba(0, 0, 0, 0.15);
+  }
+  .btn-hero-arrow {
+    @apply ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-ink text-lg text-primary-light sm:ml-2;
+  }
+  .btn-hero-arrow > span {
+    animation: hero-arrow 1.6s ease-in-out infinite;
+  }
+
   /* Brillo automático permanente para los CTA principales (sin hover). */
   .btn-shine::before {
     content: '';
@@ -139,6 +179,34 @@ body {
   }
 }
 
+@keyframes hero-gold {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -150% 0;
+  }
+}
+@keyframes hero-halo {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.97);
+  }
+  50% {
+    opacity: 0.75;
+    transform: scale(1.02);
+  }
+}
+@keyframes hero-arrow {
+  0%,
+  100% {
+    transform: translateX(-2px);
+  }
+  50% {
+    transform: translateX(3px);
+  }
+}
 @keyframes btn-shine {
   0% {
     left: -60%;

@@ -121,13 +121,15 @@ export default function Hero() {
             {hero.subtext}
           </p>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Link href={hero.button1Url} className="btn-primary btn-shine w-full text-base sm:w-auto">
-              {hero.button1Text} →
-            </Link>
-            <Link href={hero.button2Url} className="btn-outline-light w-full text-base sm:w-auto">
-              {hero.button2Text}
-            </Link>
+          <div className="mt-8">
+            <span className="btn-hero-wrap">
+              <Link href={hero.button1Url} className="btn-hero btn-shine">
+                <span className="flex-1 text-center sm:flex-none">{hero.button1Text}</span>
+                <span className="btn-hero-arrow" aria-hidden>
+                  <span>→</span>
+                </span>
+              </Link>
+            </span>
           </div>
 
           <div className="mt-7 flex flex-wrap gap-2">
