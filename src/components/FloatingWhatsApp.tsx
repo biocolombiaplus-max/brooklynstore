@@ -67,7 +67,7 @@ export default function FloatingWhatsApp() {
         ¿Te ayudamos? 👋
       </span>
       <span className="relative flex h-12 w-12 items-center sm:h-14 sm:w-14 justify-center rounded-full bg-whatsapp text-white shadow-[0_10px_30px_rgba(37,211,102,0.45)] transition-transform group-hover:scale-110">
-        <span className="absolute inset-0 animate-ping rounded-full bg-whatsapp/40" />
+        <span className="absolute -inset-1 animate-pulse rounded-full bg-whatsapp/30" />
         <WhatsAppIcon size={26} className="relative sm:h-[30px] sm:w-[30px]" />
       </span>
     </a>

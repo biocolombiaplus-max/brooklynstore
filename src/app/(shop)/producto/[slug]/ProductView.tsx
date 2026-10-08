@@ -228,7 +228,7 @@ export default function ProductView({ initialProduct, related }: { initialProduc
       {/* Barra fija de compra en celular: lo que vende el anuncio (pagar al
           recibir) a un toque, y WhatsApp para quien prefiere preguntar. */}
       {!ctaVisible && product.stock > 0 && (
-        <div className="fixed inset-x-0 bottom-0 z-30 animate-slideUp border-t border-border bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-dark backdrop-blur lg:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-30 max-w-[100vw] animate-slideUp overflow-hidden border-t border-border bg-white/95 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 shadow-dark backdrop-blur lg:hidden">
           <div className="flex items-center gap-2">
             <a
               href={whatsappLinkTo(whatsappNumber, productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price }), whatsappCountryCode)}
@@ -243,15 +243,15 @@ export default function ProductView({ initialProduct, related }: { initialProduc
             {payments.codEnabled ? (
               <button
                 onClick={() => openBuyRef.current?.('contra_entrega')}
-                className="btn-primary btn-shine flex-1 flex-col gap-0 px-3 py-2 text-xs leading-tight"
+                className="btn-primary btn-shine min-w-0 flex-1 flex-col gap-0 overflow-hidden px-3 py-2 text-xs leading-tight"
               >
-                <span>Pedir · paga al recibir</span>
-                <span className="text-[10px] font-bold normal-case tracking-normal opacity-75">
+                <span className="max-w-full truncate">Pedir · paga al recibir</span>
+                <span className="max-w-full truncate text-[10px] font-bold normal-case tracking-normal opacity-75">
                   Hoy solo {formatPrice(payments.codAdvance)} · {formatPrice(product.price)} transferencia
                 </span>
               </button>
             ) : (
-              <button onClick={() => openBuyRef.current?.('transferencia')} className="btn-primary btn-shine flex-1 px-4 py-3.5 text-xs">
+              <button onClick={() => openBuyRef.current?.('transferencia')} className="btn-primary btn-shine min-w-0 flex-1 truncate px-4 py-3.5 text-xs">
                 Comprar ahora · {formatPrice(product.price)}
               </button>
             )}

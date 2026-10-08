@@ -15,7 +15,7 @@ export default function ChatProofs({ compact = false }: { compact?: boolean }) {
   if (!chatProofs.enabled || photos.length < 1) return null;
 
   return (
-    <section className={compact ? 'mt-10 overflow-hidden rounded-3xl bg-[#0a0a0a] py-8 text-white' : 'relative overflow-hidden bg-[#0a0a0a] py-14 text-white sm:py-20'}>
+    <section className={compact ? 'relative mt-10 overflow-hidden rounded-3xl bg-[#0a0a0a] py-8 text-white' : 'relative overflow-hidden bg-[#0a0a0a] py-14 text-white sm:py-20'}>
       <span className="pointer-events-none absolute -left-24 top-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(37,211,102,0.18),transparent_70%)]" />
       <span className="pointer-events-none absolute -right-24 bottom-0 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(212,175,55,0.22),transparent_70%)]" />
       <div className={compact ? 'relative px-5' : 'container-page relative'}>

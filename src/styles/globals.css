@@ -22,10 +22,14 @@ html {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* La página solo se desliza de arriba a abajo (como una app): nada puede
+   moverla hacia los lados. "clip" es el bloqueo que respeta Safari en
+   iPhone (hidden queda de respaldo para navegadores viejos). */
 html,
 body {
   max-width: 100%;
   overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior-x: none;
 }
 
