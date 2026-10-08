@@ -30,7 +30,7 @@ export async function findShareProduct(slug: string): Promise<ShareProduct | nul
           },
         }),
         signal: controller.signal,
-        next: { revalidate: 300 },
+        next: { revalidate: 3600, tags: ['products'] },
       });
       clearTimeout(timeout);
       if (res.ok) {

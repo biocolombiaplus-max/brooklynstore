@@ -42,9 +42,10 @@ export default function ProductCard({ product, priority = false }: { product: Pr
               <SafeImage
                 src={secondImage}
                 alt=""
+                hideOnError
                 fill
                 sizes="(max-width: 768px) 50vw, 25vw"
-                className="object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                className="hidden object-cover opacity-0 transition-opacity duration-500 group-hover:opacity-100 md:block"
               />
             )}
           </>
@@ -58,7 +59,9 @@ export default function ProductCard({ product, priority = false }: { product: Pr
               -{discountPct}%
             </span>
           )}
-          {product.isNew && (
+          {/* Con la etiqueta de la marca estrella arriba, "Nuevo" no cabe al lado
+              en celular: se omite para que no se monten. */}
+          {product.isNew && !star && (
             <span className="rounded-full bg-ink px-2.5 py-1 text-[10px] font-extrabold uppercase tracking-wider text-primary-light">
               Nuevo
             </span>
@@ -66,7 +69,11 @@ export default function ProductCard({ product, priority = false }: { product: Pr
         </div>
 
         {star && (
-          <StarTag label={featuredBrand.badge} size="xs" className="absolute right-2.5 top-2.5" />
+          <StarTag
+            label={featuredBrand.badge}
+            size="xs"
+            className={classNames('absolute right-2.5', discountPct > 0 ? 'top-11' : 'top-2.5')}
+          />
         )}
 
         {product.stock > 0 && product.stock <= 5 && (

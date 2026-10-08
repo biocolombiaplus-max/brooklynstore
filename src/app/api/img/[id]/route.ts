@@ -9,7 +9,7 @@ import { FIREBASE_CONFIG } from '@/lib/firebase-config';
 // guarda en caché un año en el navegador y en la CDN de Vercel.
 export const runtime = 'nodejs';
 
-const WIDTHS = [64, 96, 128, 180, 256, 384, 640, 828, 1080, 1200, 1920];
+const WIDTHS = [64, 96, 128, 180, 256, 384, 640, 828, 1080, 1200, 1600, 1920];
 const CACHE = 'public, max-age=31536000, s-maxage=31536000, immutable';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
@@ -20,7 +20,12 @@ export async function GET(request: Request, { params }: { params: { id: string }
     `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents/images/${id}`,
     { next: { revalidate: 31536000 } },
   ).catch(() => null);
-  if (!res || !res.ok) return new Response('Not found', { status: 404 });
+  // Firestore saturado o sin cuota: error temporal, sin guardarlo en caché
+  // (si se respondiera 404 la foto quedaría rota en la CDN).
+  if (!res || (!res.ok && res.status !== 404)) {
+    return new Response('Temporarily unavailable', { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '5' } });
+  }
+  if (!res.ok) return new Response('Not found', { status: 404 });
 
   const json = (await res.json().catch(() => null)) as { fields?: Record<string, { bytesValue?: string; stringValue?: string }> } | null;
   const base64 = json?.fields?.data?.bytesValue;
@@ -36,7 +41,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     const width = WIDTHS.find((w) => w >= wanted) ?? WIDTHS[WIDTHS.length - 1];
     const quality = Math.min(90, Math.max(40, Number(url.searchParams.get('q')) || 75));
     try {
-      const out = await sharp(original).rotate().resize({ width, withoutEnlargement: true }).webp({ quality }).toBuffer();
+      const out = await sharp(original).rotate().resize({ width, withoutEnlargement: true }).webp({ quality, effort: 3, smartSubsample: true }).toBuffer();
       return new Response(new Uint8Array(out), {
         headers: { 'Content-Type': 'image/webp', 'Content-Length': String(out.length), 'Cache-Control': CACHE },
       });

@@ -13,7 +13,7 @@ interface Props {
   searchParams: { c?: string; t?: string; n?: string };
 }
 
-export const revalidate = 300;
+export const revalidate = 3600;
 
 export async function generateMetadata({ params, searchParams }: Props): Promise<Metadata> {
   const product = await findShareProduct(params.slug);

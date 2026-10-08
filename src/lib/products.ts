@@ -14,6 +14,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { refreshStore } from './storeRefresh';
 import type { Product, ProductInput } from './types';
 import { DEMO_PRODUCTS } from './demo-products';
 import { stripUndefined } from './utils';
@@ -82,6 +83,7 @@ export async function createProduct(input: ProductInput): Promise<string> {
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
+  refreshStore();
   return ref.id;
 }
 
@@ -91,8 +93,10 @@ export async function updateProduct(id: string, input: Partial<ProductInput>): P
   }
   const ref = doc(db, COLLECTION, id);
   await updateDoc(ref, { ...stripUndefined(input), updatedAt: serverTimestamp() });
+  refreshStore();
 }
 
 export async function deleteProduct(id: string): Promise<void> {
   await deleteDoc(doc(db, COLLECTION, id));
+  refreshStore();
 }

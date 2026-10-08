@@ -15,7 +15,12 @@ export async function GET(_request: Request, { params }: { params: { id: string 
     `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents/images/${id}`,
     { next: { revalidate: 31536000 } },
   ).catch(() => null);
-  if (!res || !res.ok) return new Response('Not found', { status: 404 });
+  // Firestore saturado o sin cuota: error temporal, sin guardarlo en caché
+  // (si se respondiera 404 la foto quedaría rota en la CDN).
+  if (!res || (!res.ok && res.status !== 404)) {
+    return new Response('Temporarily unavailable', { status: 503, headers: { 'Cache-Control': 'no-store', 'Retry-After': '5' } });
+  }
+  if (!res.ok) return new Response('Not found', { status: 404 });
 
   const json = (await res.json().catch(() => null)) as { fields?: Record<string, { bytesValue?: string }> } | null;
   const base64 = json?.fields?.data?.bytesValue;

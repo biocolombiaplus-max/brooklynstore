@@ -38,7 +38,7 @@ export async function getSiteSettingsServer(): Promise<SiteSettings> {
     const timeout = setTimeout(() => controller.abort(), 2500);
     const res = await fetch(
       `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/settings/site`,
-      { signal: controller.signal, next: { revalidate: 60 } },
+      { signal: controller.signal, next: { revalidate: 3600, tags: ['settings'] } },
     );
     clearTimeout(timeout);
     if (!res.ok) return DEFAULT_SETTINGS;

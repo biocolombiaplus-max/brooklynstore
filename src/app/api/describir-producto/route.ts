@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 import { z } from 'zod';
-import { FIREBASE_CONFIG } from '@/lib/firebase-config';
+import { isAdminRequest } from '@/lib/adminAuth';
 
 // Carga rápida del panel: mira la foto de un zapato y sugiere título,
 // marca, color, género y estilo. Solo para administradores (se valida el
@@ -18,28 +18,6 @@ const Suggestion = z.object({
   collection: z.enum(['deportivos', 'urbanos', 'running', 'basket', 'sandalias', 'botas']),
   description: z.string().describe('2 frases de venta en español neutro-ecuatoriano, sin decir que es original ni réplica'),
 });
-
-async function isAdminRequest(request: Request): Promise<boolean> {
-  const token = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '');
-  if (!token) return false;
-  try {
-    const lookup = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_CONFIG.apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ idToken: token }),
-    });
-    if (!lookup.ok) return false;
-    const uid = ((await lookup.json()) as { users?: { localId: string }[] }).users?.[0]?.localId;
-    if (!uid) return false;
-    const adminDoc = await fetch(
-      `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents/admins/${uid}`,
-      { headers: { Authorization: `Bearer ${token}` } },
-    );
-    return adminDoc.ok;
-  } catch {
-    return false;
-  }
-}
 
 export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {

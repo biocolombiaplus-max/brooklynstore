@@ -10,7 +10,7 @@ import { photosForColor, sharedPhotos } from '@/lib/colorPhotos';
 //
 // URL para pegar en Meta Commerce Manager → Catálogo → Orígenes de datos:
 //   https://brooklynstore-six.vercel.app/feed/meta.csv
-export const revalidate = 300;
+export const revalidate = 3600;
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore-six.vercel.app').replace(/\/$/, '');
 

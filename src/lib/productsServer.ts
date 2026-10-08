@@ -7,8 +7,11 @@ import { DEMO_PRODUCTS } from './demo-products';
 import { mapProduct } from './productMap';
 import type { Product } from './types';
 
-// Cada cuánto se refrescan los datos en caché (segundos).
-export const PRODUCTS_REVALIDATE = 60;
+// Cada cuánto se refrescan los datos en caché (segundos). Es largo a
+// propósito: cada lectura de todo el catálogo gasta una lectura de Firestore
+// por producto (cuota gratuita: 50.000 al día). Al guardar en el panel la
+// caché se borra al instante (ver /api/revalidate).
+export const PRODUCTS_REVALIDATE = 3600;
 
 function unwrapValue(value: any): any {
   if (value == null) return null;
