@@ -19,6 +19,7 @@ import SizeGuide from '@/components/sizes/SizeGuide';
 import Accordion, { AccordionItem } from '@/components/product/Accordion';
 import ProductReviews from '@/components/product/ProductReviews';
 import RealDeliveries from '@/components/RealDeliveries';
+import ChatProofs from '@/components/ChatProofs';
 import RelatedProducts from '@/components/product/RelatedProducts';
 import HowItWorks from '@/components/HowItWorks';
 import { discountPercentOf } from '@/components/ProductCard';
@@ -217,6 +218,7 @@ export default function ProductView({ initialProduct, related }: { initialProduc
         </div>
 
         <ProductReviews reviews={product.reviews ?? []} totalCount={product.reviewsCount} />
+        <ChatProofs compact />
         <RealDeliveries compact />
       </div>
 

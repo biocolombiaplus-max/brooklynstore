@@ -323,6 +323,8 @@ export interface SiteSettings {
   categoryTiles: CategoryTilesSettings;
   // Fotos reales de clientes y paquetes despachados (prueba social).
   realDeliveries: { enabled: boolean; heading: string; photos: string[] };
+  // Capturas de WhatsApp de clientes felices (prueba social).
+  chatProofs: { enabled: boolean; heading: string; subheading: string; photos: string[] };
   trustItems: TrustItem[];
   benefitsHeading: string;
   benefits: BenefitItem[];

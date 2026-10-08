@@ -12,6 +12,7 @@ import Testimonials from '@/components/Testimonials';
 import Faq from '@/components/home/Faq';
 import HomeCTA from '@/components/HomeCTA';
 import RealDeliveries from '@/components/RealDeliveries';
+import ChatProofs from '@/components/ChatProofs';
 import { getActiveProductsServer } from '@/lib/productsServer';
 import { slimProduct } from '@/lib/productMap';
 import { featuredTabs } from '@/lib/featuredTabs';
@@ -60,6 +61,7 @@ export default async function HomePage() {
       <TrustBar />
       {/* Los zapatos primero: quien llega del anuncio ve productos de inmediato. */}
       <FeaturedProducts initialProducts={featured} />
+      <ChatProofs />
       <RealDeliveries />
       <CategoryTiles />
       <FeaturedBrandSpotlight initialProducts={starProducts} />

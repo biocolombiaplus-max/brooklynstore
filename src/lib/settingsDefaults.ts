@@ -118,6 +118,12 @@ export const DEFAULT_SETTINGS: SiteSettings = {
     transferNote: 'Envíanos la foto del comprobante por WhatsApp y despachamos tu pedido ese mismo día.',
   },
   realDeliveries: { enabled: true, heading: 'Entregas reales en todo Ecuador', photos: [] },
+  chatProofs: {
+    enabled: true,
+    heading: 'Lo que nos escriben por WhatsApp',
+    subheading: 'Mensajes reales de clientes que ya recibieron sus zapatos',
+    photos: [],
+  },
   categoryTiles: {
     enabled: true,
     eyebrow: 'Compra por categoría',
@@ -334,6 +340,11 @@ export function mergeWithDefaults(data: Partial<SiteSettings> | undefined): Site
       ...DEFAULT_SETTINGS.realDeliveries,
       ...data.realDeliveries,
       photos: Array.isArray(data.realDeliveries?.photos) ? data.realDeliveries.photos : [],
+    },
+    chatProofs: {
+      ...DEFAULT_SETTINGS.chatProofs,
+      ...data.chatProofs,
+      photos: Array.isArray(data.chatProofs?.photos) ? data.chatProofs.photos : [],
     },
     trustItems: data.trustItems?.length ? data.trustItems : DEFAULT_SETTINGS.trustItems,
     benefits: data.benefits?.length ? data.benefits : DEFAULT_SETTINGS.benefits,

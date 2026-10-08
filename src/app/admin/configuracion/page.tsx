@@ -34,7 +34,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-card bg-white p-6 shadow-soft">
+    <section data-config-section={title} className="scroll-mt-4 rounded-card bg-white p-4 shadow-soft sm:p-6">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h2 className="font-heading text-lg font-bold text-ink">{title}</h2>
@@ -44,6 +44,40 @@ function Section({
       </div>
       <div className="mt-4 space-y-4">{children}</div>
     </section>
+  );
+}
+
+// Selector para saltar directo a una sección (útil en el celular, donde la
+// página es muy larga). Las secciones con fotos llevan 📷.
+const PHOTO_SECTIONS = ['General', 'Transportadora', 'Marca estrella', 'Hero', 'Compra por categoría', 'Entregas reales', 'Capturas de WhatsApp', 'Testimonios'];
+
+function SectionJump() {
+  const [titles, setTitles] = useState<string[]>([]);
+  useEffect(() => {
+    setTitles(Array.from(document.querySelectorAll<HTMLElement>('[data-config-section]')).map((el) => el.dataset.configSection || ''));
+  }, []);
+  if (!titles.length) return null;
+  return (
+    <div className="sticky top-0 z-20 -mx-4 bg-cream/95 px-4 py-2 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0">
+      <select
+        value=""
+        onChange={(e) => {
+          const el = document.querySelector(`[data-config-section="${CSS.escape(e.target.value)}"]`);
+          el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+        className="w-full rounded-xl border-2 border-primary/40 bg-white px-4 py-3 text-sm font-bold text-ink shadow-soft focus:border-primary focus:outline-none"
+      >
+        <option value="" disabled>
+          🔎 Ir a la sección…
+        </option>
+        {titles.map((t) => (
+          <option key={t} value={t}>
+            {PHOTO_SECTIONS.some((k) => t.includes(k)) ? '📷 ' : ''}
+            {t}
+          </option>
+        ))}
+      </select>
+    </div>
   );
 }
 
@@ -422,6 +456,8 @@ export default function ConfiguracionPage() {
         <h1 className="font-heading text-2xl font-bold text-ink">Configuración del sitio</h1>
         <p className="text-sm text-muted">Edita textos, imágenes, colores y contacto sin tocar código</p>
       </div>
+
+      <SectionJump />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border-2 border-dashed border-urgent/40 bg-urgent/5 p-4">
         <div>
@@ -1323,6 +1359,41 @@ export default function ConfiguracionPage() {
           values={settings.realDeliveries.photos}
           folder="entregas"
           onChange={(urls) => update('realDeliveries', { ...settings.realDeliveries, photos: urls })}
+        />
+      </Section>
+
+      <Section
+        title="💬 Capturas de WhatsApp de clientes"
+        description="Sube capturas de pantalla de mensajes de clientes felices (“ya me llegaron”, “quedaron perfectos”…). Se muestran dentro de un celular en la portada y en cada zapato apenas subas al menos 2. Es de lo que más confianza genera."
+      >
+        <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
+          <input
+            type="checkbox"
+            checked={settings.chatProofs.enabled}
+            onChange={(e) => update('chatProofs', { ...settings.chatProofs, enabled: e.target.checked })}
+          />
+          Mostrar la sección en la tienda
+        </label>
+        <Field label="Título">
+          <input
+            value={settings.chatProofs.heading}
+            onChange={(e) => update('chatProofs', { ...settings.chatProofs, heading: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
+        <Field label="Subtítulo">
+          <input
+            value={settings.chatProofs.subheading}
+            onChange={(e) => update('chatProofs', { ...settings.chatProofs, subheading: e.target.value })}
+            className={inputClass}
+          />
+        </Field>
+        <MultiImageUploadField
+          label="Capturas de WhatsApp (sube entre 3 y 12)"
+          help="Antes de subirlas tapa o recorta el número y la foto de perfil del cliente (en el celular: Editar → Recortar o Marcar). Solo capturas reales y con permiso."
+          values={settings.chatProofs.photos}
+          folder="whatsapp"
+          onChange={(urls) => update('chatProofs', { ...settings.chatProofs, photos: urls })}
         />
       </Section>
 
