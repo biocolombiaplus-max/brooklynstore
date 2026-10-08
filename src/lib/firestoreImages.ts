@@ -67,15 +67,46 @@ function draw(img: HTMLImageElement, mode: Mode, size: number): HTMLCanvasElemen
   return canvas;
 }
 
-async function compress(file: Blob, mode: Mode): Promise<Blob> {
+// ¿La imagen tiene partes transparentes? (logos PNG). Se revisa una versión
+// pequeña para que sea instantáneo.
+function hasTransparency(img: HTMLImageElement): boolean {
+  try {
+    const c = document.createElement('canvas');
+    const scale = Math.min(1, 64 / Math.max(img.width, img.height));
+    c.width = Math.max(1, Math.round(img.width * scale));
+    c.height = Math.max(1, Math.round(img.height * scale));
+    const ctx = c.getContext('2d');
+    if (!ctx) return false;
+    ctx.drawImage(img, 0, 0, c.width, c.height);
+    const data = ctx.getImageData(0, 0, c.width, c.height).data;
+    for (let i = 3; i < data.length; i += 4) if (data[i] < 250) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+export async function compress(file: Blob, mode: Mode): Promise<Blob> {
   const img = await loadImage(file);
-  const sizes = mode === 'original' ? [1600, 1300, 1000, 800] : [1200, 1000, 800, 640];
+  const sizes = mode === 'original' ? [1600, 1300, 1000, 800, 640] : [1200, 1000, 800, 640];
+  // iPhone/Safari no comprime a WebP: las fotos van en JPEG (liviano) y solo
+  // las imágenes con transparencia (logos) se guardan en PNG.
+  const fallbackType = mode === 'original' && hasTransparency(img) ? 'image/png' : 'image/jpeg';
   for (const size of sizes) {
     const canvas = draw(img, mode, size);
+    if (fallbackType === 'image/jpeg' && mode === 'original') {
+      // JPEG no tiene transparencia: fondo blanco por si acaso.
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.globalCompositeOperation = 'destination-over';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalCompositeOperation = 'source-over';
+      }
+    }
     for (const quality of [0.86, 0.78, 0.68, 0.58]) {
       let blob = await toBlob(canvas, 'image/webp', quality);
-      // Navegadores sin WebP devuelven PNG: se usa JPEG en fotos sin transparencia.
-      if (!blob || blob.type !== 'image/webp') blob = await toBlob(canvas, mode === 'original' ? 'image/png' : 'image/jpeg', quality);
+      if (!blob || blob.type !== 'image/webp') blob = await toBlob(canvas, fallbackType, quality);
       if (blob && blob.size <= MAX_BYTES) return blob;
     }
   }

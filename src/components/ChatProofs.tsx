@@ -12,7 +12,7 @@ export default function ChatProofs({ compact = false }: { compact?: boolean }) {
   const { chatProofs } = useSiteSettings();
   const [open, setOpen] = useState<number | null>(null);
   const photos = chatProofs.photos.filter(Boolean);
-  if (!chatProofs.enabled || photos.length < 2) return null;
+  if (!chatProofs.enabled || photos.length < 1) return null;
 
   return (
     <section className={compact ? 'mt-10 overflow-hidden rounded-3xl bg-[#0a0a0a] py-8 text-white' : 'relative overflow-hidden bg-[#0a0a0a] py-14 text-white sm:py-20'}>

@@ -1,8 +1,8 @@
 'use client';
 
 import Image from 'next/image';
-import { useEffect, useState } from 'react';
-import { DEFAULT_SETTINGS, getSiteSettings, updateSiteSettings } from '@/lib/settings';
+import { useEffect, useRef, useState } from 'react';
+import { DEFAULT_SETTINGS, getSiteSettings, updateSiteSettings, updateSiteSettingsFields } from '@/lib/settings';
 import { uploadProductImage } from '@/lib/storage';
 import { getProvinces } from '@/lib/ecuador';
 import { FONT_GROUPS, ALL_CURATED_FONTS, googleFontsHref, fontFamilyValue } from '@/lib/fonts';
@@ -283,15 +283,35 @@ function MultiImageUploadField({
   values,
   folder,
   onChange,
+  autoSave,
 }: {
   label: string;
   help?: string;
   values: string[];
   folder: string;
   onChange: (urls: string[]) => void;
+  // Si se indica, las fotos se publican solas apenas terminan de subir.
+  autoSave?: (urls: string[]) => Promise<void>;
 }) {
-  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [uploadError, setUploadError] = useState('');
+  const [savedNote, setSavedNote] = useState('');
+  // Lista siempre al día: con varias fotos a la vez, cada una se suma a la
+  // anterior (antes cada foto reemplazaba a la otra y solo quedaba la última).
+  const latest = useRef(values);
+  latest.current = values;
+
+  async function persist(urls: string[]) {
+    onChange(urls);
+    if (!autoSave) return;
+    try {
+      await autoSave(urls);
+      setSavedNote('✓ Guardado y publicado en la tienda');
+      setTimeout(() => setSavedNote(''), 4000);
+    } catch {
+      setUploadError('Las fotos se subieron, pero no se pudieron publicar. Toca “Guardar cambios”.');
+    }
+  }
 
   async function handleFiles(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
@@ -299,24 +319,33 @@ function MultiImageUploadField({
     setUploadError('');
     const queued = Array.from(files);
     e.target.value = '';
+    setProgress({ done: 0, total: queued.length });
 
-    setUploading(true);
-    try {
-      for (const file of queued) {
+    // Sube de a 3 a la vez (rápido sin saturar la conexión del celular).
+    const results: (string | null)[] = new Array(queued.length).fill(null);
+    let failed = 0;
+    let next = 0;
+    async function worker() {
+      while (next < queued.length) {
+        const i = next++;
         try {
-          const url = await uploadProductImage(file, folder, 'original');
-          onChange([...values, url]);
-        } catch (err) {
-          setUploadError(err instanceof Error ? err.message : 'No se pudo subir la foto. Intenta de nuevo.');
+          results[i] = await uploadProductImage(queued[i], folder, 'original');
+        } catch {
+          failed++;
         }
+        setProgress((p) => (p ? { ...p, done: p.done + 1 } : p));
       }
-    } finally {
-      setUploading(false);
     }
+    await Promise.all([worker(), worker(), worker()]);
+
+    const uploaded = results.filter((u): u is string => !!u);
+    if (uploaded.length) await persist([...latest.current, ...uploaded]);
+    if (failed) setUploadError(`${failed} ${failed === 1 ? 'foto no se pudo subir' : 'fotos no se pudieron subir'}. Intenta de nuevo con esas.`);
+    setProgress(null);
   }
 
   function removeAt(url: string) {
-    onChange(values.filter((v) => v !== url));
+    persist(latest.current.filter((v) => v !== url));
   }
 
   return (
@@ -340,11 +369,32 @@ function MultiImageUploadField({
             </button>
           </div>
         ))}
-        <label className="flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-border text-center text-[11px] text-muted hover:border-primary">
-          {uploading ? 'Subiendo...' : '+ Agregar'}
-          <input type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} disabled={uploading} />
+        <label
+          className={`flex h-20 w-20 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed text-center text-[11px] font-semibold ${
+            progress ? 'border-primary text-primary' : 'border-border text-muted hover:border-primary'
+          }`}
+        >
+          {progress ? (
+            <>
+              <span className="text-base">⏳</span>
+              {progress.done}/{progress.total}
+            </>
+          ) : (
+            <>
+              <span className="text-lg leading-none">+</span>
+              Agregar
+              <span className="text-[9px] font-normal">(varias)</span>
+            </>
+          )}
+          <input type="file" accept="image/*" multiple className="hidden" onChange={handleFiles} disabled={!!progress} />
         </label>
       </div>
+      {progress && (
+        <div className="mb-2 h-1.5 overflow-hidden rounded-full bg-cream-alt">
+          <div className="h-full bg-gold-gradient transition-all" style={{ width: `${(progress.done / progress.total) * 100}%` }} />
+        </div>
+      )}
+      {savedNote && <p className="mb-1 text-xs font-bold text-whatsapp">{savedNote}</p>}
       {uploadError && <p className="mb-1 text-xs text-urgent">{uploadError}</p>}
       {help && <p className="text-xs text-muted">{help}</p>}
     </Field>
@@ -1336,7 +1386,7 @@ export default function ConfiguracionPage() {
 
       <Section
         title="📸 Entregas reales (prueba social)"
-        description="Fotos reales de tus clientes con sus zapatos, paquetes listos o guías de Servientrega. Es lo que más confianza da a quien no conoce la tienda. Se muestran en la portada y en cada zapato apenas subas al menos 3."
+        description="Fotos reales de tus clientes con sus zapatos, paquetes listos o guías de Servientrega. Es lo que más confianza da a quien no conoce la tienda. Se muestran en la portada y en cada zapato apenas subas la primera."
       >
         <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
           <input
@@ -1354,17 +1404,18 @@ export default function ConfiguracionPage() {
           />
         </Field>
         <MultiImageUploadField
-          label="Fotos reales (sube entre 4 y 12)"
+          label="Fotos reales (puedes elegir varias de una vez)"
           help="Pide permiso a tus clientes antes de publicar su foto. Puedes tapar la dirección de las guías."
           values={settings.realDeliveries.photos}
           folder="entregas"
           onChange={(urls) => update('realDeliveries', { ...settings.realDeliveries, photos: urls })}
+          autoSave={(urls) => updateSiteSettingsFields({ realDeliveries: { ...settings.realDeliveries, photos: urls } })}
         />
       </Section>
 
       <Section
         title="💬 Capturas de WhatsApp de clientes"
-        description="Sube capturas de pantalla de mensajes de clientes felices (“ya me llegaron”, “quedaron perfectos”…). Se muestran dentro de un celular en la portada y en cada zapato apenas subas al menos 2. Es de lo que más confianza genera."
+        description="Sube capturas de pantalla de mensajes de clientes felices (“ya me llegaron”, “quedaron perfectos”…). Se muestran dentro de un celular en la portada y en cada zapato apenas subas la primera. Es de lo que más confianza genera."
       >
         <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-ink">
           <input
@@ -1389,11 +1440,12 @@ export default function ConfiguracionPage() {
           />
         </Field>
         <MultiImageUploadField
-          label="Capturas de WhatsApp (sube entre 3 y 12)"
+          label="Capturas de WhatsApp (puedes elegir varias de una vez)"
           help="Antes de subirlas tapa o recorta el número y la foto de perfil del cliente (en el celular: Editar → Recortar o Marcar). Solo capturas reales y con permiso."
           values={settings.chatProofs.photos}
           folder="whatsapp"
           onChange={(urls) => update('chatProofs', { ...settings.chatProofs, photos: urls })}
+          autoSave={(urls) => updateSiteSettingsFields({ chatProofs: { ...settings.chatProofs, photos: urls } })}
         />
       </Section>
 

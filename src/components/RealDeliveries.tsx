@@ -10,7 +10,7 @@ export default function RealDeliveries({ compact = false }: { compact?: boolean 
   const { realDeliveries } = useSiteSettings();
   const [open, setOpen] = useState<string | null>(null);
   const photos = realDeliveries.photos.filter(Boolean);
-  if (!realDeliveries.enabled || photos.length < 3) return null;
+  if (!realDeliveries.enabled || photos.length < 1) return null;
 
   return (
     <section className={compact ? 'mt-8' : 'bg-white py-12 sm:py-16'}>
