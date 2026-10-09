@@ -333,9 +333,9 @@ export default function BuyBox({
               className="btn-primary btn-shine w-full justify-between gap-3 rounded-2xl px-5 py-4 text-left normal-case tracking-normal"
             >
               <span className="flex flex-col gap-1">
-                <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">🏦 Pago por transferencia</span>
+                <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">⚡ Pagar de inmediato</span>
                 <span className="text-[12px] font-bold opacity-80">
-                  Pichincha · total con envío {formatPrice(lineTotal + shippingFee)}
+                  👉 Clic aquí · transferencia · total con envío {formatPrice(lineTotal + shippingFee)}
                 </span>
               </span>
               <span className="shrink-0 text-right">
@@ -354,12 +354,12 @@ export default function BuyBox({
                   <span className="flex flex-col gap-1">
                     <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">💵 Pago contra entrega</span>
                     <span className="text-[12px] font-semibold text-white/70">
-                      Hoy {formatPrice(cod.payNow)} de envío · {formatPrice(cod.payOnDelivery)} al recibir
+                      👉 Clic aquí · pagas tus zapatos al recibirlos
                     </span>
                   </span>
                   <span className="shrink-0 rounded-xl bg-gold-gradient px-3 py-2 text-center text-ink">
-                    <span className="block text-[9px] font-extrabold uppercase">Hoy solo</span>
-                    <span className="block text-xl font-black leading-none">{formatPrice(cod.payNow)}</span>
+                    <span className="block text-[9px] font-extrabold uppercase">Al recibir</span>
+                    <span className="block text-xl font-black leading-none">{formatPrice(cod.payOnDelivery)}</span>
                   </span>
                 </button>
                 <button
@@ -368,8 +368,8 @@ export default function BuyBox({
                   className="grid w-full grid-cols-3 border-t border-white/10 text-center text-white"
                 >
                   {[
-                    { n: '1', t: `Hoy ${formatPrice(cod.payNow)}`, s: 'garantiza tu envío' },
-                    { n: '2', t: 'Te llega', s: 'a tu dirección' },
+                    { n: '1', t: 'Confirmas', s: 'por WhatsApp con un asesor' },
+                    { n: '2', t: `Envío ${formatPrice(cod.payNow)}`, s: 'para despachar' },
                     { n: '3', t: `Pagas ${formatPrice(cod.payOnDelivery)}`, s: 'en efectivo al recibir' },
                   ].map((step, i) => (
                     <span key={step.n} className={classNames('px-1.5 py-2.5', i > 0 && 'border-l border-white/10')}>
@@ -385,7 +385,7 @@ export default function BuyBox({
 
             <button type="button" onClick={handleAddToCart} className="btn-secondary w-full">
               <CartIcon size={18} />
-              {added ? '✓ ¡Agregado al carrito!' : 'Agregar al carrito'}
+              {added ? '✓ ¡Agregado al carrito!' : 'Clic aquí para agregar al carrito'}
             </button>
           </>
         )}

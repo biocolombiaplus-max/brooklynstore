@@ -47,8 +47,18 @@ function buildStatusMessage(order: Order, storeName: string): string {
   }
 }
 
+type Filter = 'todos' | 'por_cerrar' | 'cerradas' | 'no_compro';
+
+const FILTERS: { value: Filter; label: string; match: (o: Order) => boolean }[] = [
+  { value: 'por_cerrar', label: '💬 Por cerrar', match: (o) => o.status === 'pendiente' },
+  { value: 'cerradas', label: '✅ Ventas cerradas', match: (o) => ['confirmado', 'enviado', 'entregado'].includes(o.status) },
+  { value: 'no_compro', label: '✕ No compró', match: (o) => o.status === 'cancelado' },
+  { value: 'todos', label: 'Todos', match: () => true },
+];
+
 export default function AdminOrdersPage() {
   const [orders, setOrders] = useState<Order[] | null>(null);
+  const [filter, setFilter] = useState<Filter>('por_cerrar');
   const [storeName, setStoreName] = useState('la tienda');
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [savingShipping, setSavingShipping] = useState<string | null>(null);
@@ -109,13 +119,33 @@ export default function AdminOrdersPage() {
         </Link>
       </div>
 
+      {orders && orders.length > 0 && (
+        <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
+          {FILTERS.map((f) => {
+            const count = orders.filter(f.match).length;
+            return (
+              <button
+                key={f.value}
+                type="button"
+                onClick={() => setFilter(f.value)}
+                className={`shrink-0 rounded-full px-4 py-2 text-xs font-extrabold transition-colors ${
+                  filter === f.value ? 'bg-ink text-white' : 'bg-white text-ink ring-1 ring-border hover:ring-ink/40'
+                }`}
+              >
+                {f.label} <span className={filter === f.value ? 'text-primary-light' : 'text-muted'}>{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       <div className="space-y-4">
         {orders === null ? (
           <p className="text-muted">Cargando pedidos...</p>
         ) : orders.length === 0 ? (
           <p className="rounded-card bg-white p-6 text-center text-muted shadow-soft">Todavía no hay pedidos.</p>
         ) : (
-          orders.map((order) => (
+          orders.filter(FILTERS.find((f) => f.value === filter)!.match).map((order) => (
             <OrderCard
               key={order.id}
               order={order}
@@ -202,7 +232,14 @@ function OrderCard({
     <div className="rounded-card bg-white p-5 shadow-soft">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="font-bold text-ink">{order.orderNumber}</p>
+          <p className="flex flex-wrap items-center gap-2 font-bold text-ink">
+            {order.orderNumber}
+            {order.channel === 'whatsapp' && (
+              <span className="rounded-full bg-whatsapp/15 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#128C4B]">
+                💬 Pedido por WhatsApp
+              </span>
+            )}
+          </p>
           <p className="text-xs text-muted">{new Date(order.createdAt).toLocaleString('es-CO')}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5">
@@ -226,6 +263,28 @@ function OrderCard({
           </button>
         </div>
       </div>
+
+      {order.status === 'pendiente' && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 rounded-xl bg-gold-50 p-3 ring-1 ring-primary/30">
+          <p className="min-w-0 flex-1 text-xs text-ink">
+            <strong>¿Se cerró la venta en WhatsApp?</strong> Márcala para que cuente en las ventas y en la ganancia de Juan Carlos.
+          </p>
+          <button
+            type="button"
+            onClick={() => onStatusChange('confirmado')}
+            className="rounded-lg bg-whatsapp px-4 py-2 text-xs font-extrabold text-white shadow-soft transition-transform hover:scale-[1.03]"
+          >
+            ✅ Venta cerrada
+          </button>
+          <button
+            type="button"
+            onClick={() => onStatusChange('cancelado')}
+            className="rounded-lg bg-white px-4 py-2 text-xs font-extrabold text-muted ring-1 ring-border hover:text-urgent"
+          >
+            ✕ No compró
+          </button>
+        </div>
+      )}
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>

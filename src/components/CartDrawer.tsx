@@ -108,7 +108,7 @@ export default function CartDrawer() {
               {settings.payments.codEnabled && ` · 💵 Contra entrega: adelantas ${formatPrice(settings.payments.codAdvance)}`}
             </p>
             <Link href="/checkout" onClick={close} className="btn-primary btn-shine w-full py-4 text-base">
-              Finalizar compra →
+              👉 Clic aquí para finalizar compra
             </Link>
             <a
               href={whatsappLinkTo(settings.whatsappNumber, buildCartWhatsAppMessage(items), settings.whatsappCountryCode)}

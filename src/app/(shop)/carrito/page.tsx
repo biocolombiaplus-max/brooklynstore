@@ -109,7 +109,7 @@ export default function CarritoPage() {
             )}
           </div>
           <Link href="/checkout" className="btn-primary btn-shine mt-5 w-full py-4 text-base">
-            Finalizar compra →
+            👉 Clic aquí para finalizar compra
           </Link>
           <a
             href={whatsappLinkTo(settings.whatsappNumber, buildCartWhatsAppMessage(items), settings.whatsappCountryCode)}

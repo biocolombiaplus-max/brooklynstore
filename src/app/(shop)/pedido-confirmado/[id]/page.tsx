@@ -188,6 +188,19 @@ export default function OrderConfirmationPage() {
     );
   }
 
+  if (order.channel === 'whatsapp') {
+    return (
+      <WhatsAppOrderView
+        order={order}
+        whatsappNumber={whatsappNumber}
+        whatsappCountryCode={whatsappCountryCode}
+        bankAccounts={payments.bankAccounts}
+        deliveryTime={shipping.deliveryTime}
+        email={footer.email}
+      />
+    );
+  }
+
   const firstName = order.customer.name.split(' ')[0];
   const isCod = order.paymentMethod === 'contra_entrega';
   const paidMessage = buildOrderWhatsAppMessage(order, { paid: true });
@@ -283,52 +296,7 @@ export default function OrderConfirmationPage() {
           </>
         )}
 
-        {/* Resumen */}
-        <div className="mt-4 rounded-3xl bg-white p-5 shadow-soft sm:p-7">
-          <h2 className="text-sm font-black uppercase text-ink">Resumen del pedido</h2>
-          <ul className="mt-4 space-y-2">
-            {order.items.map((item, i) => (
-              <li key={i} className="flex justify-between gap-3 text-sm">
-                <span>
-                  <span className="font-bold text-ink">{item.title}</span> × {item.quantity}
-                  <span className="block text-xs text-muted">
-                    Talla {item.size}
-                    {item.sizeUs && ` (US ${item.sizeUs})`}
-                    {item.color && ` · ${item.color}`}
-                  </span>
-                </span>
-                <span className="font-bold text-ink">{formatPrice(item.price * item.quantity)}</span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-4 space-y-1 border-t border-border pt-3 text-sm text-muted">
-            {!!order.discount && (
-              <div className="flex justify-between">
-                <span>Descuento {order.couponCode && `(${order.couponCode})`}</span>
-                <span>-{formatPrice(order.discount)}</span>
-              </div>
-            )}
-            <div className="flex justify-between">
-              <span>Envío</span>
-              <span>{order.shipping === 0 ? 'Sin costo' : formatPrice(order.shipping)}</span>
-            </div>
-            <div className="flex justify-between pt-1 text-base font-black text-ink">
-              <span>Total</span>
-              <span>{formatPrice(order.total)}</span>
-            </div>
-            <p className="pt-1 text-xs">{paymentMethodLabel(order.paymentMethod)}</p>
-          </div>
-          <div className="mt-4 border-t border-border pt-3 text-sm text-muted">
-            <p className="font-bold text-ink">📍 Entrega</p>
-            <p>
-              {order.customer.name} · {order.customer.phone}
-            </p>
-            <p>
-              {order.customer.address}, {order.customer.city}, {order.customer.province}
-            </p>
-            {order.customer.reference && <p>Referencia: {order.customer.reference}</p>}
-          </div>
-        </div>
+        <OrderSummary order={order} />
 
         <ExchangePolicy compact className="mt-4" />
 
@@ -445,5 +413,179 @@ function Stepper({ current = 1, dark = false }: { current?: 1 | 2; dark?: boolea
         );
       })}
     </ol>
+  );
+}
+
+function OrderSummary({ order }: { order: Order }) {
+  return (
+    <div className="mt-4 rounded-3xl bg-white p-5 shadow-soft sm:p-7">
+      <h2 className="text-sm font-black uppercase text-ink">Resumen del pedido</h2>
+      <ul className="mt-4 space-y-2">
+        {order.items.map((item, i) => (
+          <li key={i} className="flex justify-between gap-3 text-sm">
+            <span>
+              <span className="font-bold text-ink">{item.title}</span> × {item.quantity}
+              <span className="block text-xs text-muted">
+                Talla {item.size}
+                {item.sizeUs && ` (US ${item.sizeUs})`}
+                {item.color && ` · ${item.color}`}
+              </span>
+            </span>
+            <span className="font-bold text-ink">{formatPrice(item.price * item.quantity)}</span>
+          </li>
+        ))}
+      </ul>
+      <div className="mt-4 space-y-1 border-t border-border pt-3 text-sm text-muted">
+        {!!order.discount && (
+          <div className="flex justify-between">
+            <span>Descuento {order.couponCode && `(${order.couponCode})`}</span>
+            <span>-{formatPrice(order.discount)}</span>
+          </div>
+        )}
+        <div className="flex justify-between">
+          <span>Envío</span>
+          <span>{order.shipping === 0 ? 'Sin costo' : formatPrice(order.shipping)}</span>
+        </div>
+        <div className="flex justify-between pt-1 text-base font-black text-ink">
+          <span>Total</span>
+          <span>{formatPrice(order.total)}</span>
+        </div>
+        <p className="pt-1 text-xs">{paymentMethodLabel(order.paymentMethod)}</p>
+      </div>
+      <div className="mt-4 border-t border-border pt-3 text-sm text-muted">
+        <p className="font-bold text-ink">📍 Entrega</p>
+        <p>
+          {order.customer.name} · {order.customer.phone}
+        </p>
+        <p>
+          {order.customer.address}, {order.customer.city}, {order.customer.province}
+        </p>
+        {order.customer.reference && <p>Referencia: {order.customer.reference}</p>}
+      </div>
+    </div>
+
+  );
+}
+
+// Pedido confirmado por WhatsApp: el cliente ya tiene el chat abierto con su
+// pedido. Aquí solo se le tranquiliza, se le da el botón para volver a
+// abrirlo y (opcional) la cuenta oficial por si quiere adelantar el pago.
+function WhatsAppOrderView({
+  order,
+  whatsappNumber,
+  whatsappCountryCode,
+  bankAccounts,
+  deliveryTime,
+  email,
+}: {
+  order: Order;
+  whatsappNumber: string;
+  whatsappCountryCode: string;
+  bankAccounts: BankAccount[];
+  deliveryTime: string;
+  email: string;
+}) {
+  const [showBank, setShowBank] = useState(false);
+  const firstName = order.customer.name.split(' ')[0];
+  const isCod = order.paymentMethod === 'contra_entrega';
+  const waUrl = whatsappLinkTo(whatsappNumber, buildOrderWhatsAppMessage(order, { request: true }), whatsappCountryCode);
+
+  return (
+    <div className="bg-cream-alt/50 pb-12">
+      <div className="container-page max-w-3xl py-6 sm:py-10">
+        <div className="text-center">
+          <div className="mx-auto flex h-20 w-20 animate-popIn items-center justify-center rounded-full bg-whatsapp text-white shadow-lift">
+            <WhatsAppIcon size={40} />
+          </div>
+          <p className="mt-5 text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary-dark">Pedido {order.orderNumber} registrado ✓</p>
+          <h1 className="mt-1 font-heading text-2xl font-black uppercase text-ink sm:text-3xl">{firstName}, ¡ya casi es tuyo!</h1>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted">
+            Se abrió WhatsApp con tu pedido listo. <strong className="text-ink">Solo toca Enviar</strong> y un asesor te confirma la talla, la
+            disponibilidad y el pago.
+          </p>
+        </div>
+
+        <a href={waUrl} target="_blank" rel="noopener noreferrer" className="btn-whatsapp btn-shine mt-6 w-full py-5 text-base">
+          <WhatsAppIcon size={22} /> 👉 Clic aquí si no se abrió WhatsApp
+        </a>
+
+        <ol className="mt-5 grid gap-2 sm:grid-cols-3">
+          {[
+            { icon: '💬', title: 'Envías el mensaje', text: 'Tu pedido ya va escrito con todos los datos.' },
+            {
+              icon: '👤',
+              title: 'Un asesor te confirma',
+              text: isCod
+                ? `Para despachar solo pagas ${formatPrice(order.payNow)} del envío.`
+                : `Te pasa la cuenta oficial para pagar ${formatPrice(order.payNow)}.`,
+            },
+            {
+              icon: '🚚',
+              title: `Llega en ${deliveryTime}`,
+              text: isCod ? `Pagas ${formatPrice(order.payOnDelivery)} en efectivo al recibir.` : 'Con Servientrega y número de guía.',
+            },
+          ].map((step, i) => (
+            <li key={step.title} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-soft sm:flex-col sm:text-center">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold-gradient text-lg">{step.icon}</span>
+              <span>
+                <span className="block text-sm font-extrabold text-ink">
+                  {i + 1}. {step.title}
+                </span>
+                <span className="block text-xs text-muted">{step.text}</span>
+              </span>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] font-semibold text-muted">
+          <span>✅ Atención de personas reales</span>
+          <span>🔒 Cuenta oficial única</span>
+          <span>🔄 Cambio de talla en 48 h</span>
+        </div>
+
+        {bankAccounts.length > 0 && (
+          <div className="mt-5">
+            {showBank ? (
+              <div className="grid gap-3">
+                <p className="text-center text-xs text-muted">
+                  Si prefieres adelantar el pago de <strong className="text-ink">{formatPrice(order.payNow)}</strong>, esta es nuestra única cuenta oficial.
+                  Envía la captura por el mismo chat.
+                </p>
+                {bankAccounts.map((account) => (
+                  <BankCard key={account.bank + account.number} account={account} amount={order.payNow} />
+                ))}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setShowBank(true)}
+                className="w-full text-center text-xs font-bold text-muted underline underline-offset-4 hover:text-ink"
+              >
+                ¿Ya quieres pagar? Ver la cuenta oficial Banco Pichincha
+              </button>
+            )}
+          </div>
+        )}
+
+        <OrderSummary order={order} />
+
+        <ExchangePolicy compact className="mt-4" />
+
+        <p className="mt-6 text-center text-xs text-muted">
+          ¿Alguna duda? Escríbenos por WhatsApp o al correo{' '}
+          <a href={`mailto:${email}`} className="font-bold text-ink underline">
+            {email}
+          </a>
+        </p>
+
+        <div className="mt-8 text-center">
+          <Link href="/catalogo" className="text-sm font-bold text-ink underline decoration-primary decoration-2 underline-offset-4">
+            ← Seguir comprando
+          </Link>
+        </div>
+
+        <PostPurchaseUpsell excludeProductIds={order.items.map((i) => i.productId)} />
+      </div>
+    </div>
   );
 }

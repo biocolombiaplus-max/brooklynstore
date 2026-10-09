@@ -145,7 +145,7 @@ export function buildOrderWhatsAppMessage(order: {
   paymentMethod: PaymentMethod;
   couponCode?: string;
   customer: OrderCustomer;
-}, opts: { paid?: boolean } = {}): string {
+}, opts: { paid?: boolean; request?: boolean } = {}): string {
   const cod = order.paymentMethod === 'contra_entrega';
   const itemsList = order.items
     .map(
@@ -173,6 +173,36 @@ export function buildOrderWhatsAppMessage(order: {
   ]
     .filter(Boolean)
     .join('\n');
+
+  // Pedido enviado desde la web para confirmarlo con un asesor por WhatsApp.
+  if (opts.request) {
+    const how = cod
+      ? `Elegí *pago contra entrega*: ${formatPrice(order.payNow)} del envío para despachar y ${formatPrice(order.payOnDelivery)} en efectivo al recibir.`
+      : `Elegí *pagar de inmediato* por transferencia o depósito: ${formatPrice(order.payNow)}.`;
+    return `Hola Brooklyn Store, quiero confirmar mi pedido.
+
+*PEDIDO WEB · ${order.orderNumber}*
+${WA_LINE}
+
+*PRODUCTOS*
+${itemsList}
+
+${WA_LINE}
+Subtotal: ${formatPrice(order.subtotal)}${
+      order.discount ? `\nDescuento${order.couponCode ? ` (${order.couponCode})` : ''}: -${formatPrice(order.discount)}` : ''
+    }
+Envío Servientrega: ${order.shipping === 0 ? 'Sin costo' : formatPrice(order.shipping)}
+*TOTAL: ${formatPrice(order.total)}*
+${WA_LINE}
+
+*FORMA DE PAGO*
+${how}
+
+*DATOS DE ENTREGA*
+${delivery}
+
+¿Me confirman la disponibilidad y los pasos para el pago? ¡Gracias!`;
+  }
 
   const closing = opts.paid
     ? `✓ *Pago realizado:* ${formatPrice(order.payNow)}${cod ? ' (envío)' : ''} en Banco Pichincha.\nAdjunto la foto del comprobante. Quedo atento/a a mi guía de Servientrega. ¡Gracias!`

@@ -27,6 +27,7 @@ function toOrder(id: string, data: any): Order {
     loyaltyCode: data.loyaltyCode || undefined,
     guideType: data.guideType === 'pdf' ? 'pdf' : data.guideUrl ? 'image' : undefined,
     couponCode: data.couponCode || undefined,
+    channel: data.channel === 'whatsapp' ? 'whatsapp' : undefined,
     createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : Date.now(),
   };
 }
@@ -36,9 +37,8 @@ function toOrder(id: string, data: any): Order {
 // igual su número y el cliente lo confirma por WhatsApp.
 export async function createOrder(
   input: OrderInput,
-  { requireDatabase = false }: { requireDatabase?: boolean } = {},
+  { requireDatabase = false, orderNumber = generateOrderNumber() }: { requireDatabase?: boolean; orderNumber?: string } = {},
 ): Promise<{ id: string; orderNumber: string }> {
-  const orderNumber = generateOrderNumber();
   let id = `local-${Date.now()}`;
   if (requireDatabase) {
     // Pedidos manuales del panel: ahí sí debe fallar si no se guardó.

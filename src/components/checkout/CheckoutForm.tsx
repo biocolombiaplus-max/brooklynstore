@@ -7,7 +7,7 @@ import { getCantons, getProvinces } from '@/lib/ecuador';
 import { codUnitPrice, computeOrderTotals } from '@/lib/shipping';
 import { clearCoupon, couponPercentFor, getActiveCoupon, redeemAnyCouponCode, type WonCoupon } from '@/lib/coupon';
 import { useSiteSettings } from '@/lib/settings-context';
-import { classNames, formatPrice } from '@/lib/utils';
+import { buildOrderWhatsAppMessage, classNames, formatPrice, generateOrderNumber, whatsappLinkTo } from '@/lib/utils';
 import { trackPixel } from '@/lib/pixel';
 import { trackVisitorCheckoutItems, trackVisitorContact, trackVisitorPurchase } from '@/lib/visitor';
 import type { CartItem, OrderCustomer, PaymentMethod } from '@/lib/types';
@@ -65,9 +65,10 @@ function isValidPhone(phone: string): boolean {
 
 /**
  * Formulario de compra compartido por la "compra rápida" de la ficha de
- * producto y por el checkout del carrito. Todo pedido termina en WhatsApp
- * con el resumen completo (productos, totales, cuánto paga ahora y cuánto al
- * recibir, y datos de entrega).
+ * producto y por el checkout del carrito. Al confirmar, el pedido se
+ * registra (etiquetado "WhatsApp") y se abre WhatsApp con el resumen
+ * completo y la forma de pago elegida: un asesor real confirma y coordina
+ * el pago en el chat (genera más confianza que pagar a ciegas en la web).
  */
 export default function CheckoutForm({
   items,
@@ -76,7 +77,7 @@ export default function CheckoutForm({
 }: {
   items: CartItem[];
   initialMethod?: PaymentMethod;
-  onSuccess: (orderId: string) => void;
+  onSuccess: (orderId: string, opened: boolean) => void;
 }) {
   const settings = useSiteSettings();
   const bank = settings.payments.bankAccounts[0];
@@ -178,9 +179,12 @@ export default function CheckoutForm({
       return;
     }
 
-    // Primero se paga: el pedido queda registrado y pasamos a la pantalla
-    // con la cuenta bancaria. WhatsApp se abre después, con el comprobante.
+    // WhatsApp se abre AQUÍ, dentro del clic (si se abre después de esperar
+    // a la base de datos, el celular lo bloquea). El pedido se registra en
+    // paralelo con el mismo número que lleva el mensaje.
     setSubmitting(true);
+    const orderNumber = generateOrderNumber();
+    let opened = false;
 
     try {
       const customer: OrderCustomer = {
@@ -211,10 +215,14 @@ export default function CheckoutForm({
         paymentMethod: method,
         status: 'pendiente' as const,
         couponCode: couponBlocked ? undefined : coupon?.code,
+        channel: 'whatsapp' as const,
       };
 
+      const message = buildOrderWhatsAppMessage({ ...orderData, orderNumber }, { request: true });
+      opened = !!window.open(whatsappLinkTo(settings.whatsappNumber, message, settings.whatsappCountryCode), '_blank');
+
       const { createOrder } = await import('@/lib/orders');
-      const { id, orderNumber } = await createOrder(orderData);
+      const { id } = await createOrder(orderData, { orderNumber });
 
       trackVisitorPurchase(orderNumber);
       // Píxel: compra registrada (el ID del pedido evita contarla dos veces).
@@ -262,10 +270,14 @@ export default function CheckoutForm({
             .catch(() => {});
         clearCoupon();
       }
-      onSuccess(id);
+      onSuccess(id, opened);
     } catch (err) {
       console.error(err);
-      setError('Uy, no pudimos registrar tu pedido. Intenta otra vez o escríbenos directo por WhatsApp.');
+      setError(
+        opened
+          ? 'Tu pedido ya está en WhatsApp: envía el mensaje y te atendemos de una.'
+          : 'Uy, no pudimos registrar tu pedido. Intenta otra vez o escríbenos directo por WhatsApp.',
+      );
       setSubmitting(false);
     }
   }
@@ -283,11 +295,11 @@ export default function CheckoutForm({
             selected={method === 'transferencia'}
             onSelect={() => setMethod('transferencia')}
             badge={coupon?.onlyMethod === 'transferencia' ? `🎁 -${coupon.percent}% con tu cupón` : undefined}
-            icon="🏦"
-            title="Transferencia o depósito Pichincha"
+            icon="⚡"
+            title="Pagar de inmediato"
             lines={[
-              `${formatPrice(transferTotals.subtotal)} por transferencia o depósito en Banco Pichincha`,
-              'Ves la cuenta al instante · Despacho el mismo día',
+              `${formatPrice(transferTotals.total)} por transferencia o depósito Banco Pichincha`,
+              'El asesor te confirma tu talla y te pasa la cuenta oficial por WhatsApp · Despacho el mismo día',
             ]}
           />
           {codEnabled && (
@@ -296,53 +308,47 @@ export default function CheckoutForm({
               onSelect={() => setMethod('contra_entrega')}
               icon="💵"
               title="Pago contra entrega"
-              badge={`Hoy solo ${formatPrice(codTotals.payNow)}`}
+              badge="Pagas al recibir"
               lines={[
-                `Hoy ${formatPrice(codTotals.payNow)} de envío · ${formatPrice(codTotals.payOnDelivery)} en efectivo al recibir`,
-                'El envío garantiza tu pedido; lo demás lo pagas con tus zapatos en la mano',
+                `${formatPrice(codTotals.payNow)} del envío para despachar · ${formatPrice(codTotals.payOnDelivery)} en efectivo al recibir`,
+                'Los zapatos los pagas cuando los tienes en la mano',
               ]}
             />
           )}
-          {codEnabled && method === 'contra_entrega' && (
-            <div className="mt-3 animate-slideUp overflow-hidden rounded-2xl bg-ink text-white ring-1 ring-primary/40">
-              <p className="px-4 pt-4 text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary-light">
-                Así funciona el pago contra entrega
-              </p>
-              <ol className="space-y-3 px-4 pb-4 pt-3">
-                {[
-                  {
-                    amount: formatPrice(codTotals.payNow),
-                    title: 'Hoy: pagas el envío y garantizas tu pedido',
-                    text: bank
-                      ? `${bank.bank} · ${bank.type} ${bank.number} · ${bank.holder}. Al continuar te mostramos la cuenta para copiarla.`
-                      : 'Transferencia o depósito. Al continuar te mostramos la cuenta para copiarla.',
-                  },
-                  { amount: '🚚', title: 'Despachamos tu pedido', text: `Llega a la dirección que nos indiques en ${settings.shipping.deliveryTime}.` },
-                  {
-                    amount: formatPrice(codTotals.payOnDelivery),
-                    title: 'Al recibir: pagas tus zapatos',
-                    text: 'En efectivo, cuando tienes tus zapatos en la mano.',
-                  },
-                ].map((step, i) => (
-                  <li key={step.title} className="flex items-center gap-3">
-                    <span className="flex h-12 min-w-[64px] shrink-0 items-center justify-center rounded-xl bg-gold-gradient px-2 text-sm font-black text-ink">
-                      {step.amount}
-                    </span>
-                    <span>
-                      <span className="block text-sm font-extrabold">
-                        {i + 1}. {step.title}
-                      </span>
-                      <span className="block text-xs text-white/60">{step.text}</span>
-                    </span>
-                  </li>
-                ))}
-              </ol>
-              <p className="border-t border-white/10 px-4 py-3 text-center text-xs font-bold">
-                Total {formatPrice(codTotals.total)} = <span className="text-primary-light">{formatPrice(codTotals.payNow)} hoy</span> +{' '}
-                <span className="text-primary-light">{formatPrice(codTotals.payOnDelivery)} al recibir</span>
-              </p>
-            </div>
-          )}
+          <div className="mt-1 overflow-hidden rounded-2xl bg-ink text-white ring-1 ring-primary/40">
+            <p className="px-4 pt-4 text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary-light">
+              Así de fácil y seguro
+            </p>
+            <ol className="space-y-3 px-4 pb-4 pt-3">
+              {[
+                { icon: '💬', title: 'Confirmas tu pedido por WhatsApp', text: 'Se abre el chat con tu pedido ya escrito. No pagas nada en esta página.' },
+                {
+                  icon: '👤',
+                  title: 'Te atiende un asesor real',
+                  text:
+                    method === 'contra_entrega'
+                      ? `Te confirma talla y disponibilidad. Para despachar solo pagas ${formatPrice(codTotals.payNow)} del envío.`
+                      : 'Te confirma talla y disponibilidad y te pasa la cuenta oficial Banco Pichincha.',
+                },
+                {
+                  icon: '🚚',
+                  title: `Recibes en ${settings.shipping.deliveryTime}`,
+                  text:
+                    method === 'contra_entrega'
+                      ? `Con Servientrega. Pagas ${formatPrice(codTotals.payOnDelivery)} en efectivo con tus zapatos en la mano.`
+                      : 'Con Servientrega y número de guía para que sigas tu pedido.',
+                },
+              ].map((step) => (
+                <li key={step.title} className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold-gradient text-lg">{step.icon}</span>
+                  <span>
+                    <span className="block text-sm font-extrabold">{step.title}</span>
+                    <span className="block text-xs text-white/60">{step.text}</span>
+                  </span>
+                </li>
+              ))}
+            </ol>
+          </div>
         </div>
       </fieldset>
 
@@ -514,7 +520,7 @@ export default function CheckoutForm({
             </button>
           )}
           <Row
-            label={method === 'contra_entrega' ? 'Envío Servientrega (se paga hoy)' : 'Envío Servientrega'}
+            label={method === 'contra_entrega' ? 'Envío Servientrega (para despachar)' : 'Envío Servientrega'}
             value={totals.shipping === 0 ? 'Sin costo' : formatPrice(totals.shipping)}
           />
           <div className="mt-2 flex items-center justify-between border-t border-border pt-3 text-base font-black text-ink">
@@ -524,9 +530,9 @@ export default function CheckoutForm({
 
           <div className="mt-4 grid grid-cols-2 gap-2 text-center">
             <div className="rounded-xl bg-ink p-3 text-white">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-primary-light">Pagas ahora</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-primary-light">Para despachar</p>
               <p className="mt-0.5 text-xl font-black">{formatPrice(totals.payNow)}</p>
-              <p className="text-[10px] text-white/70">{method === 'contra_entrega' ? 'garantiza tu envío' : 'transferencia / depósito Pichincha'}</p>
+              <p className="text-[10px] text-white/70">{method === 'contra_entrega' ? 'el envío, al confirmar por WhatsApp' : 'al confirmar por WhatsApp'}</p>
             </div>
             <div className="rounded-xl bg-white p-3 ring-1 ring-border">
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted">Pagas al recibir</p>
@@ -539,12 +545,11 @@ export default function CheckoutForm({
         {error && <p className="mt-4 rounded-xl bg-urgent/10 p-3 text-sm font-semibold text-urgent">{error}</p>}
 
         <button type="submit" disabled={submitting} className="btn-whatsapp btn-shine mt-5 w-full py-5 text-base">
-          🔒 {submitting ? 'Reservando tu pedido...' : `Continuar al pago de ${formatPrice(totals.payNow)}`}
+          {submitting ? 'Abriendo WhatsApp...' : '👉 Clic aquí para confirmar mi pedido por WhatsApp'}
         </button>
         <p className="mt-2 text-center text-xs text-muted">
-          {method === 'contra_entrega'
-            ? `Te mostramos la cuenta al instante: pagas los ${formatPrice(totals.payNow)} del envío y nos envías el comprobante por WhatsApp.`
-            : 'Te mostramos la cuenta Banco Pichincha al instante: pagas y nos envías el comprobante por WhatsApp.'}
+          Se abre WhatsApp con tu pedido listo: solo toca <strong className="text-ink">Enviar</strong>. Un asesor te responde y coordina el
+          pago contigo. <strong className="text-ink">No pagas nada en esta página.</strong>
         </p>
         <div className="mt-4 flex flex-col items-center gap-2 border-t border-border pt-4">
           <PaymentLogos size="sm" className="justify-center" />

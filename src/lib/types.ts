@@ -150,6 +150,9 @@ export interface Order {
   guideUrl?: string;
   guideType?: 'image' | 'pdf';
   couponCode?: string;
+  // "whatsapp": el cliente confirmó su pedido por WhatsApp desde la web (la
+  // venta se cierra en el chat y luego se marca en el panel).
+  channel?: 'whatsapp';
   createdAt: number;
 }
 
