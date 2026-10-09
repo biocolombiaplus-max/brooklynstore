@@ -20,6 +20,10 @@ const nextConfig = {
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
   },
+  // Fuentes de la tarjeta del pedido (vista previa en WhatsApp).
+  experimental: {
+    outputFileTracingIncludes: { '/api/og/pedido': ['./assets/fonts/**'] },
+  },
   reactStrictMode: true,
   poweredByHeader: false,
   compress: true,

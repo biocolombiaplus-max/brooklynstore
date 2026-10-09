@@ -11,7 +11,6 @@ import { buildOrderWhatsAppMessage, classNames, formatPrice, generateOrderNumber
 import { trackPixel } from '@/lib/pixel';
 import { trackVisitorCheckoutItems, trackVisitorContact, trackVisitorPurchase } from '@/lib/visitor';
 import type { CartItem, OrderCustomer, PaymentMethod } from '@/lib/types';
-import LocationCapture from '@/components/product/LocationCapture';
 import { CheckIcon } from '@/components/icons';
 
 const PROVINCES = getProvinces();
@@ -84,7 +83,6 @@ export default function CheckoutForm({
   const codEnabled = settings.payments.codEnabled;
   const [method, setMethod] = useState<PaymentMethod>(codEnabled ? initialMethod : 'transferencia');
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
-  const [locationUrl, setLocationUrl] = useState('');
   const [attempted, setAttempted] = useState(false);
   const [showNote, setShowNote] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -196,7 +194,6 @@ export default function CheckoutForm({
         ...(form.cedula.trim() ? { cedula: form.cedula.trim() } : {}),
         ...(form.reference.trim() ? { reference: form.reference.trim() } : {}),
         ...(form.note.trim() ? { note: form.note.trim() } : {}),
-        ...(locationUrl ? { locationUrl } : {}),
       };
 
       // En contra entrega cada producto se registra con su precio contra
@@ -455,7 +452,6 @@ export default function CheckoutForm({
           </button>
         )}
 
-        <LocationCapture value={locationUrl} onCapture={setLocationUrl} />
       </fieldset>
 
       {/* 3. Resumen y confirmación */}

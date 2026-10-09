@@ -1,3 +1,4 @@
+import { orderCardUrl } from './orderCard';
 import type { BankAccount, Order, OrderCustomer, PaymentMethod } from './types';
 
 // Determina qué foto mostrar para el color elegido: si el admin le asignó
@@ -176,16 +177,33 @@ export function buildOrderWhatsAppMessage(order: {
 
   // Pedido enviado desde la web para confirmarlo con un asesor por WhatsApp.
   if (opts.request) {
+    // Primer link del mensaje = tarjeta del pedido con las fotos: WhatsApp la
+    // muestra como imagen grande en el chat.
+    const card = orderCardUrl({
+      orderNumber: order.orderNumber,
+      items: order.items.filter((i) => i.slug).map((i) => ({ slug: i.slug as string, color: i.color, size: i.size, quantity: i.quantity })),
+      cod,
+      total: order.total,
+    });
+    const plainItems = order.items
+      .map(
+        (i) =>
+          `▸ *${i.title}*\n   Talla ${i.size}${i.sizeUs ? ` EC (US ${i.sizeUs})` : ''}${i.color ? ` · ${i.color}` : ''} · x${i.quantity}\n   Valor: ${formatPrice(
+            i.price * i.quantity,
+          )}`,
+      )
+      .join('\n\n');
     const how = cod
       ? `Elegí *pago contra entrega*: ${formatPrice(order.payNow)} del envío para despachar y ${formatPrice(order.payOnDelivery)} en efectivo al recibir.`
       : `Elegí *pagar de inmediato* por transferencia o depósito: ${formatPrice(order.payNow)}.`;
     return `Hola Brooklyn Store, quiero confirmar mi pedido.
 
 *PEDIDO WEB · ${order.orderNumber}*
+Fotos de mi pedido: ${card}
 ${WA_LINE}
 
 *PRODUCTOS*
-${itemsList}
+${plainItems}
 
 ${WA_LINE}
 Subtotal: ${formatPrice(order.subtotal)}${
