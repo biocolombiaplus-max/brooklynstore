@@ -48,6 +48,14 @@ export async function uploadProductImage(
   if (!CLOUD_NAME || !UPLOAD_PRESET) {
     return uploadImageToFirestore(file, cropMode);
   }
+  // Con Cloudinary: la foto se guarda en Firestore y se copia a Cloudinary
+  // (doble respaldo, ver cloudinaryMirror.ts). Si Firestore falla (sin
+  // cuota, sin conexión), se sube directo a Cloudinary.
+  try {
+    return await uploadImageToFirestore(file, cropMode);
+  } catch {
+    // Sigue abajo: subida directa a Cloudinary.
+  }
 
   // Deliberadamente solo se envían "file" y "upload_preset": son los dos
   // únicos parámetros que Cloudinary permite sin restricción en TODAS las

@@ -2,6 +2,7 @@
 
 import { addDoc, Bytes, collection, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from './firebase';
+import { uploadMirror } from './cloudinaryMirror';
 
 // Respaldo para las fotos cuando Cloudinary no está configurado: la foto se
 // procesa en el navegador (recorte/encuadre + WebP comprimido) y se guarda en
@@ -124,6 +125,8 @@ export async function uploadImageToFirestore(file: Blob, mode: Mode): Promise<st
       size: blob.size,
       createdAt: serverTimestamp(),
     });
+    // Copia de respaldo en Cloudinary (en segundo plano, no frena la subida).
+    void uploadMirror(ref.id, blob);
     return `${FIRESTORE_IMAGE_PREFIX}${ref.id}`;
   } catch (error) {
     if ((error as { code?: string })?.code === 'permission-denied') {

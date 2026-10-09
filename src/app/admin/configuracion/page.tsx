@@ -19,6 +19,7 @@ import type {
   CategoryTile,
 } from '@/lib/types';
 import { PaymentLogoChip, CourierLogo } from '@/components/brand/PaymentLogos';
+import PhotoBackupCard from '@/components/admin/PhotoBackupCard';
 
 const PROVINCES = getProvinces();
 
@@ -508,6 +509,8 @@ export default function ConfiguracionPage() {
       </div>
 
       <SectionJump />
+
+      <PhotoBackupCard settings={settings} />
 
       <div className="flex flex-wrap items-center justify-between gap-3 rounded-card border-2 border-dashed border-urgent/40 bg-urgent/5 p-4">
         <div>

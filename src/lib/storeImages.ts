@@ -1,6 +1,7 @@
 import sharp from 'sharp';
 import { unstable_cache } from 'next/cache';
 import { FIREBASE_CONFIG } from './firebase-config';
+import { isMirrorEnabled, mirrorUrl, uploadMirror } from './cloudinaryMirror';
 
 // Fotos de la tienda guardadas en Firestore (colección "images").
 //
@@ -16,7 +17,30 @@ export class ImageUnavailable extends Error {}
 
 export type StoredImage = { data: Buffer; contentType: string };
 
+// Copia de respaldo en Cloudinary (si está configurado). null si no existe.
+async function loadFromMirror(id: string): Promise<StoredImage | null> {
+  if (!isMirrorEnabled()) return null;
+  // Sin caché de fetch: un "no existe" no debe quedar guardado (la copia puede
+  // crearse después). Las versiones optimizadas ya quedan guardadas aparte.
+  const res = await fetch(mirrorUrl(id), { cache: 'no-store' }).catch(() => null);
+  if (!res?.ok) return null;
+  const contentType = res.headers.get('content-type') || 'image/webp';
+  return { data: Buffer.from(await res.arrayBuffer()), contentType };
+}
+
+// Primero la copia de Cloudinary (no gasta cuota de Firestore); si no existe,
+// Firestore, y de paso se crea la copia para la próxima vez.
 export async function loadOriginalImage(id: string): Promise<StoredImage> {
+  const mirrored = await loadFromMirror(id);
+  if (mirrored) return mirrored;
+  const original = await loadFromFirestore(id);
+  if (isMirrorEnabled() && original.contentType.startsWith('image/') && original.contentType !== 'image/svg+xml') {
+    await uploadMirror(id, `data:${original.contentType};base64,${original.data.toString('base64')}`, 6000);
+  }
+  return original;
+}
+
+export async function loadFromFirestore(id: string): Promise<StoredImage> {
   const res = await fetch(
     `https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents/images/${id}`,
     { next: { revalidate: 31536000 } },
