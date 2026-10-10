@@ -100,7 +100,7 @@ export default function PaymentMethods() {
               >
                 <span className="flex flex-col">
                   <span className="text-[15px] font-black uppercase tracking-wide">Ver catálogo y pagar al recibir</span>
-                  <span className="text-[11px] font-bold text-primary-light">Hoy solo {formatPrice(payments.codAdvance)} · el resto en efectivo</span>
+                  <span className="text-[11px] font-bold text-primary-light">Confirmas por WhatsApp · pagas al recibir</span>
                 </span>
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gold-gradient text-lg text-ink transition-transform group-hover:translate-x-1">
                   →

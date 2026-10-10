@@ -71,7 +71,7 @@ export default function QuickBuyModal({
             ))}
           </ul>
 
-          <CheckoutForm items={items} initialMethod={initialMethod} onSuccess={(id) => router.push(`/pedido-confirmado/${id}`)} />
+          <CheckoutForm items={items} initialMethod={initialMethod} onSuccess={(id, opened) => router.push(`/pedido-confirmado/${id}${opened ? '' : '?abrir=1'}`)} />
         </div>
       </div>
     </div>

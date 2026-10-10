@@ -8,12 +8,12 @@ export default function HowItWorks() {
   const steps = [
     { icon: '👟', title: 'Elige tu par', text: 'Escoge el modelo, el color y tu talla. ¿Dudas? Usa la guía de tallas.' },
     { icon: '📝', title: 'Llena tus datos', text: 'Nombre, ciudad y dirección. Te toma menos de 1 minuto.' },
-    { icon: '🏦', title: 'Paga y envía el comprobante', text: 'Te mostramos la cuenta Pichincha al instante. Pagas y nos mandas la foto por WhatsApp.' },
+    { icon: '💬', title: 'Confirma por WhatsApp', text: 'Se abre el chat con tu pedido listo. Un asesor real te confirma talla y disponibilidad y coordina el pago contigo.' },
     {
       icon: '📦',
       title: 'Recibe y estrena',
       text: payments.codEnabled
-        ? `Despachamos con Servientrega y te llega a casa. En contra entrega pagas el resto al recibir (hoy solo ${formatPrice(payments.codAdvance)}).`
+        ? 'Despachamos con Servientrega y te llega a casa. En contra entrega pagas tus zapatos en efectivo al recibirlos.'
         : 'Despachamos con Servientrega y recibes tus zapatos en la puerta de tu casa.',
     },
   ];

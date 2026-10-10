@@ -49,10 +49,10 @@ export default function CheckoutPage() {
         <div className="order-2 lg:order-1">
           <CheckoutForm
             items={items}
-            onSuccess={(id) => {
+            onSuccess={(id, opened) => {
               setDone(true);
               clear();
-              router.push(`/pedido-confirmado/${id}`);
+              router.push(`/pedido-confirmado/${id}${opened ? '' : '?abrir=1'}`);
             }}
           />
         </div>

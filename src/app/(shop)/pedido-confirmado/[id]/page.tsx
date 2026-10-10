@@ -490,6 +490,20 @@ function WhatsAppOrderView({
   const isCod = order.paymentMethod === 'contra_entrega';
   const waUrl = whatsappLinkTo(whatsappNumber, buildOrderWhatsAppMessage(order, { request: true }), whatsappCountryCode);
 
+  // Si el navegador bloqueó abrir WhatsApp (navegador interno de Facebook o
+  // Instagram), se abre aquí directamente, una sola vez.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has('abrir')) return;
+    const key = `bs-wa-abierto-${order.orderNumber}`;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key, '1');
+    } catch {
+      /* sin almacenamiento: se abre igual */
+    }
+    window.location.href = waUrl;
+  }, [order.orderNumber, waUrl]);
+
   return (
     <div className="bg-cream-alt/50 pb-12">
       <div className="container-page max-w-3xl py-6 sm:py-10">

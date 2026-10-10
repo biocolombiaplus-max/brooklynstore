@@ -15,6 +15,7 @@ import { useSiteSettings } from '@/lib/settings-context';
 import { GENDERS, type PaymentMethod, type Product } from '@/lib/types';
 import ProductGallery from '@/components/product/ProductGallery';
 import BuyBox from '@/components/product/BuyBox';
+import TrustStrip from '@/components/product/TrustStrip';
 import SizeGuide from '@/components/sizes/SizeGuide';
 import Accordion, { AccordionItem } from '@/components/product/Accordion';
 import ProductReviews from '@/components/product/ProductReviews';
@@ -159,11 +160,13 @@ export default function ProductView({ initialProduct, related }: { initialProduc
                 recibir, envío y cambio de talla (datos reales de la tienda). */}
             <ul className="mt-3 flex flex-wrap gap-1.5 text-[11px] font-bold text-ink sm:text-xs">
               {payments.codEnabled && (
-                <li className="rounded-full bg-gold-50 px-3 py-1.5 ring-1 ring-primary/30">💵 Hoy solo {formatPrice(payments.codAdvance)} · el resto al recibir</li>
+                <li className="rounded-full bg-gold-50 px-3 py-1.5 ring-1 ring-primary/30">💵 Pagas al recibir</li>
               )}
               <li className="rounded-full bg-cream-alt px-3 py-1.5">🚚 Envío a todo Ecuador</li>
               <li className="rounded-full bg-cream-alt px-3 py-1.5">🔄 Cambio de talla en 48 h</li>
             </ul>
+
+            <TrustStrip />
 
             <div id="comprar" className="mt-4 scroll-mt-24">
               <BuyBox
@@ -198,8 +201,8 @@ export default function ProductView({ initialProduct, related }: { initialProduc
                     </li>
                     {payments.codEnabled && (
                       <li>
-                        • <strong className="text-ink">Contra entrega:</strong> hoy pagas {formatPrice(payments.codAdvance)} del envío para garantizar tu pedido y
-                        tus zapatos los pagas en efectivo al recibir.
+                        • <strong className="text-ink">Contra entrega:</strong> confirmas por WhatsApp con un asesor, pagas solo{' '}
+                        {formatPrice(payments.codAdvance)} del envío para despachar y tus zapatos los pagas en efectivo al recibir.
                       </li>
                     )}
                     <li>• Todos los pedidos se confirman por WhatsApp — te respondemos ya mismo.</li>
@@ -218,8 +221,10 @@ export default function ProductView({ initialProduct, related }: { initialProduc
         </div>
 
         <ProductReviews reviews={product.reviews ?? []} totalCount={product.reviewsCount} />
-        <ChatProofs compact />
-        <RealDeliveries compact />
+        <div id="pruebas" className="scroll-mt-24">
+          <ChatProofs compact />
+          <RealDeliveries compact />
+        </div>
       </div>
 
       <HowItWorks />
