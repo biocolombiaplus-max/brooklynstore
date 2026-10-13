@@ -128,7 +128,8 @@ export default function CheckoutForm({
     phone: !isValidPhone(form.phone),
     province: !form.province,
     city: !form.city,
-    address: form.address.trim().length < 5,
+    // La dirección es opcional: el asesor la confirma por WhatsApp.
+    address: false,
   };
   const hasErrors = Object.values(errors).some(Boolean);
 
@@ -353,7 +354,7 @@ export default function CheckoutForm({
       <fieldset className="space-y-3">
         <legend className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-wide text-ink">
           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] text-white">2</span>
-          ¿A dónde te lo enviamos?
+          ¿A dónde te lo enviamos? <span className="font-semibold normal-case tracking-normal text-muted">· 30 segundos</span>
         </legend>
 
         <div>
@@ -367,7 +368,7 @@ export default function CheckoutForm({
           {attempted && errors.name && <p className="mt-1 text-xs text-urgent">Escribe tu nombre y apellido.</p>}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div>
           <div>
             <input
               type="tel"
@@ -381,13 +382,6 @@ export default function CheckoutForm({
             {attempted && errors.phone && <p className="mt-1 text-xs text-urgent">Escribe un celular válido, ej: 0991234567.</p>}
             <p className="mt-1 text-[11px] text-muted">Lo usamos solo para coordinar tu pedido por WhatsApp.</p>
           </div>
-          <input
-            inputMode="numeric"
-            placeholder="Cédula (para la guía de envío)"
-            value={form.cedula}
-            onChange={(e) => update('cedula', e.target.value.replace(/[^0-9]/g, '').slice(0, 13))}
-            className="input"
-          />
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2">
@@ -422,7 +416,7 @@ export default function CheckoutForm({
 
         <div>
           <input
-            placeholder="Dirección * (calle principal, número y secundaria)"
+            placeholder="Dirección (opcional)"
             autoComplete="street-address"
             value={form.address}
             onChange={(e) => update('address', e.target.value)}
@@ -431,24 +425,32 @@ export default function CheckoutForm({
           {attempted && errors.address && <p className="mt-1 text-xs text-urgent">Escribe tu dirección completa.</p>}
         </div>
 
-        <input
-          placeholder="Referencia (ej: frente al parque, casa esquinera azul)"
-          value={form.reference}
-          onChange={(e) => update('reference', e.target.value)}
-          className="input"
-        />
-        {/* Menos campos a la vista = compra más rápida: la nota es opcional. */}
-        {showNote || form.note ? (
-          <input
-            placeholder="Nota para tu pedido (opcional)"
-            value={form.note}
-            onChange={(e) => update('note', e.target.value)}
-            className="input"
-            autoFocus={showNote && !form.note}
-          />
+        {/* Menos campos a la vista = compra más rápida: lo demás es opcional. */}
+        {showNote || form.note || form.reference || form.cedula ? (
+          <>
+            <input
+              placeholder="Referencia (ej: frente al parque, casa esquinera azul)"
+              value={form.reference}
+              onChange={(e) => update('reference', e.target.value)}
+              className="input"
+            />
+            <input
+              inputMode="numeric"
+              placeholder="Cédula (para la guía de envío)"
+              value={form.cedula}
+              onChange={(e) => update('cedula', e.target.value.replace(/[^0-9]/g, '').slice(0, 13))}
+              className="input"
+            />
+            <input
+              placeholder="Nota para tu pedido (opcional)"
+              value={form.note}
+              onChange={(e) => update('note', e.target.value)}
+              className="input"
+            />
+          </>
         ) : (
           <button type="button" onClick={() => setShowNote(true)} className="text-left text-xs font-bold text-muted underline underline-offset-4 hover:text-ink">
-            + Agregar una nota (opcional)
+            + Agregar referencia, cédula o nota (opcional)
           </button>
         )}
 

@@ -166,7 +166,7 @@ export function buildOrderWhatsAppMessage(order: {
     `Nombre: ${c.name}`,
     c.cedula ? `C.I.: ${c.cedula}` : '',
     `Celular: ${c.phone}`,
-    `Dirección: ${c.address}`,
+    c.address ? `Dirección: ${c.address}` : 'Dirección: la confirmo por aquí',
     c.reference ? `Referencia: ${c.reference}` : '',
     `Ciudad: ${c.city}, ${c.province}`,
     c.locationUrl ? `Ubicación: ${c.locationUrl}` : '',

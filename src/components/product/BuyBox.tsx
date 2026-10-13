@@ -42,6 +42,8 @@ export default function BuyBox({
   const [sizeError, setSizeError] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
   const [buyMethod, setBuyMethod] = useState<PaymentMethod | null>(null);
+  // Acción que quedó esperando la talla (se abre la hoja "Elige tu talla").
+  const [pending, setPending] = useState<{ type: 'buy'; method: PaymentMethod } | { type: 'cart' } | null>(null);
 
   const discountPercent = discountPercentOf(product);
   const soldOut = product.stock <= 0;
@@ -79,7 +81,8 @@ export default function BuyBox({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product.id]);
 
-  function buildItem() {
+  function buildItem(sizeOverride?: string) {
+    const chosen = sizeOverride ?? size;
     return {
       productId: product.id,
       slug: product.slug,
@@ -88,25 +91,26 @@ export default function BuyBox({
       price: product.price,
       ...(product.codPrice ? { codPrice: product.codPrice } : {}),
       image: resolveColorImage(product, color) || product.images[0] || '',
-      size: size || 'Única',
-      ...(usSizeFor(size, product.gender) ? { sizeUs: usSizeFor(size, product.gender) } : {}),
+      size: chosen || 'Única',
+      ...(usSizeFor(chosen, product.gender) ? { sizeUs: usSizeFor(chosen, product.gender) } : {}),
       color,
       quantity,
       metaId: metaItemId(product, color),
     };
   }
 
-  // Sin talla elegida no se deja avanzar: se marca el selector en rojo y se
-  // lleva la pantalla hasta él — es el error #1 en compras de zapatos.
-  function ensureSize(): boolean {
-    if (!needsSize || size) return true;
+  // Sin talla elegida se abre la hoja "Elige tu talla" y, al tocar una, la
+  // compra sigue sola (antes solo se bajaba la página hasta el selector y
+  // muchos creían que el botón no funcionaba).
+  function ensureSize(action: { type: 'buy'; method: PaymentMethod } | { type: 'cart' }, sizeOverride?: string): boolean {
+    if (!needsSize || sizeOverride || size) return true;
     setSizeError(true);
-    document.getElementById('selector-talla')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setPending(action);
     return false;
   }
 
-  function openBuy(method: PaymentMethod) {
-    if (!ensureSize()) return;
+  function openBuy(method: PaymentMethod, sizeOverride?: string) {
+    if (!ensureSize({ type: 'buy', method }, sizeOverride)) return;
     setBuyMethod(method);
     trackPixel('InitiateCheckout', {
       content_ids: [metaItemId(product, color)],
@@ -118,11 +122,21 @@ export default function BuyBox({
   }
 
   // La barra fija del celular usa esta misma función para abrir la compra.
-  onRequestBuy?.(openBuy);
+  onRequestBuy?.((method) => openBuy(method));
 
-  function handleAddToCart() {
-    if (!ensureSize()) return;
-    addItem(buildItem());
+  function pickFromSheet(s: string) {
+    const action = pending;
+    setSize(s);
+    setSizeError(false);
+    setPending(null);
+    trackPixel('CustomizeProduct', { content_ids: [metaItemId(product, color)], content_name: `${product.title} talla ${s}` });
+    if (action?.type === 'buy') openBuy(action.method, s);
+    else if (action?.type === 'cart') handleAddToCart(s);
+  }
+
+  function handleAddToCart(sizeOverride?: string) {
+    if (!ensureSize({ type: 'cart' }, sizeOverride)) return;
+    addItem(buildItem(sizeOverride));
     trackPixel('AddToCart', {
       content_ids: [metaItemId(product, color)],
       content_name: product.title,
@@ -383,7 +397,7 @@ export default function BuyBox({
               </div>
             )}
 
-            <button type="button" onClick={handleAddToCart} className="btn-secondary w-full">
+            <button type="button" onClick={() => handleAddToCart()} className="btn-secondary w-full">
               <CartIcon size={18} />
               {added ? '✓ ¡Agregado al carrito!' : 'Clic aquí para agregar al carrito'}
             </button>
@@ -430,12 +444,113 @@ export default function BuyBox({
         availableSizes={product.sizes}
         productTitle={product.title}
         onPickSize={(s) => {
+          if (pending) {
+            setGuideOpen(false);
+            pickFromSheet(s);
+            return;
+          }
           setSize(s);
           setSizeError(false);
         }}
       />
 
+      {pending && !guideOpen && (
+        <SizeSheet
+          product={product}
+          color={color}
+          image={resolveColorImage(product, color) || product.images[0]}
+          waHelpUrl={whatsappLinkTo(
+            whatsappNumber,
+            productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, color }, 'No sé mi talla, ¿me ayudan? 🙏'),
+            whatsappCountryCode,
+          )}
+          onPick={pickFromSheet}
+          onGuide={() => setGuideOpen(true)}
+          onClose={() => setPending(null)}
+        />
+      )}
+
       {buyMethod && <QuickBuyModal items={[buildItem()]} initialMethod={buyMethod} onClose={() => setBuyMethod(null)} />}
+    </div>
+  );
+}
+
+// Hoja que sube desde abajo para elegir la talla sin buscarla en la página:
+// al tocar una talla la compra continúa sola.
+function SizeSheet({
+  product,
+  color,
+  image,
+  waHelpUrl,
+  onPick,
+  onGuide,
+  onClose,
+}: {
+  product: Product;
+  color: string;
+  image?: string;
+  waHelpUrl: string;
+  onPick: (size: string) => void;
+  onGuide: () => void;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/70 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-lg animate-slideUp rounded-t-3xl bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-dark sm:rounded-3xl"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Elige tu talla"
+      >
+        <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-border sm:hidden" />
+        <div className="flex items-center gap-3">
+          <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-2xl bg-cream-alt">
+            {image && <SafeImage src={image} alt={product.title} fill sizes="64px" className="object-cover" />}
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-black uppercase text-ink">{product.title}</span>
+            <span className="block text-xs text-muted">
+              {color && `${color} · `}
+              {formatPrice(product.price)}
+            </span>
+          </span>
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full bg-cream-alt text-lg font-bold text-ink">
+            ×
+          </button>
+        </div>
+
+        <p className="mt-5 text-base font-black text-ink">👇 Toca tu talla para continuar</p>
+        <div className="mt-3 grid grid-cols-4 gap-2">
+          {product.sizes.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => onPick(s)}
+              className="flex h-16 flex-col items-center justify-center rounded-2xl border-2 border-border bg-white leading-none text-ink transition-all active:scale-95 active:border-ink active:bg-ink active:text-white"
+            >
+              <span className="text-lg font-black">{s}</span>
+              {usSizeFor(s, product.gender) && <span className="mt-1 text-[10px] font-bold text-muted">US {usSizeFor(s, product.gender)}</span>}
+            </button>
+          ))}
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
+          <button type="button" onClick={onGuide} className="flex items-center gap-1.5 text-ink underline decoration-primary decoration-2 underline-offset-4">
+            <RulerIcon size={15} /> ¿Cuál es mi talla?
+          </button>
+          <a href={waHelpUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#128C4B]">
+            <WhatsAppIcon size={15} /> Te ayudamos por WhatsApp
+          </a>
+        </div>
+      </div>
     </div>
   );
 }

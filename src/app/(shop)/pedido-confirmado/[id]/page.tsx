@@ -458,7 +458,7 @@ function OrderSummary({ order }: { order: Order }) {
           {order.customer.name} · {order.customer.phone}
         </p>
         <p>
-          {order.customer.address}, {order.customer.city}, {order.customer.province}
+          {[order.customer.address, order.customer.city, order.customer.province].filter(Boolean).join(", ")}
         </p>
         {order.customer.reference && <p>Referencia: {order.customer.reference}</p>}
       </div>

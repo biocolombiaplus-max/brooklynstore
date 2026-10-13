@@ -295,7 +295,7 @@ function OrderCard({
             {order.customer.cedula && ` · C.I. ${order.customer.cedula}`}
           </p>
           <p className="text-sm text-muted">
-            {order.customer.address}, {order.customer.city}, {order.customer.province}
+            {[order.customer.address, order.customer.city, order.customer.province].filter(Boolean).join(", ")}
           </p>
           {order.customer.reference && <p className="text-xs text-muted">Referencia: {order.customer.reference}</p>}
           {order.customer.locationUrl && (
