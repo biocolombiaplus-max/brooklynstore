@@ -11,7 +11,6 @@ import { buildOrderWhatsAppMessage, classNames, formatPrice, generateOrderNumber
 import { trackPixel } from '@/lib/pixel';
 import { trackVisitorCheckoutItems, trackVisitorContact, trackVisitorPurchase } from '@/lib/visitor';
 import type { CartItem, OrderCustomer, PaymentMethod } from '@/lib/types';
-import { CheckIcon } from '@/components/icons';
 
 const PROVINCES = getProvinces();
 
@@ -154,7 +153,7 @@ export default function CheckoutForm({
     const invalid = attempted && errors[key];
     return {
       'data-invalid': invalid ? 'true' : undefined,
-      className: classNames('input', invalid && 'border-urgent ring-2 ring-urgent/20'),
+      className: classNames('input-pro', invalid && 'border-urgent bg-urgent/5 ring-2 ring-urgent/20'),
     };
   }
 
@@ -282,184 +281,143 @@ export default function CheckoutForm({
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-7">
-      {/* 1. Forma de pago */}
-      <fieldset>
-        <legend className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-wide text-ink">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] text-white">1</span>
-          ¿Cómo quieres pagar?
-        </legend>
-        <div className="grid gap-3">
-          <PaymentOption
-            selected={method === 'transferencia'}
-            onSelect={() => setMethod('transferencia')}
-            badge={coupon?.onlyMethod === 'transferencia' ? `🎁 -${coupon.percent}% con tu cupón` : undefined}
-            icon="⚡"
-            title="Pagar de inmediato"
-            lines={[
-              `${formatPrice(transferTotals.total)} por transferencia o depósito Banco Pichincha`,
-              'El asesor te confirma tu talla y te pasa la cuenta oficial por WhatsApp · Despacho el mismo día',
-            ]}
-          />
-          {codEnabled && (
-            <PaymentOption
-              selected={method === 'contra_entrega'}
-              onSelect={() => setMethod('contra_entrega')}
-              icon="💵"
-              title="Pago contra entrega"
-              badge="Pagas al recibir"
-              lines={[
-                `${formatPrice(codTotals.payNow)} del envío para despachar · ${formatPrice(codTotals.payOnDelivery)} en efectivo al recibir`,
-                'Los zapatos los pagas cuando los tienes en la mano',
-              ]}
-            />
-          )}
-          <div className="mt-1 overflow-hidden rounded-2xl bg-ink text-white ring-1 ring-primary/40">
-            <p className="px-4 pt-4 text-[11px] font-extrabold uppercase tracking-[0.2em] text-primary-light">
-              Así de fácil y seguro
-            </p>
-            <ol className="space-y-3 px-4 pb-4 pt-3">
-              {[
-                { icon: '💬', title: 'Confirmas tu pedido por WhatsApp', text: 'Se abre el chat con tu pedido ya escrito. No pagas nada en esta página.' },
-                {
-                  icon: '👤',
-                  title: 'Te atiende un asesor real',
-                  text:
-                    method === 'contra_entrega'
-                      ? `Te confirma talla y disponibilidad. Para despachar solo pagas ${formatPrice(codTotals.payNow)} del envío.`
-                      : 'Te confirma talla y disponibilidad y te pasa la cuenta oficial Banco Pichincha.',
-                },
-                {
-                  icon: '🚚',
-                  title: `Recibes en ${settings.shipping.deliveryTime}`,
-                  text:
-                    method === 'contra_entrega'
-                      ? `Con Servientrega. Pagas ${formatPrice(codTotals.payOnDelivery)} en efectivo con tus zapatos en la mano.`
-                      : 'Con Servientrega y número de guía para que sigas tu pedido.',
-                },
-              ].map((step) => (
-                <li key={step.title} className="flex items-center gap-3">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gold-gradient text-lg">{step.icon}</span>
-                  <span>
-                    <span className="block text-sm font-extrabold">{step.title}</span>
-                    <span className="block text-xs text-white/60">{step.text}</span>
-                  </span>
-                </li>
-              ))}
-            </ol>
+      {/* 1. Datos: lo primero que se ve, campos grandes con su nombre arriba. */}
+      <fieldset className="space-y-3.5 rounded-3xl border-2 border-buy/60 bg-white p-4 shadow-[0_10px_30px_rgba(255,106,0,0.12)] sm:p-5">
+        <legend className="sr-only">Tus datos para el envío</legend>
+        <div className="flex items-start gap-2.5">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-buy text-xs font-black text-white">1</span>
+          <div>
+            <p className="text-base font-black leading-tight text-ink">Escribe tus datos para el envío ✍️</p>
+            <p className="mt-0.5 text-xs text-muted">Solo 4 datos · menos de 30 segundos</p>
           </div>
         </div>
-      </fieldset>
 
-      {/* 2. Datos de entrega */}
-      <fieldset className="space-y-3">
-        <legend className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-wide text-ink">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] text-white">2</span>
-          ¿A dónde te lo enviamos? <span className="font-semibold normal-case tracking-normal text-muted">· 30 segundos</span>
-        </legend>
-
-        <div>
+        <Field label="Tu nombre y apellido" error={attempted && errors.name ? 'Escribe tu nombre y apellido.' : ''}>
           <input
-            placeholder="Nombre y apellido *"
+            placeholder="Ej: María Pérez"
             autoComplete="name"
+            enterKeyHint="next"
             value={form.name}
             onChange={(e) => update('name', e.target.value)}
             {...fieldProps('name')}
           />
-          {attempted && errors.name && <p className="mt-1 text-xs text-urgent">Escribe tu nombre y apellido.</p>}
-        </div>
+        </Field>
 
-        <div>
-          <div>
-            <input
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              placeholder="Celular / WhatsApp * (09...)"
-              value={form.phone}
-              onChange={(e) => update('phone', e.target.value)}
-              {...fieldProps('phone')}
-            />
-            {attempted && errors.phone && <p className="mt-1 text-xs text-urgent">Escribe un celular válido, ej: 0991234567.</p>}
-            <p className="mt-1 text-[11px] text-muted">Lo usamos solo para coordinar tu pedido por WhatsApp.</p>
-          </div>
-        </div>
+        <Field
+          label="Tu celular / WhatsApp"
+          hint="Por aquí te confirmamos tu pedido."
+          error={attempted && errors.phone ? 'Escribe un celular válido, ej: 0991234567.' : ''}
+        >
+          <input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            enterKeyHint="next"
+            placeholder="Ej: 0991234567"
+            value={form.phone}
+            onChange={(e) => update('phone', e.target.value)}
+            {...fieldProps('phone')}
+          />
+        </Field>
 
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Provincia" error={attempted && errors.province ? 'Elige tu provincia.' : ''}>
             <select value={form.province} onChange={(e) => update('province', e.target.value)} {...fieldProps('province')}>
-              <option value="">Provincia *</option>
+              <option value="">Elegir…</option>
               {PROVINCES.map((p) => (
                 <option key={p} value={p}>
                   {p}
                 </option>
               ))}
             </select>
-            {attempted && errors.province && <p className="mt-1 text-xs text-urgent">Elige tu provincia.</p>}
-          </div>
-          <div>
-            <select
-              value={form.city}
-              disabled={!form.province}
-              onChange={(e) => update('city', e.target.value)}
-              {...fieldProps('city')}
-            >
-              <option value="">{form.province ? 'Ciudad / cantón *' : 'Elige la provincia primero'}</option>
+          </Field>
+          <Field label="Ciudad" error={attempted && errors.city ? 'Elige tu ciudad.' : ''}>
+            <select value={form.city} disabled={!form.province} onChange={(e) => update('city', e.target.value)} {...fieldProps('city')}>
+              <option value="">Elegir…</option>
               {cantons.map((c) => (
                 <option key={c} value={c}>
                   {c}
                 </option>
               ))}
             </select>
-            {attempted && errors.city && <p className="mt-1 text-xs text-urgent">Elige tu ciudad.</p>}
-          </div>
+          </Field>
         </div>
 
-        <div>
+        <Field label="Dirección" optional>
           <input
-            placeholder="Dirección (opcional)"
+            placeholder="Calle principal, número y secundaria"
             autoComplete="street-address"
             value={form.address}
             onChange={(e) => update('address', e.target.value)}
             {...fieldProps('address')}
           />
-          {attempted && errors.address && <p className="mt-1 text-xs text-urgent">Escribe tu dirección completa.</p>}
-        </div>
+        </Field>
 
         {/* Menos campos a la vista = compra más rápida: lo demás es opcional. */}
         {showNote || form.note || form.reference || form.cedula ? (
           <>
-            <input
-              placeholder="Referencia (ej: frente al parque, casa esquinera azul)"
-              value={form.reference}
-              onChange={(e) => update('reference', e.target.value)}
-              className="input"
-            />
-            <input
-              inputMode="numeric"
-              placeholder="Cédula (para la guía de envío)"
-              value={form.cedula}
-              onChange={(e) => update('cedula', e.target.value.replace(/[^0-9]/g, '').slice(0, 13))}
-              className="input"
-            />
-            <input
-              placeholder="Nota para tu pedido (opcional)"
-              value={form.note}
-              onChange={(e) => update('note', e.target.value)}
-              className="input"
-            />
+            <Field label="Referencia" optional>
+              <input
+                placeholder="Ej: frente al parque, casa esquinera azul"
+                value={form.reference}
+                onChange={(e) => update('reference', e.target.value)}
+                className="input-pro"
+              />
+            </Field>
+            <Field label="Cédula (para la guía)" optional>
+              <input
+                inputMode="numeric"
+                placeholder="Ej: 0912345678"
+                value={form.cedula}
+                onChange={(e) => update('cedula', e.target.value.replace(/[^0-9]/g, '').slice(0, 13))}
+                className="input-pro"
+              />
+            </Field>
+            <Field label="Nota" optional>
+              <input placeholder="Algo que debamos saber" value={form.note} onChange={(e) => update('note', e.target.value)} className="input-pro" />
+            </Field>
           </>
         ) : (
           <button type="button" onClick={() => setShowNote(true)} className="text-left text-xs font-bold text-muted underline underline-offset-4 hover:text-ink">
             + Agregar referencia, cédula o nota (opcional)
           </button>
         )}
+      </fieldset>
 
+      {/* 2. Forma de pago: compacta (ya la eligió en la ficha). */}
+      <fieldset>
+        <legend className="mb-3 flex items-center gap-2.5 text-base font-black text-ink">
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs text-white">2</span>
+          ¿Cómo quieres pagar?
+        </legend>
+        <div className={classNames('grid gap-2.5', codEnabled && 'grid-cols-2')}>
+          {codEnabled && (
+            <MethodChip
+              selected={method === 'contra_entrega'}
+              onSelect={() => setMethod('contra_entrega')}
+              title="💵 Contra entrega"
+              sub={`${formatPrice(codTotals.payOnDelivery)} al recibir + ${formatPrice(codTotals.payNow)} envío`}
+            />
+          )}
+          <MethodChip
+            selected={method === 'transferencia'}
+            onSelect={() => setMethod('transferencia')}
+            title="⚡ Pagar ya"
+            sub={`${formatPrice(transferTotals.total)} por transferencia${coupon?.onlyMethod === 'transferencia' ? ` · -${coupon.percent}%` : ''}`}
+          />
+        </div>
+        <p className="mt-2.5 rounded-xl bg-cream-alt/70 px-3 py-2.5 text-[12px] leading-snug text-ink">
+          💬 Un <strong>asesor real</strong> te confirma talla y disponibilidad por WhatsApp
+          {method === 'contra_entrega'
+            ? ` · tus zapatos los pagas en efectivo al recibirlos (${settings.shipping.deliveryTime}).`
+            : ' y te pasa la cuenta oficial Banco Pichincha.'}
+        </p>
       </fieldset>
 
       {/* 3. Resumen y confirmación */}
       <fieldset>
         <legend className="mb-3 flex items-center gap-2 text-sm font-black uppercase tracking-wide text-ink">
-          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-ink text-[11px] text-white">3</span>
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-ink text-xs text-white">3</span>
           Confirma tu pedido
         </legend>
 
@@ -542,9 +500,6 @@ export default function CheckoutForm({
 
         {error && <p className="mt-4 rounded-xl bg-urgent/10 p-3 text-sm font-semibold text-urgent">{error}</p>}
 
-        <button type="submit" disabled={submitting} className="btn-whatsapp btn-shine mt-5 w-full py-5 text-base">
-          {submitting ? 'Abriendo WhatsApp...' : '👉 Clic aquí para confirmar mi pedido por WhatsApp'}
-        </button>
         <p className="mt-2 text-center text-xs text-muted">
           Se abre WhatsApp con tu pedido listo: solo toca <strong className="text-ink">Enviar</strong>. Un asesor te responde y coordina el
           pago contigo. <strong className="text-ink">No pagas nada en esta página.</strong>
@@ -561,7 +516,57 @@ export default function CheckoutForm({
           <span>🔄 Cambio de talla en 48 h</span>
         </div>
       </fieldset>
+
+      {/* Botón siempre a la vista (fijo abajo mientras se llenan los datos). */}
+      <div className="sticky bottom-0 z-10 -mx-5 mt-5 bg-gradient-to-t from-white via-white to-white/0 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-4">
+        <button type="submit" disabled={submitting} className="btn-whatsapp btn-shine w-full py-5 text-base">
+          {submitting ? 'Abriendo WhatsApp...' : '👉 Clic aquí para confirmar mi pedido por WhatsApp'}
+        </button>
+      </div>
     </form>
+  );
+}
+
+function Field({
+  label,
+  hint,
+  error,
+  optional = false,
+  children,
+}: {
+  label: string;
+  hint?: string;
+  error?: string;
+  optional?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 flex items-center gap-1.5 text-[13px] font-extrabold text-ink">
+        {label}
+        {optional ? <span className="font-semibold text-muted">(opcional)</span> : <span className="text-buy">*</span>}
+      </span>
+      {children}
+      {error ? <span className="mt-1 block text-xs font-semibold text-urgent">{error}</span> : hint && <span className="mt-1 block text-[11px] text-muted">{hint}</span>}
+    </label>
+  );
+}
+
+function MethodChip({ selected, onSelect, title, sub }: { selected: boolean; onSelect: () => void; title: string; sub: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      aria-pressed={selected}
+      className={classNames(
+        'relative rounded-2xl border-2 px-3 py-3 text-left transition-all',
+        selected ? 'border-ink bg-ink text-white shadow-dark' : 'border-border bg-white text-ink',
+      )}
+    >
+      {selected && <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-whatsapp text-[10px] text-white">✓</span>}
+      <span className="block pr-5 text-sm font-black">{title}</span>
+      <span className={classNames('mt-0.5 block text-[11px] leading-snug', selected ? 'text-white/70' : 'text-muted')}>{sub}</span>
+    </button>
   );
 }
 
@@ -571,59 +576,5 @@ function Row({ label, value, highlight = false }: { label: string; value: string
       <span>{label}</span>
       <span className={highlight ? 'font-extrabold text-whatsapp' : 'font-semibold text-ink'}>{value}</span>
     </div>
-  );
-}
-
-function PaymentOption({
-  selected,
-  onSelect,
-  icon,
-  title,
-  badge,
-  lines,
-}: {
-  selected: boolean;
-  onSelect: () => void;
-  icon: string;
-  title: string;
-  badge?: string;
-  lines: string[];
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onSelect}
-      aria-pressed={selected}
-      className={classNames(
-        'relative flex w-full items-start gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200',
-        selected ? 'border-ink bg-white shadow-dark' : 'border-border bg-white hover:border-ink/40',
-      )}
-    >
-      <span
-        className={classNames(
-          'mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
-          selected ? 'border-ink bg-ink text-primary-light' : 'border-border',
-        )}
-      >
-        {selected && <CheckIcon size={12} />}
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex flex-wrap items-center gap-2">
-          <span className="text-sm font-black text-ink sm:text-base">
-            {icon} {title}
-          </span>
-          {badge && (
-            <span className="rounded-full bg-gold-gradient px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wide text-ink">
-              {badge}
-            </span>
-          )}
-        </span>
-        {lines.map((line) => (
-          <span key={line} className="mt-1 block text-xs leading-relaxed text-muted">
-            {line}
-          </span>
-        ))}
-      </span>
-    </button>
   );
 }

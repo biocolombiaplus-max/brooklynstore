@@ -179,6 +179,10 @@ body {
     @apply font-heading text-2xl font-black uppercase tracking-tight text-ink sm:text-4xl;
   }
 
+  /* Campo de formulario grande y bien marcado (compra). */
+  .input-pro {
+    @apply w-full rounded-xl border-2 border-ink/15 bg-cream-alt/40 px-4 py-3.5 text-base font-semibold text-ink placeholder:font-normal placeholder:text-muted/60 transition-all focus:border-buy focus:bg-white focus:outline-none focus:ring-4 focus:ring-buy/15 disabled:opacity-60;
+  }
   .input {
     @apply w-full rounded-xl border border-border bg-white px-4 py-3.5 text-[15px] text-ink placeholder:text-muted/70 transition-colors focus:border-ink focus:outline-none focus:ring-2 focus:ring-primary/30;
   }

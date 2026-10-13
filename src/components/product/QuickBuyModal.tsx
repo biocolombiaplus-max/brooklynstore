@@ -40,27 +40,22 @@ export default function QuickBuyModal({
         aria-modal="true"
         aria-label="Finalizar compra"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-white/95 px-5 py-4 backdrop-blur">
-          <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary">Compra rápida y segura</p>
-            <h2 className="text-lg font-black uppercase text-ink">Finaliza tu pedido</h2>
+        <div className="sticky top-0 z-20 border-b border-border bg-white/95 px-5 py-3 backdrop-blur">
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-base font-black uppercase text-ink">Último paso 🙌</h2>
+            <button onClick={onClose} aria-label="Cerrar" className="flex h-9 w-9 items-center justify-center rounded-full bg-cream-alt">
+              <CloseIcon />
+            </button>
           </div>
-          <button onClick={onClose} aria-label="Cerrar" className="flex h-10 w-10 items-center justify-center rounded-full bg-cream-alt">
-            <CloseIcon />
-          </button>
-        </div>
-
-        <div className="px-5 pb-8 pt-5">
-          <ul className="mb-6 space-y-3">
+          <ul className="mt-2 space-y-2">
             {items.map((item, i) => (
-              <li key={i} className="flex items-center gap-3 rounded-2xl bg-cream-alt/70 p-3">
-                <span className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-white">
+              <li key={i} className="flex items-center gap-2.5">
+                <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg bg-cream-alt">
                   {item.image && <SafeImage src={item.image} alt={item.title} fill sizes="64px" className="object-cover" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  {item.brand && <span className="block text-[10px] font-extrabold uppercase tracking-widest text-primary">{item.brand}</span>}
-                  <span className="block truncate text-sm font-bold text-ink">{item.title}</span>
-                  <span className="block text-xs text-muted">
+                  <span className="block truncate text-[13px] font-bold text-ink">{item.title}</span>
+                  <span className="block truncate text-[11px] text-muted">
                     Talla <strong className="text-ink">{item.size}</strong>
                         {item.sizeUs && <span> (US {item.sizeUs})</span>}
                     {item.color && ` · ${item.color}`} · x{item.quantity}
@@ -70,6 +65,9 @@ export default function QuickBuyModal({
               </li>
             ))}
           </ul>
+        </div>
+
+        <div className="px-5 pt-4">
 
           <CheckoutForm items={items} initialMethod={initialMethod} onSuccess={(id, opened) => router.push(`/pedido-confirmado/${id}${opened ? '' : '?abrir=1'}`)} />
         </div>
