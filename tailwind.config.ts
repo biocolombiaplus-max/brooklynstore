@@ -7,6 +7,8 @@ const config: Config = {
       colors: {
         // Estos leen de variables CSS (definidas en globals.css) para poder
         // cambiarse en vivo desde /admin/configuracion sin recompilar.
+        // Naranja de compra: solo para los botones de "pedir".
+        buy: { DEFAULT: '#FF6A00', dark: '#C2410C' },
         cream: 'rgb(var(--color-cream) / <alpha-value>)',
         'cream-alt': 'rgb(var(--color-cream-alt) / <alpha-value>)',
         ink: 'rgb(var(--color-ink) / <alpha-value>)',

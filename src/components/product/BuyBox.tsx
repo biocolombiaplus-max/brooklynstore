@@ -239,7 +239,8 @@ export default function BuyBox({
       {needsSize && (
         <div id="selector-talla" className="scroll-mt-32">
           <div className="mb-2.5 flex items-center justify-between gap-3">
-            <p className={classNames('text-sm font-bold', sizeError ? 'text-urgent' : 'text-ink')}>
+            <p className={classNames('flex items-center gap-2 text-sm font-black', sizeError ? 'text-urgent' : 'text-ink')}>
+              <StepNumber n={1} done={!!size} />
               {size ? (
                 <>
                   Talla elegida: <span className="text-primary">EC {size}</span>
@@ -248,7 +249,7 @@ export default function BuyBox({
               ) : sizeError ? (
                 '👇 Elige tu talla para continuar'
               ) : (
-                'Elige tu talla (EC)'
+                'Toca tu talla (EC)'
               )}
             </p>
             <button
@@ -341,65 +342,38 @@ export default function BuyBox({
           </a>
         ) : (
           <>
-            <button
-              type="button"
-              onClick={() => openBuy('transferencia')}
-              className="btn-primary btn-shine w-full justify-between gap-3 rounded-2xl px-5 py-4 text-left normal-case tracking-normal"
-            >
-              <span className="flex flex-col gap-1">
-                <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">⚡ Pagar de inmediato</span>
-                <span className="text-[12px] font-bold opacity-80">
-                  👉 Clic aquí · transferencia · total con envío {formatPrice(lineTotal + shippingFee)}
-                </span>
-              </span>
-              <span className="shrink-0 text-right">
-                <span className="block text-2xl font-black leading-none">{formatPrice(lineTotal)}</span>
-                <span className="mt-1 block text-[10px] font-extrabold uppercase opacity-70">{quantity > 1 ? `${quantity} pares` : 'Precio'}</span>
-              </span>
-            </button>
+            <StepTitle n={needsSize ? 2 : 1} text="Elige cómo quieres pagar y toca el botón naranja" />
 
             {payments.codEnabled && (
-              <div className="overflow-hidden rounded-2xl bg-ink shadow-dark ring-1 ring-primary/40">
-                <button
-                  type="button"
-                  onClick={() => openBuy('contra_entrega')}
-                  className="btn-base w-full justify-between gap-3 rounded-none px-5 py-4 text-left normal-case tracking-normal text-white"
-                >
-                  <span className="flex flex-col gap-1">
-                    <span className="text-[15px] font-black uppercase tracking-wide sm:text-base">💵 Pago contra entrega</span>
-                    <span className="text-[12px] font-semibold text-white/70">
-                      👉 Clic aquí · pagas tus zapatos al recibirlos
-                    </span>
-                  </span>
-                  <span className="shrink-0 rounded-xl bg-gold-gradient px-3 py-2 text-center text-ink">
-                    <span className="block text-[9px] font-extrabold uppercase">Al recibir</span>
-                    <span className="block text-xl font-black leading-none">{formatPrice(cod.payOnDelivery)}</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => openBuy('contra_entrega')}
-                  className="grid w-full grid-cols-3 border-t border-white/10 text-center text-white"
-                >
-                  {[
-                    { n: '1', t: 'Confirmas', s: 'por WhatsApp con un asesor' },
-                    { n: '2', t: `Envío ${formatPrice(cod.payNow)}`, s: 'para despachar' },
-                    { n: '3', t: `Pagas ${formatPrice(cod.payOnDelivery)}`, s: 'en efectivo al recibir' },
-                  ].map((step, i) => (
-                    <span key={step.n} className={classNames('px-1.5 py-2.5', i > 0 && 'border-l border-white/10')}>
-                      <span className="block text-[12px] font-extrabold text-primary-light">
-                        {step.n}. {step.t}
-                      </span>
-                      <span className="block text-[10px] text-white/60">{step.s}</span>
-                    </span>
-                  ))}
-                </button>
-              </div>
+              <PayOption
+                recommended
+                icon="💵"
+                title="Pago contra entrega"
+                lines={[`Pagas tus zapatos (${formatPrice(cod.payOnDelivery)}) en efectivo al recibirlos`, `Solo ${formatPrice(cod.payNow)} del envío para despachar`]}
+                cta="Pedir contra entrega"
+                onClick={() => openBuy('contra_entrega')}
+              />
             )}
 
-            <button type="button" onClick={() => handleAddToCart()} className="btn-secondary w-full">
-              <CartIcon size={18} />
-              {added ? '✓ ¡Agregado al carrito!' : 'Clic aquí para agregar al carrito'}
+            <PayOption
+              icon="⚡"
+              title="Pagar de inmediato"
+              lines={[`${formatPrice(lineTotal)} + ${formatPrice(shippingFee)} de envío por transferencia o depósito`, 'El precio más bajo · despacho el mismo día']}
+              cta={`Pedir ahora · ${formatPrice(lineTotal + shippingFee)}`}
+              onClick={() => openBuy('transferencia')}
+            />
+
+            <p className="pt-1 text-center text-[11px] text-muted">
+              Al tocar el botón confirmas tu pedido por WhatsApp con un asesor. <strong className="text-ink">No pagas nada en la página.</strong>
+            </p>
+
+            <button
+              type="button"
+              onClick={() => handleAddToCart()}
+              className="flex w-full items-center justify-center gap-2 py-1 text-xs font-bold text-muted underline underline-offset-4 hover:text-ink"
+            >
+              <CartIcon size={15} />
+              {added ? '✓ ¡Agregado al carrito!' : 'O agrégalo al carrito y sigue viendo'}
             </button>
           </>
         )}
@@ -550,6 +524,77 @@ function SizeSheet({
             <WhatsAppIcon size={15} /> Te ayudamos por WhatsApp
           </a>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function StepNumber({ n, done = false }: { n: number; done?: boolean }) {
+  return (
+    <span
+      className={classNames(
+        'flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[11px] font-black',
+        done ? 'bg-whatsapp text-white' : 'bg-ink text-white',
+      )}
+    >
+      {done ? '✓' : n}
+    </span>
+  );
+}
+
+function StepTitle({ n, text }: { n: number; text: string }) {
+  return (
+    <p className="flex items-center gap-2 text-sm font-black text-ink">
+      <StepNumber n={n} />
+      {text} 👇
+    </p>
+  );
+}
+
+// Opción de pago: arriba qué incluye, abajo un botón naranja que no deja
+// dudas de dónde tocar.
+function PayOption({
+  icon,
+  title,
+  lines,
+  cta,
+  onClick,
+  recommended = false,
+}: {
+  icon: string;
+  title: string;
+  lines: string[];
+  cta: string;
+  onClick: () => void;
+  recommended?: boolean;
+}) {
+  return (
+    <div
+      className={classNames(
+        'relative overflow-hidden rounded-2xl border-2 bg-white',
+        recommended ? 'border-buy shadow-[0_12px_30px_rgba(255,106,0,0.18)]' : 'border-border',
+      )}
+    >
+      {recommended && (
+        <span className="absolute right-3 top-3 rounded-full bg-buy/10 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-buy-dark">
+          El más pedido
+        </span>
+      )}
+      <button type="button" onClick={onClick} className="block w-full px-4 pb-3 pt-4 text-left">
+        <span className="block pr-24 text-[15px] font-black uppercase tracking-wide text-ink">
+          {icon} {title}
+        </span>
+        {lines.map((line) => (
+          <span key={line} className="mt-1 block text-xs leading-snug text-muted">
+            {line}
+          </span>
+        ))}
+      </button>
+      <div className="px-3 pb-3">
+        <button type="button" onClick={onClick} className={classNames('btn-buy btn-shine w-full', recommended && 'btn-buy-pulse')}>
+          👉 {cta}
+          <span aria-hidden className="text-lg leading-none">→</span>
+        </button>
       </div>
     </div>
   );

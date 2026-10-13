@@ -248,7 +248,7 @@ export default function ProductView({ initialProduct, related }: { initialProduc
             {payments.codEnabled ? (
               <button
                 onClick={() => openBuyRef.current?.('contra_entrega')}
-                className="btn-primary btn-shine min-w-0 flex-1 flex-col gap-0 overflow-hidden px-3 py-2 text-xs leading-tight"
+                className="btn-buy btn-shine btn-buy-pulse min-w-0 flex-1 flex-col gap-0 overflow-hidden px-3 py-2 text-xs leading-tight"
               >
                 <span className="max-w-full truncate">👉 Clic aquí para pedir</span>
                 <span className="max-w-full truncate text-[10px] font-bold normal-case tracking-normal opacity-75">
@@ -256,7 +256,7 @@ export default function ProductView({ initialProduct, related }: { initialProduc
                 </span>
               </button>
             ) : (
-              <button onClick={() => openBuyRef.current?.('transferencia')} className="btn-primary btn-shine min-w-0 flex-1 truncate px-4 py-3.5 text-xs">
+              <button onClick={() => openBuyRef.current?.('transferencia')} className="btn-buy btn-shine btn-buy-pulse min-w-0 flex-1 truncate px-4 py-3.5 text-xs">
                 👉 Clic aquí para comprar · {formatPrice(product.price)}
               </button>
             )}

@@ -102,16 +102,13 @@ export default function LabelScanner({
         <button
           type="button"
           onClick={() => cameraRef.current?.click()}
-          className="group flex w-full items-center gap-3 rounded-2xl bg-[#0a0a0a] px-4 py-3 text-left text-white ring-1 ring-primary/40 transition-transform active:scale-[0.99]"
+          className="group flex w-full items-center gap-2.5 rounded-xl bg-cream-alt/70 px-3 py-2 text-left text-ink transition-transform active:scale-[0.99]"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gold-gradient text-lg">📸</span>
-          <span className="min-w-0 flex-1">
-            <span className="block text-[13px] font-black uppercase tracking-wide">¿No sabes tu talla?</span>
-            <span className="block text-[11px] text-white/65">Tómale foto a la etiqueta de tus zapatos y te la decimos</span>
+          <span className="text-base">📸</span>
+          <span className="min-w-0 flex-1 text-[12px]">
+            <strong>¿No sabes tu talla?</strong> <span className="text-muted">Tómale foto a la etiqueta de tus zapatos</span>
           </span>
-          <span className="shrink-0 rounded-full bg-primary/20 px-2.5 py-1 text-[10px] font-extrabold uppercase text-primary-light transition-colors group-hover:bg-primary group-hover:text-ink">
-            Escanear
-          </span>
+          <span className="shrink-0 text-[11px] font-extrabold text-ink underline underline-offset-2">Escanear</span>
         </button>
       </>
     );
