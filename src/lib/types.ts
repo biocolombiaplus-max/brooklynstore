@@ -153,6 +153,8 @@ export interface Order {
   // "whatsapp": el cliente confirmó su pedido por WhatsApp desde la web (la
   // venta se cierra en el chat y luego se marca en el panel).
   channel?: 'whatsapp';
+  // Datos del anuncio que trajo al cliente (para avisar la venta a Meta al cerrarla).
+  tracking?: { vid?: string; fbp?: string; fbc?: string; ua?: string };
   createdAt: number;
 }
 

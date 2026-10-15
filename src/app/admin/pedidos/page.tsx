@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { getAllOrders, updateOrderStatus, updateOrderShipping, updateOrderGuide, deleteOrder } from '@/lib/orders';
+import { getAllOrders, updateOrderStatus, updateOrderContact, reportPurchaseToMeta, updateOrderShipping, updateOrderGuide, deleteOrder } from '@/lib/orders';
 import { getSiteSettings } from '@/lib/settings';
 import { CARRIERS, type Order, type OrderStatus, type Carrier, type BankAccount } from '@/lib/types';
 import { buildPaymentDataMessage, buildShippedMessage, formatPrice, guidePageUrl, orderPhotoUrl, whatsappLinkTo } from '@/lib/utils';
@@ -77,6 +77,8 @@ export default function AdminOrdersPage() {
 
   async function handleStatusChange(id: string, status: OrderStatus) {
     await updateOrderStatus(id, status);
+    const order = orders?.find((o) => o.id === id);
+    if (order && status === 'confirmado' && order.status === 'pendiente') reportPurchaseToMeta(order);
     setOrders((prev) => (prev ? prev.map((o) => (o.id === id ? { ...o, status } : o)) : prev));
   }
 
@@ -153,6 +155,10 @@ export default function AdminOrdersPage() {
               bankAccounts={bankAccounts}
               saving={savingShipping === order.id}
               onStatusChange={(status) => handleStatusChange(order.id, status)}
+              onContactSave={async (contact) => {
+                await updateOrderContact(order.id, contact);
+                setOrders((prev) => (prev ? prev.map((o) => (o.id === order.id ? { ...o, customer: { ...o.customer, ...contact } } : o)) : prev));
+              }}
               onShippingSave={(carrier, trackingNumber) => handleShippingSave(order, carrier, trackingNumber)}
               onGuideChange={(guide) => handleGuideChange(order, guide)}
               onDelete={() => handleDeleteOrder(order)}
@@ -170,6 +176,7 @@ function OrderCard({
   bankAccounts,
   saving,
   onStatusChange,
+  onContactSave,
   onShippingSave,
   onGuideChange,
   onDelete,
@@ -179,6 +186,7 @@ function OrderCard({
   bankAccounts: BankAccount[];
   saving: boolean;
   onStatusChange: (status: OrderStatus) => void;
+  onContactSave: (contact: { name: string; phone: string }) => Promise<void>;
   onShippingSave: (carrier: Carrier | '', trackingNumber: string) => void;
   onGuideChange: (guide: { url: string; type: 'image' | 'pdf' } | null) => Promise<void>;
   onDelete: () => void;
@@ -289,6 +297,7 @@ function OrderCard({
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <p className="mb-1 text-xs font-bold uppercase text-muted">Cliente</p>
+          {!order.customer.phone && <ContactCapture orderNumber={order.orderNumber} onSave={onContactSave} />}
           <p className="text-sm text-ink">{order.customer.name}</p>
           <p className="text-sm text-muted">
             {order.customer.phone}
@@ -503,6 +512,41 @@ function OrderCard({
           </a>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Pedido directo a WhatsApp: el cliente da sus datos en el chat. Aquí se
+// guardan su nombre y celular para poder escribirle desde el panel.
+function ContactCapture({ orderNumber, onSave }: { orderNumber: string; onSave: (c: { name: string; phone: string }) => Promise<void> }) {
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [busy, setBusy] = useState(false);
+  const valid = phone.replace(/\D/g, '').length >= 9;
+  return (
+    <div className="mb-2 rounded-xl bg-gold-50 p-3 ring-1 ring-primary/30">
+      <p className="text-xs text-ink">
+        💬 El cliente pidió directo por WhatsApp. Busca el chat con <strong>{orderNumber}</strong> y guarda sus datos:
+      </p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="rounded-lg border border-border px-3 py-2 text-sm" />
+        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Celular (09...)" inputMode="tel" className="rounded-lg border border-border px-3 py-2 text-sm" />
+      </div>
+      <button
+        type="button"
+        disabled={!valid || busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            await onSave({ name: name.trim(), phone: phone.trim() });
+          } finally {
+            setBusy(false);
+          }
+        }}
+        className="mt-2 rounded-lg bg-ink px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+      >
+        {busy ? 'Guardando…' : 'Guardar datos del cliente'}
+      </button>
     </div>
   );
 }

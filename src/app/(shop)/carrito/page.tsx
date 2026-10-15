@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useCartStore } from '@/lib/cart-store';
 import { useSiteSettings } from '@/lib/settings-context';
 import { buildCartWhatsAppMessage, formatPrice, whatsappLinkTo } from '@/lib/utils';
+import CartWhatsAppButtons from '@/components/CartWhatsAppButtons';
 import SafeImage from '@/components/SafeImage';
 import { CloseIcon, WhatsAppIcon } from '@/components/icons';
 
@@ -97,28 +98,8 @@ export default function CarritoPage() {
             <span>Subtotal</span>
             <span className="font-bold text-ink">{formatPrice(subtotal)}</span>
           </div>
-          <div className="mt-3 space-y-2 rounded-xl bg-white p-3 text-xs text-muted">
-            <p>
-              🏦 <strong className="text-ink">Transferencia o depósito Pichincha:</strong>{' '}
-              pagas todo en un solo pago · envío con Servientrega
-            </p>
-            {settings.payments.codEnabled && (
-              <p>
-                💵 <strong className="text-ink">Contra entrega:</strong> adelantas {formatPrice(settings.payments.codAdvance)} del envío y tus zapatos los pagas al recibir
-              </p>
-            )}
-          </div>
-          <Link href="/checkout" className="btn-primary btn-shine mt-5 w-full py-4 text-base">
-            👉 Clic aquí para finalizar compra
-          </Link>
-          <a
-            href={whatsappLinkTo(settings.whatsappNumber, buildCartWhatsAppMessage(items), settings.whatsappCountryCode)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 flex items-center justify-center gap-2 text-xs font-bold text-ink hover:text-whatsapp"
-          >
-            <WhatsAppIcon size={16} className="text-whatsapp" /> O termina tu compra por WhatsApp
-          </a>
+          <div className="mt-4" />
+          <CartWhatsAppButtons />
           <Link href="/catalogo" className="mt-3 block text-center text-sm text-muted hover:text-ink">
             ← Seguir comprando
           </Link>

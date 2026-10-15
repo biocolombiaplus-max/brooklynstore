@@ -18,7 +18,7 @@ import { discountPercentOf } from '../ProductCard';
 import SizeGuideModal from '../sizes/SizeGuideModal';
 import LabelScanner from '../sizes/LabelScanner';
 import DeliveryEstimate from './DeliveryEstimate';
-import QuickBuyModal from './QuickBuyModal';
+import { sendOrderToWhatsApp } from '@/lib/whatsappOrder';
 import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 
 export default function BuyBox({
@@ -41,7 +41,6 @@ export default function BuyBox({
   const [added, setAdded] = useState(false);
   const [sizeError, setSizeError] = useState(false);
   const [guideOpen, setGuideOpen] = useState(false);
-  const [buyMethod, setBuyMethod] = useState<PaymentMethod | null>(null);
   // Acción que quedó esperando la talla (se abre la hoja "Elige tu talla").
   const [pending, setPending] = useState<{ type: 'buy'; method: PaymentMethod } | { type: 'cart' } | null>(null);
 
@@ -111,14 +110,9 @@ export default function BuyBox({
 
   function openBuy(method: PaymentMethod, sizeOverride?: string) {
     if (!ensureSize({ type: 'buy', method }, sizeOverride)) return;
-    setBuyMethod(method);
-    trackPixel('InitiateCheckout', {
-      content_ids: [metaItemId(product, color)],
-      content_type: 'product',
-      value: product.price * quantity,
-      currency: 'USD',
-      num_items: quantity,
-    });
+    // Directo a WhatsApp con la foto, talla, color, forma de pago y total:
+    // sin formulario (los datos de envío los da en el chat).
+    sendOrderToWhatsApp([buildItem(sizeOverride)], method, settings);
   }
 
   // La barra fija del celular usa esta misma función para abrir la compra.
@@ -350,7 +344,7 @@ export default function BuyBox({
                 icon="💵"
                 title="Pago contra entrega"
                 lines={[`Pagas tus zapatos (${formatPrice(cod.payOnDelivery)}) en efectivo al recibirlos`, `Solo ${formatPrice(cod.payNow)} del envío para despachar`]}
-                cta="Pedir contra entrega"
+                cta="Pedir por WhatsApp · contra entrega"
                 onClick={() => openBuy('contra_entrega')}
               />
             )}
@@ -359,12 +353,12 @@ export default function BuyBox({
               icon="⚡"
               title="Pagar de inmediato"
               lines={[`${formatPrice(lineTotal)} + ${formatPrice(shippingFee)} de envío por transferencia o depósito`, 'El precio más bajo · despacho el mismo día']}
-              cta={`Pedir ahora · ${formatPrice(lineTotal + shippingFee)}`}
+              cta={`Pedir por WhatsApp · ${formatPrice(lineTotal + shippingFee)}`}
               onClick={() => openBuy('transferencia')}
             />
 
             <p className="pt-1 text-center text-[11px] text-muted">
-              Al tocar el botón confirmas tu pedido por WhatsApp con un asesor. <strong className="text-ink">No pagas nada en la página.</strong>
+              Al tocar el botón se abre WhatsApp con tu pedido y su foto: <strong className="text-ink">solo toca Enviar</strong> y un asesor te atiende. No pagas nada en la página.
             </p>
 
             <button
@@ -444,7 +438,6 @@ export default function BuyBox({
         />
       )}
 
-      {buyMethod && <QuickBuyModal items={[buildItem()]} initialMethod={buyMethod} onClose={() => setBuyMethod(null)} />}
     </div>
   );
 }

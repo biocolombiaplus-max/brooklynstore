@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useCartStore } from '@/lib/cart-store';
 import { useSiteSettings } from '@/lib/settings-context';
 import { buildCartWhatsAppMessage, formatPrice, whatsappLinkTo } from '@/lib/utils';
+import CartWhatsAppButtons from '@/components/CartWhatsAppButtons';
 import SafeImage from './SafeImage';
 import { CloseIcon, WhatsAppIcon } from './icons';
 
@@ -104,20 +105,9 @@ export default function CartDrawer() {
               <span>{formatPrice(subtotal)}</span>
             </div>
             <p className="mb-4 mt-1 text-xs text-muted">
-              🚚 Envío con Servientrega a todo el Ecuador · se calcula al pagar
-              {settings.payments.codEnabled && ` · 💵 Contra entrega: adelantas ${formatPrice(settings.payments.codAdvance)}`}
+              🚚 Envío con Servientrega a todo el Ecuador · confirmas tu pedido por WhatsApp
             </p>
-            <Link href="/checkout" onClick={close} className="btn-primary btn-shine w-full py-4 text-base">
-              👉 Clic aquí para finalizar compra
-            </Link>
-            <a
-              href={whatsappLinkTo(settings.whatsappNumber, buildCartWhatsAppMessage(items), settings.whatsappCountryCode)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-3 flex items-center justify-center gap-2 text-xs font-bold text-ink hover:text-whatsapp"
-            >
-              <WhatsAppIcon size={16} className="text-whatsapp" /> O termina tu compra hablando con nosotros
-            </a>
+            <CartWhatsAppButtons onDone={close} />
           </div>
         )}
       </div>

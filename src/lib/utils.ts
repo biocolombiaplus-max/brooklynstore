@@ -216,10 +216,11 @@ ${WA_LINE}
 *FORMA DE PAGO*
 ${how}
 
-*DATOS DE ENTREGA*
-${delivery}
-
-¿Me confirman la disponibilidad y los pasos para el pago? ¡Gracias!`;
+${
+      c.name
+        ? `*DATOS DE ENTREGA*\n${delivery}\n\n¿Me confirman la disponibilidad y los pasos para el pago? ¡Gracias!`
+        : '¿Me confirman la disponibilidad? Les paso mis datos de envío por aquí. ¡Gracias!'
+    }`;
   }
 
   const closing = opts.paid

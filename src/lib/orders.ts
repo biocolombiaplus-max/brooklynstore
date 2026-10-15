@@ -28,6 +28,7 @@ function toOrder(id: string, data: any): Order {
     guideType: data.guideType === 'pdf' ? 'pdf' : data.guideUrl ? 'image' : undefined,
     couponCode: data.couponCode || undefined,
     channel: data.channel === 'whatsapp' ? 'whatsapp' : undefined,
+    tracking: data.tracking || undefined,
     createdAt: data.createdAt instanceof Timestamp ? data.createdAt.toMillis() : Date.now(),
   };
 }
@@ -80,6 +81,43 @@ export async function getAllOrders(): Promise<Order[]> {
 
 export async function updateOrderStatus(id: string, status: OrderStatus): Promise<void> {
   await updateDoc(doc(db, COLLECTION, id), { status });
+}
+
+// Datos del cliente que llegan por el chat (pedidos directos a WhatsApp).
+export async function updateOrderContact(id: string, contact: { name: string; phone: string }): Promise<void> {
+  await updateDoc(doc(db, COLLECTION, id), { 'customer.name': contact.name, 'customer.phone': contact.phone });
+}
+
+// Avisa a Meta (API de Conversiones) que la venta se cerró, con los datos
+// del anuncio que trajo al cliente: así la campaña aprende qué vende.
+export function reportPurchaseToMeta(order: Order): void {
+  if (!order.tracking) return;
+  fetch('/api/meta-capi', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    keepalive: true,
+    body: JSON.stringify({
+      event_name: 'Purchase',
+      event_id: order.orderNumber,
+      custom_data: {
+        content_ids: order.items.map((i) => i.metaId || i.productId),
+        contents: order.items.map((i) => ({ id: i.metaId || i.productId, quantity: i.quantity, item_price: i.price })),
+        content_type: 'product',
+        num_items: order.items.reduce((n, i) => n + i.quantity, 0),
+        value: order.total,
+        currency: 'USD',
+      },
+      user_data: {
+        fbp: order.tracking.fbp,
+        fbc: order.tracking.fbc,
+        external_id: order.tracking.vid,
+        phone: order.customer.phone,
+        name: order.customer.name,
+        client_user_agent: order.tracking.ua,
+        offline: true,
+      },
+    }),
+  }).catch(() => {});
 }
 
 export async function deleteOrder(id: string): Promise<void> {

@@ -71,9 +71,12 @@ export async function POST(req: Request) {
   const u = body.user_data ?? {};
   const phone = normalizePhone(clean(u.phone, 30));
   const name = normalizeName(clean(u.name, 80));
-  const ip = (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim();
+  // Venta cerrada desde el panel: se usan los datos guardados del cliente
+  // (su navegador), nunca la IP del administrador.
+  const offline = u.offline === true;
+  const ip = offline ? '' : (req.headers.get('x-forwarded-for') ?? '').split(',')[0].trim();
   const user_data: Record<string, unknown> = {
-    client_user_agent: req.headers.get('user-agent') ?? '',
+    client_user_agent: (offline && clean(u.client_user_agent, 300)) || req.headers.get('user-agent') || '',
     country: [sha256('ec')],
     ...(ip ? { client_ip_address: ip } : {}),
     ...(clean(u.fbp) ? { fbp: clean(u.fbp) } : {}),

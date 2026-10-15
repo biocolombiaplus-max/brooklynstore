@@ -53,6 +53,12 @@ function sendToServer(event: string, params: FbqParams | undefined, eventId: str
   }
 }
 
+// Datos para atribuir a Meta una venta que se cierra después (por WhatsApp).
+export function adTracking(): { vid: string; fbp: string; fbc: string; ua: string } {
+  if (typeof window === 'undefined') return { vid: '', fbp: '', fbc: '', ua: '' };
+  return { vid: visitorId(), fbp: cookie('_fbp'), fbc: clickId(), ua: navigator.userAgent.slice(0, 300) };
+}
+
 export function trackPixel(event: string, params?: FbqParams, eventID?: string): void {
   if (typeof window === 'undefined' || isStaffDevice()) return;
   const id = eventID || newEventId();
