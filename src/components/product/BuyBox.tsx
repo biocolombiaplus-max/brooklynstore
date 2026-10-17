@@ -5,7 +5,9 @@ import { usSizeFor } from '@/lib/sizes';
 import { useEffect, useState, type RefObject } from 'react';
 import { trackPixel } from '@/lib/pixel';
 import { metaItemId } from '@/lib/metaCatalog';
-import { trackVisitorProduct } from '@/lib/visitor';
+import { trackVisitorProduct, visitorContact } from '@/lib/visitor';
+import { ecLocal, isEcMobile, savedPhone } from '@/lib/phone';
+import EcPhoneInput from '../EcPhoneInput';
 import { productMessage, useWaContext } from '@/lib/wa-messages';
 import type { PaymentMethod, Product } from '@/lib/types';
 import { classNames, formatPrice, resolveColorImage, whatsappLinkTo } from '@/lib/utils';
@@ -109,23 +111,32 @@ export default function BuyBox({
     return false;
   }
 
-  function openBuy(method: PaymentMethod, sizeOverride?: string) {
-    if (!ensureSize({ type: 'buy', method }, sizeOverride)) return;
-    // Directo a WhatsApp con la foto, talla, color, forma de pago y total:
-    // sin formulario (los datos de envío los da en el chat).
-    sendOrderToWhatsApp([buildItem(sizeOverride)], method, settings);
+  // Directo a WhatsApp con la foto, talla, color, forma de pago y total. Solo
+  // se pide la talla (si falta) y el WhatsApp del cliente (si no lo dejó
+  // antes en este teléfono), en una sola hoja.
+  function openBuy(method: PaymentMethod, sizeOverride?: string, phoneOverride?: string) {
+    const chosen = sizeOverride ?? size;
+    const national = phoneOverride ?? savedPhone(visitorContact().phone);
+    if ((needsSize && !chosen) || !isEcMobile(national)) {
+      if (needsSize && !chosen) setSizeError(true);
+      setPending({ type: 'buy', method });
+      return;
+    }
+    sendOrderToWhatsApp([buildItem(chosen)], method, settings, ecLocal(national));
   }
 
   // La barra fija del celular usa esta misma función para abrir la compra.
   onRequestBuy?.((method) => openBuy(method));
 
-  function pickFromSheet(s: string) {
+  function pickFromSheet(s: string, national?: string) {
     const action = pending;
-    setSize(s);
-    setSizeError(false);
+    if (s) {
+      setSize(s);
+      setSizeError(false);
+      if (s !== size) trackPixel('CustomizeProduct', { content_ids: [metaItemId(product, color)], content_name: `${product.title} talla ${s}` });
+    }
     setPending(null);
-    trackPixel('CustomizeProduct', { content_ids: [metaItemId(product, color)], content_name: `${product.title} talla ${s}` });
-    if (action?.type === 'buy') openBuy(action.method, s);
+    if (action?.type === 'buy') openBuy(action.method, s || size, national);
     else if (action?.type === 'cart') handleAddToCart(s);
   }
 
@@ -413,7 +424,7 @@ export default function BuyBox({
         availableSizes={product.sizes}
         productTitle={product.title}
         onPickSize={(s) => {
-          if (pending) {
+          if (pending?.type === 'cart') {
             setGuideOpen(false);
             pickFromSheet(s);
             return;
@@ -424,7 +435,11 @@ export default function BuyBox({
       />
 
       {pending && !guideOpen && (
-        <SizeSheet
+        <OrderSheet
+          mode={pending.type}
+          needsSize={needsSize}
+          initialSize={size}
+          initialPhone={savedPhone(visitorContact().phone)}
           product={product}
           color={color}
           image={resolveColorImage(product, color) || product.images[0]}
@@ -443,9 +458,14 @@ export default function BuyBox({
   );
 }
 
-// Hoja que sube desde abajo para elegir la talla sin buscarla en la página:
-// al tocar una talla la compra continúa sola.
-function SizeSheet({
+// Hoja que sube desde abajo: talla (si falta) + WhatsApp del cliente (con
+// el +593 ya puesto) y un solo botón que abre WhatsApp con el pedido.
+// Para "agregar al carrito" solo pide la talla.
+function OrderSheet({
+  mode,
+  needsSize,
+  initialSize,
+  initialPhone,
   product,
   color,
   image,
@@ -454,14 +474,25 @@ function SizeSheet({
   onGuide,
   onClose,
 }: {
+  mode: 'buy' | 'cart';
+  needsSize: boolean;
+  initialSize: string;
+  initialPhone: string;
   product: Product;
   color: string;
   image?: string;
   waHelpUrl: string;
-  onPick: (size: string) => void;
+  onPick: (size: string, national?: string) => void;
   onGuide: () => void;
   onClose: () => void;
 }) {
+  const [selected, setSelected] = useState(initialSize);
+  const [phone, setPhone] = useState(initialPhone);
+  const [tried, setTried] = useState(false);
+  const phoneOk = isEcMobile(phone);
+  const sizeOk = !needsSize || !!selected;
+  const askPhone = mode === 'buy';
+
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -470,14 +501,26 @@ function SizeSheet({
     };
   }, []);
 
+  function chooseSize(s: string) {
+    setSelected(s);
+    // Carrito, o compra con el WhatsApp ya escrito: sigue de una.
+    if (!askPhone) onPick(s);
+    else if (phoneOk) onPick(s, phone);
+  }
+
+  function submit() {
+    setTried(true);
+    if (sizeOk && phoneOk) onPick(selected, phone);
+  }
+
   return (
     <div className="fixed inset-0 z-[70] flex items-end justify-center bg-ink/70 backdrop-blur-sm sm:items-center sm:p-4" onClick={onClose}>
       <div
-        className="w-full max-w-lg animate-slideUp rounded-t-3xl bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-dark sm:rounded-3xl"
+        className="max-h-[94vh] w-full max-w-lg animate-slideUp overflow-y-auto rounded-t-3xl bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4 shadow-dark sm:rounded-3xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-label="Elige tu talla"
+        aria-label={askPhone ? 'Confirma tu pedido' : 'Elige tu talla'}
       >
         <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-border sm:hidden" />
         <div className="flex items-center gap-3">
@@ -496,28 +539,63 @@ function SizeSheet({
           </button>
         </div>
 
-        <p className="mt-5 text-base font-black text-ink">👇 Toca tu talla para continuar</p>
-        <div className="mt-3 grid grid-cols-4 gap-2">
-          {product.sizes.map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => onPick(s)}
-              className="flex h-16 flex-col items-center justify-center rounded-2xl border-2 border-border bg-white leading-none text-ink transition-all active:scale-95 active:border-ink active:bg-ink active:text-white"
-            >
-              <span className="text-lg font-black">{s}</span>
-              {usSizeFor(s, product.gender) && <span className="mt-1 text-[10px] font-bold text-muted">US {usSizeFor(s, product.gender)}</span>}
+        {needsSize && (
+          <>
+            <p className={classNames('mt-5 flex items-center gap-2 text-base font-black', tried && !sizeOk ? 'text-urgent' : 'text-ink')}>
+              {askPhone && <StepNumber n={1} done={sizeOk} />}
+              {selected ? `Talla ${selected}` : '👇 Toca tu talla'}
+            </p>
+            <div className="mt-3 grid grid-cols-4 gap-2">
+              {product.sizes.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => chooseSize(s)}
+                  className={classNames(
+                    'flex h-14 flex-col items-center justify-center rounded-2xl border-2 leading-none transition-all active:scale-95',
+                    selected === s ? 'border-ink bg-ink text-white' : 'border-border bg-white text-ink',
+                  )}
+                >
+                  <span className="text-lg font-black">{s}</span>
+                  {usSizeFor(s, product.gender) && (
+                    <span className={classNames('mt-1 text-[10px] font-bold', selected === s ? 'text-primary-light' : 'text-muted')}>US {usSizeFor(s, product.gender)}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
+              <button type="button" onClick={onGuide} className="flex items-center gap-1.5 text-ink underline decoration-primary decoration-2 underline-offset-4">
+                <RulerIcon size={15} /> ¿Cuál es mi talla?
+              </button>
+              <a href={waHelpUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#128C4B]">
+                <WhatsAppIcon size={15} /> Te ayudamos por WhatsApp
+              </a>
+            </div>
+          </>
+        )}
+
+        {askPhone && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              submit();
+            }}
+            className="mt-5"
+          >
+            <p className={classNames('flex items-center gap-2 text-base font-black', tried && !phoneOk ? 'text-urgent' : 'text-ink')}>
+              {needsSize && <StepNumber n={2} done={phoneOk} />}
+              Tu número de WhatsApp
+            </p>
+            <p className="mb-2 mt-0.5 text-xs text-muted">Para enviarte la foto real de tu par y tu guía de envío 📦</p>
+            <EcPhoneInput value={phone} onChange={setPhone} invalid={tried && !phoneOk} autoFocus={!initialPhone && !needsSize} />
+            {tried && !phoneOk && <p className="mt-1 text-xs font-semibold text-urgent">Escribe tu celular, ej: 99 123 4567</p>}
+            {tried && !sizeOk && <p className="mt-1 text-xs font-semibold text-urgent">Elige tu talla arriba 👆</p>}
+            <button type="submit" className={classNames('btn-buy btn-shine mt-4 w-full py-4', sizeOk && phoneOk && 'btn-buy-pulse')}>
+              <WhatsAppIcon size={20} /> 👉 Pedir por WhatsApp
             </button>
-          ))}
-        </div>
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs font-bold">
-          <button type="button" onClick={onGuide} className="flex items-center gap-1.5 text-ink underline decoration-primary decoration-2 underline-offset-4">
-            <RulerIcon size={15} /> ¿Cuál es mi talla?
-          </button>
-          <a href={waHelpUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 text-[#128C4B]">
-            <WhatsAppIcon size={15} /> Te ayudamos por WhatsApp
-          </a>
-        </div>
+            <p className="mt-2 text-center text-[11px] text-muted">🔒 Solo lo usamos para tu pedido. No pagas nada en la página.</p>
+          </form>
+        )}
       </div>
     </div>
   );

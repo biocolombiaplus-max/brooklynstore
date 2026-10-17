@@ -10,6 +10,8 @@ import { uploadProductImage } from '@/lib/storage';
 import { buildReviewRequestMessage, ensureLoyaltyForOrder } from '@/lib/loyalty';
 import { uploadRawFileToFirestore } from '@/lib/firestoreImages';
 import { WA_TAG_GUIDE } from '@/lib/waTags';
+import { ecLocal, isEcMobile } from '@/lib/phone';
+import EcPhoneInput from '@/components/EcPhoneInput';
 
 const STATUSES: { value: OrderStatus; label: string }[] = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -578,15 +580,14 @@ function PhonePrompt({
 }) {
   const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState('');
-  const digits = phone.replace(/\D/g, '');
-  const valid = digits.length >= 9 && digits.length <= 13;
+  const valid = isEcMobile(phone);
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-ink/70 p-0 sm:items-center sm:p-4" onClick={onCancel}>
       <form
         onClick={(e) => e.stopPropagation()}
         onSubmit={(e) => {
           e.preventDefault();
-          if (valid) onConfirm(name.trim(), phone.trim());
+          if (valid) onConfirm(name.trim(), ecLocal(phone));
         }}
         className="w-full max-w-md rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-dark sm:rounded-3xl"
       >
@@ -596,15 +597,10 @@ function PhonePrompt({
           copia el número del cliente. Se guarda en el pedido para las próximas veces.
         </p>
         <label className="mt-4 block text-[13px] font-extrabold text-ink">Celular / WhatsApp *</label>
-        <input
-          autoFocus
-          type="tel"
-          inputMode="tel"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          placeholder="Ej: 0991234567 o +593 99 123 4567"
-          className="input-pro mt-1.5"
-        />
+        <div className="mt-1.5">
+          <EcPhoneInput value={phone} onChange={setPhone} autoFocus />
+        </div>
+        <p className="mt-1 text-[11px] text-muted">Puedes pegarlo como venga (0991234567, +593 99 123 4567…): se ajusta solo.</p>
         <label className="mt-3 block text-[13px] font-extrabold text-ink">Nombre (opcional)</label>
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: María Pérez" className="input-pro mt-1.5" />
         <div className="mt-4 flex gap-2">

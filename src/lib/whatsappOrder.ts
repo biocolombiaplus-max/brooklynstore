@@ -1,7 +1,8 @@
 'use client';
 
 import { trackPixel, adTracking } from './pixel';
-import { trackVisitorCheckoutItems, visitorContact } from './visitor';
+import { ecNational, rememberPhone } from './phone';
+import { trackVisitorCheckoutItems, trackVisitorContact, visitorContact } from './visitor';
 import { codUnitPrice, computeOrderTotals } from './shipping';
 import { couponPercentFor, getActiveCoupon } from './coupon';
 import { buildOrderWhatsAppMessage, generateOrderNumber, whatsappLinkTo } from './utils';
@@ -11,9 +12,16 @@ import type { CartItem, PaymentMethod, SiteSettings } from './types';
 // abre el chat con su pedido (fotos, talla, color, forma de pago y total).
 // Los datos de envío los da en el chat. El pedido queda en el panel como
 // "Por cerrar" para marcarlo cuando se cierre la venta.
-export function sendOrderToWhatsApp(items: CartItem[], method: PaymentMethod, settings: SiteSettings): void {
+export function sendOrderToWhatsApp(items: CartItem[], method: PaymentMethod, settings: SiteSettings, phone?: string): void {
   if (!items.length) return;
   const orderNumber = generateOrderNumber();
+  const known = visitorContact();
+  // El celular queda guardado en este teléfono para la próxima compra y en
+  // el panel de visitantes (recuperar carritos).
+  if (phone) {
+    rememberPhone(ecNational(phone));
+    trackVisitorContact(known.name, phone);
+  }
   const coupon = getActiveCoupon();
   const percent = couponPercentFor(coupon, method);
   const totals = computeOrderTotals(settings, items, method, '', percent);
@@ -28,7 +36,7 @@ export function sendOrderToWhatsApp(items: CartItem[], method: PaymentMethod, se
     payOnDelivery: totals.payOnDelivery,
     // Si el cliente ya dejó su nombre y celular antes en este celular, el
     // pedido queda con ellos (así se le puede escribir desde el panel).
-    customer: { ...visitorContact(), province: '', city: '', address: '' },
+    customer: { name: known.name, phone: phone || known.phone, province: '', city: '', address: '' },
     paymentMethod: method,
     status: 'pendiente' as const,
     couponCode: percent > 0 ? coupon?.code : undefined,
