@@ -19,6 +19,7 @@ import SizeGuideModal from '../sizes/SizeGuideModal';
 import LabelScanner from '../sizes/LabelScanner';
 import DeliveryEstimate from './DeliveryEstimate';
 import { sendOrderToWhatsApp } from '@/lib/whatsappOrder';
+import { WA_TAGS } from '@/lib/waTags';
 import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
 
 export default function BuyBox({
@@ -327,7 +328,7 @@ export default function BuyBox({
       <div ref={ctaRef} className="space-y-3">
         {soldOut ? (
           <a
-            href={whatsappLinkTo(whatsappNumber, productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size: size && usSizeFor(size, product.gender) ? `${size} EC (US ${usSizeFor(size, product.gender)})` : size, color }, 'Lo vi agotado en la web. ¿Me avisan cuando llegue? 🙏'), whatsappCountryCode)}
+            href={whatsappLinkTo(whatsappNumber, productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, size: size && usSizeFor(size, product.gender) ? `${size} EC (US ${usSizeFor(size, product.gender)})` : size, color }, 'Lo vi agotado en la web. ¿Me avisan cuando llegue? 🙏', WA_TAGS.agotado), whatsappCountryCode)}
             target="_blank"
             rel="noopener noreferrer"
             className="btn-dark w-full py-5"
@@ -429,7 +430,7 @@ export default function BuyBox({
           image={resolveColorImage(product, color) || product.images[0]}
           waHelpUrl={whatsappLinkTo(
             whatsappNumber,
-            productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, color }, 'No sé mi talla, ¿me ayudan? 🙏'),
+            productMessage({ title: product.title, slug: product.slug, brand: product.brand, price: product.price, color }, 'No sé mi talla, ¿me ayudan? 🙏', WA_TAGS.talla),
             whatsappCountryCode,
           )}
           onPick={pickFromSheet}

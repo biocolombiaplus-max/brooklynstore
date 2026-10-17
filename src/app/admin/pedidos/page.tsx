@@ -9,6 +9,7 @@ import { buildPaymentDataMessage, buildShippedMessage, formatPrice, guidePageUrl
 import { uploadProductImage } from '@/lib/storage';
 import { buildReviewRequestMessage, ensureLoyaltyForOrder } from '@/lib/loyalty';
 import { uploadRawFileToFirestore } from '@/lib/firestoreImages';
+import { WA_TAG_GUIDE } from '@/lib/waTags';
 
 const STATUSES: { value: OrderStatus; label: string }[] = [
   { value: 'pendiente', label: 'Pendiente' },
@@ -120,6 +121,8 @@ export default function AdminOrdersPage() {
           + Nuevo pedido
         </Link>
       </div>
+
+      <WaTagsGuide />
 
       {orders && orders.length > 0 && (
         <div className="-mx-1 mb-4 flex gap-2 overflow-x-auto px-1 pb-1">
@@ -614,5 +617,56 @@ function PhonePrompt({
         </div>
       </form>
     </div>
+  );
+}
+
+// Guía de etiquetas: cada mensaje que llega de la página empieza con una de
+// estas. Se copian con un toque para pegarlas en el buscador de WhatsApp.
+function WaTagsGuide() {
+  const [copied, setCopied] = useState('');
+  return (
+    <details className="group mb-4 overflow-hidden rounded-card bg-[#0a0a0a] text-white shadow-soft ring-1 ring-primary/40">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+        <span>
+          <span className="block text-[10px] font-extrabold uppercase tracking-[0.2em] text-primary-light">WhatsApp Business</span>
+          <span className="block text-sm font-black">🏷️ Etiquetas para encontrar los chats</span>
+        </span>
+        <span className="text-xs font-bold text-white/60 group-open:hidden">Ver ▾</span>
+        <span className="hidden text-xs font-bold text-white/60 group-open:inline">Ocultar ▴</span>
+      </summary>
+      <div className="border-t border-white/10 px-4 pb-4 pt-3">
+        <p className="text-xs text-white/70">
+          Cada mensaje que llega desde la página empieza con una etiqueta. En WhatsApp Business toca la 🔍 lupa y pega la etiqueta para ver
+          todos esos chats. Tip: selecciónalos y ponles tu etiqueta de color (ej. &quot;Pedido web&quot;).
+        </p>
+        <ul className="mt-3 grid gap-2 sm:grid-cols-2">
+          {WA_TAG_GUIDE.map((t) => (
+            <li key={t.tag} className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2 ring-1 ring-white/10">
+              <span className="min-w-0 flex-1">
+                <span className="block font-mono text-[13px] font-black text-primary-light">{t.tag}</span>
+                <span className="block text-[11px] text-white/60">
+                  {t.label} · {t.when}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  navigator.clipboard
+                    ?.writeText(t.tag)
+                    .then(() => {
+                      setCopied(t.tag);
+                      setTimeout(() => setCopied(''), 1500);
+                    })
+                    .catch(() => {})
+                }
+                className="shrink-0 rounded-full bg-gold-gradient px-3 py-1.5 text-[10px] font-extrabold uppercase text-ink"
+              >
+                {copied === t.tag ? '✓ Copiada' : 'Copiar'}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </details>
   );
 }

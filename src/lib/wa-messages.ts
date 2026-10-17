@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { formatPrice } from './utils';
+import { WA_TAGS, withTag, type WaTag } from './waTags';
 
 // Mensajes de WhatsApp personalizados según desde dónde escribe el cliente,
 // para que la tienda sepa de inmediato qué necesita y pueda responder rápido.
@@ -13,32 +14,32 @@ function pageUrl(): string {
 }
 
 export function generalMessage(topic = 'Quiero información sobre sus zapatos.'): string {
-  return `${HELLO}\n${topic}`;
+  return withTag(WA_TAGS.info, `${HELLO}\n${topic}`);
 }
 
 export function catalogMessage(): string {
-  return `${HELLO}\nQuiero ver el catálogo y los modelos disponibles. ¿Me ayudan?`;
+  return withTag(WA_TAGS.catalogo, `${HELLO}\nQuiero ver el catálogo y los modelos disponibles. ¿Me ayudan?`);
 }
 
 export function adviceMessage(): string {
-  return `${HELLO}\nQuiero asesoría para elegir mis zapatos.\n\n• Para: (hombre / mujer)\n• Uso: (diario / correr / gym / formal)\n• Mi talla: \n• Presupuesto aprox.: `;
+  return withTag(WA_TAGS.asesoria, `${HELLO}\nQuiero asesoría para elegir mis zapatos.\n\n• Para: (hombre / mujer)\n• Uso: (diario / correr / gym / formal)\n• Mi talla: \n• Presupuesto aprox.: `);
 }
 
 export function sizeHelpMessage(): string {
-  return `${HELLO}\nNecesito ayuda con mi talla.\n\n• Largo de mi pie: ___ cm\n• Modelo que me interesa: \n• Talla que uso normalmente: `;
+  return withTag(WA_TAGS.talla, `${HELLO}\nNecesito ayuda con mi talla.\n\n• Largo de mi pie: ___ cm\n• Modelo que me interesa: \n• Talla que uso normalmente: `);
 }
 
 export function exchangeMessage(hours = 48): string {
-  return `${HELLO}\nQuiero solicitar un *cambio de talla* (dentro de las ${hours} h de recibido)\n\n• N.º de pedido: \n• Modelo: \n• Talla que recibí: \n• Talla que necesito: \n• Fecha en que lo recibí: \n\nTe envío fotos del zapato sin uso y con su caja.`;
+  return withTag(WA_TAGS.cambio, `${HELLO}\nQuiero solicitar un *cambio de talla* (dentro de las ${hours} h de recibido)\n\n• N.º de pedido: \n• Modelo: \n• Talla que recibí: \n• Talla que necesito: \n• Fecha en que lo recibí: \n\nTe envío fotos del zapato sin uso y con su caja.`);
 }
 
 export function brandMessage(brand: string): string {
-  return `${HELLO}\nMe interesan los zapatos *${brand}*. ¿Qué modelos y tallas tienen disponibles?\n\n${pageUrl()}`;
+  return withTag(WA_TAGS.catalogo, `${HELLO}\nMe interesan los zapatos *${brand}*. ¿Qué modelos y tallas tienen disponibles?\n\n${pageUrl()}`);
 }
 
 export function filteredCatalogMessage(filters: string[]): string {
   const detail = filters.length ? `\nEstoy buscando: ${filters.join(' · ')}` : '';
-  return `${HELLO}\nQuiero ver modelos disponibles.${detail}\n\n${pageUrl()}`;
+  return withTag(WA_TAGS.catalogo, `${HELLO}\nQuiero ver modelos disponibles.${detail}\n\n${pageUrl()}`);
 }
 
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore-six.vercel.app').replace(/\/$/, '');
@@ -46,6 +47,7 @@ const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://brooklynstore-six
 export function productMessage(
   p: { title: string; slug: string; brand?: string; price: number; size?: string; color?: string },
   extra?: string,
+  tag: WaTag = WA_TAGS.producto,
 ): string {
   const lines = [
     `▸ *${p.title}*${p.brand ? ` (${p.brand})` : ''}`,
@@ -53,7 +55,7 @@ export function productMessage(
     p.size ? `Talla: ${p.size}` : 'Talla: (por confirmar)',
     p.color ? `Color: ${p.color}` : '',
   ].filter(Boolean);
-  return `${HELLO}\nMe interesa este modelo:\n\n${lines.join('\n')}\n\n${extra ?? '¿Está disponible?'}\n${SITE_URL}/producto/${p.slug}`;
+  return withTag(tag, `${HELLO}\nMe interesa este modelo:\n\n${lines.join('\n')}\n\n${extra ?? '¿Está disponible?'}\n${SITE_URL}/producto/${p.slug}`, p.title);
 }
 
 // La ficha de producto guarda aquí el modelo que el cliente está viendo,

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { WA_TAGS, withTag } from '@/lib/waTags';
 import { useEffect, useState } from 'react';
 import ExchangePolicy from '@/components/ExchangePolicy';
 import PaymentLogos, { CourierLogo } from '@/components/brand/PaymentLogos';
@@ -86,7 +87,7 @@ function WaButton({ message, label, className }: { message: string; label: strin
   const { whatsappNumber, whatsappCountryCode } = useSiteSettings();
   return (
     <a
-      href={whatsappLinkTo(whatsappNumber, message, whatsappCountryCode)}
+      href={whatsappLinkTo(whatsappNumber, withTag(WA_TAGS.ayuda, message), whatsappCountryCode)}
       target="_blank"
       rel="noopener noreferrer"
       className={classNames('btn-whatsapp btn-shine', className)}

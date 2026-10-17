@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { WA_TAGS, withTag } from '@/lib/waTags';
 import { prepareLabelImage, readLabel, recommendFromLabel, type LabelRecommendation, type LabelSizes } from '@/lib/labelScan';
 import type { SizeGender } from '@/lib/sizes';
 import type { Gender } from '@/lib/types';
@@ -82,7 +83,7 @@ export default function LabelScanner({
     setLabel(null);
   }
 
-  const helpMessage = `¡Hola Brooklyn Store! 👋 No estoy seguro de mi talla${productTitle ? ` para las *${productTitle}*` : ''}. Les envío la foto de la etiqueta de mis zapatos 📸 para que me ayuden.`;
+  const helpMessage = withTag(WA_TAGS.talla, `¡Hola Brooklyn Store! 👋 No estoy seguro de mi talla${productTitle ? ` para las *${productTitle}*` : ''}. Les envío la foto de la etiqueta de mis zapatos 📸 para que me ayuden.`);
   const available = result && (!availableSizes || availableSizes.includes(result.row.ec));
   const readChips = label
     ? [

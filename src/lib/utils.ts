@@ -1,4 +1,5 @@
 import { orderCardUrl } from './orderCard';
+import { WA_TAGS, withTag } from './waTags';
 import type { BankAccount, Order, OrderCustomer, PaymentMethod } from './types';
 
 // Determina qué foto mostrar para el color elegido: si el admin le asignó
@@ -117,14 +118,14 @@ export function buildCartWhatsAppMessage(
     )
     .join('\n\n');
   const subtotal = items.reduce((sum, i) => sum + (i.price ?? 0) * i.quantity, 0);
-  return `Hola Brooklyn Store, quiero terminar mi compra.
+  return withTag(WA_TAGS.carrito, `Hola Brooklyn Store, quiero terminar mi compra.
 
 *MI CARRITO*
 ${WA_LINE}
 ${lines}${subtotal > 0 ? `\n${WA_LINE}\n*Subtotal: ${formatPrice(subtotal)}*` : ''}
 
 ¿Me ayudan a confirmar el pedido?
-Forma de pago: (transferencia / contra entrega)`;
+Forma de pago: (transferencia / contra entrega)`);
 }
 
 export function paymentMethodLabel(method: PaymentMethod): string {
@@ -196,7 +197,7 @@ export function buildOrderWhatsAppMessage(order: {
     const how = cod
       ? `Elegí *pago contra entrega*: ${formatPrice(order.payNow)} del envío para despachar y ${formatPrice(order.payOnDelivery)} en efectivo al recibir.`
       : `Elegí *pagar de inmediato* por transferencia o depósito: ${formatPrice(order.payNow)}.`;
-    return `Hola Brooklyn Store, quiero confirmar mi pedido.
+    return withTag(WA_TAGS.pedido, `Hola Brooklyn Store, quiero confirmar mi pedido.
 
 *PEDIDO WEB · ${order.orderNumber}*
 Fotos de mi pedido: ${card}
@@ -220,7 +221,7 @@ ${
       c.city
         ? `*DATOS DE ENTREGA*\n${delivery}\n\n¿Me confirman la disponibilidad y los pasos para el pago? ¡Gracias!`
         : '¿Me confirman la disponibilidad? Les paso mis datos de envío por aquí. ¡Gracias!'
-    }`;
+    }`, order.orderNumber);
   }
 
   const closing = opts.paid
@@ -229,7 +230,7 @@ ${
     ? `Por favor confírmenme el pedido para enviar el comprobante de los ${formatPrice(order.payNow)} que garantizan el envío. ¡Gracias!`
     : 'Por favor confírmenme el pedido. En seguida les envío la foto del comprobante. ¡Gracias!';
 
-  return `*${opts.paid ? 'PEDIDO PAGADO' : 'NUEVO PEDIDO'} · ${order.orderNumber}*
+  return withTag(opts.paid ? WA_TAGS.pago : WA_TAGS.pedido, `*${opts.paid ? 'PEDIDO PAGADO' : 'NUEVO PEDIDO'} · ${order.orderNumber}*
 _Brooklyn Store_
 ${WA_LINE}
 
@@ -249,7 +250,7 @@ ${paymentBlock}
 *DATOS DE ENTREGA*
 ${delivery}
 
-${closing}`;
+${closing}`, order.orderNumber);
 }
 
 export function generateOrderNumber(): string {
