@@ -195,10 +195,26 @@ function OrderCard({
   const [guideError, setGuideError] = useState('');
   const [loyaltyBusy, setLoyaltyBusy] = useState(false);
   const [loyaltyCode, setLoyaltyCode] = useState(order.loyaltyCode ?? '');
+  // Mensaje esperando el celular del cliente (pedidos directos a WhatsApp).
+  const [askPhone, setAskPhone] = useState<string | null>(null);
+
+  // Abre el chat del cliente con el mensaje. Si el pedido aún no tiene
+  // celular, primero se pide (una sola vez) y queda guardado en el pedido.
+  function contact(message: string) {
+    if (!order.customer.phone) {
+      setAskPhone(message);
+      return;
+    }
+    window.open(whatsappLinkTo(order.customer.phone, message), '_blank');
+  }
 
   // Pide la reseña y regala el 10% OFF. La pestaña se abre dentro del clic
   // para que el navegador no la bloquee.
   async function sendReviewRequest() {
+    if (!order.customer.phone) {
+      setAskPhone('');
+      return;
+    }
     const tab = window.open('', '_blank');
     setLoyaltyBusy(true);
     try {
@@ -242,6 +258,15 @@ function OrderCard({
         <div>
           <p className="flex flex-wrap items-center gap-2 font-bold text-ink">
             {order.orderNumber}
+            {!order.customer.phone && (
+              <button
+                type="button"
+                onClick={() => setAskPhone('')}
+                className="rounded-full bg-urgent/10 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-urgent"
+              >
+                📵 Sin celular · agregar
+              </button>
+            )}
             {order.channel === 'whatsapp' && (
               <span className="rounded-full bg-whatsapp/15 px-2.5 py-0.5 text-[10px] font-extrabold uppercase tracking-wider text-[#128C4B]">
                 💬 Pedido por WhatsApp
@@ -297,7 +322,15 @@ function OrderCard({
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <div>
           <p className="mb-1 text-xs font-bold uppercase text-muted">Cliente</p>
-          {!order.customer.phone && <ContactCapture orderNumber={order.orderNumber} onSave={onContactSave} />}
+          {!order.customer.phone && (
+            <button
+              type="button"
+              onClick={() => setAskPhone('')}
+              className="mb-2 w-full rounded-xl bg-gold-50 px-3 py-2.5 text-left text-xs text-ink ring-1 ring-primary/30"
+            >
+              💬 Pidió directo por WhatsApp · <strong className="underline">toca aquí para guardar su celular</strong>
+            </button>
+          )}
           <p className="text-sm text-ink">{order.customer.name}</p>
           <p className="text-sm text-muted">
             {order.customer.phone}
@@ -447,14 +480,13 @@ function OrderCard({
             </label>
           )}
           {(order.guideUrl || order.trackingNumber) && (
-            <a
-              href={whatsappLinkTo(order.customer.phone, buildShippedMessage(order, storeName))}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => contact(buildShippedMessage(order, storeName))}
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-whatsapp px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.02] sm:w-auto"
             >
               🚚 Enviar guía por WhatsApp
-            </a>
+            </button>
           )}
           {guideError && <p className="w-full text-xs font-semibold text-urgent">{guideError}</p>}
         </div>
@@ -493,60 +525,94 @@ function OrderCard({
             </button>
           )}
           {order.status === 'pendiente' && bankAccounts.length > 0 && (
-            <a
-              href={whatsappLinkTo(order.customer.phone, buildPaymentDataMessage(order, bankAccounts))}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => contact(buildPaymentDataMessage(order, bankAccounts))}
               className="flex items-center gap-2 rounded-lg bg-ink px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.03] active:scale-[0.98]"
             >
               💳 Enviar datos de pago
-            </a>
+            </button>
           )}
-          <a
-            href={whatsappLinkTo(order.customer.phone, buildStatusMessage(order, storeName))}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => contact(buildStatusMessage(order, storeName))}
             className="flex items-center gap-2 rounded-lg bg-whatsapp px-4 py-2.5 text-sm font-bold text-white shadow-soft transition-transform hover:scale-[1.03] active:scale-[0.98]"
           >
             💬 Avisar por WhatsApp ({STATUSES.find((s) => s.value === order.status)?.label})
-          </a>
+          </button>
         </div>
       </div>
+
+      {askPhone !== null && (
+        <PhonePrompt
+          orderNumber={order.orderNumber}
+          initialName={order.customer.name}
+          onCancel={() => setAskPhone(null)}
+          onConfirm={(name, phone) => {
+            // Se abre dentro del mismo toque y se guarda en segundo plano.
+            if (askPhone) window.open(whatsappLinkTo(phone, askPhone), '_blank');
+            setAskPhone(null);
+            onContactSave({ name: name || order.customer.name, phone }).catch(() => alert('No se pudo guardar el celular. Intenta de nuevo.'));
+          }}
+        />
+      )}
     </div>
   );
 }
 
-// Pedido directo a WhatsApp: el cliente da sus datos en el chat. Aquí se
-// guardan su nombre y celular para poder escribirle desde el panel.
-function ContactCapture({ orderNumber, onSave }: { orderNumber: string; onSave: (c: { name: string; phone: string }) => Promise<void> }) {
-  const [name, setName] = useState('');
+// Ventana para guardar el celular del cliente (lo ves en el chat de WhatsApp
+// donde llegó el pedido) y abrir su chat de una.
+function PhonePrompt({
+  orderNumber,
+  initialName,
+  onCancel,
+  onConfirm,
+}: {
+  orderNumber: string;
+  initialName: string;
+  onCancel: () => void;
+  onConfirm: (name: string, phone: string) => void;
+}) {
+  const [name, setName] = useState(initialName);
   const [phone, setPhone] = useState('');
-  const [busy, setBusy] = useState(false);
-  const valid = phone.replace(/\D/g, '').length >= 9;
+  const digits = phone.replace(/\D/g, '');
+  const valid = digits.length >= 9 && digits.length <= 13;
   return (
-    <div className="mb-2 rounded-xl bg-gold-50 p-3 ring-1 ring-primary/30">
-      <p className="text-xs text-ink">
-        💬 El cliente pidió directo por WhatsApp. Busca el chat con <strong>{orderNumber}</strong> y guarda sus datos:
-      </p>
-      <div className="mt-2 grid gap-2 sm:grid-cols-2">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nombre" className="rounded-lg border border-border px-3 py-2 text-sm" />
-        <input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Celular (09...)" inputMode="tel" className="rounded-lg border border-border px-3 py-2 text-sm" />
-      </div>
-      <button
-        type="button"
-        disabled={!valid || busy}
-        onClick={async () => {
-          setBusy(true);
-          try {
-            await onSave({ name: name.trim(), phone: phone.trim() });
-          } finally {
-            setBusy(false);
-          }
+    <div className="fixed inset-0 z-[80] flex items-end justify-center bg-ink/70 p-0 sm:items-center sm:p-4" onClick={onCancel}>
+      <form
+        onClick={(e) => e.stopPropagation()}
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (valid) onConfirm(name.trim(), phone.trim());
         }}
-        className="mt-2 rounded-lg bg-ink px-4 py-2 text-xs font-bold text-white disabled:opacity-50"
+        className="w-full max-w-md rounded-t-3xl bg-white p-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] shadow-dark sm:rounded-3xl"
       >
-        {busy ? 'Guardando…' : 'Guardar datos del cliente'}
-      </button>
+        <p className="text-base font-black text-ink">📱 Celular del cliente</p>
+        <p className="mt-1 text-xs text-muted">
+          Este pedido llegó directo por WhatsApp. Busca en tu WhatsApp el chat que dice <strong className="text-ink">{orderNumber}</strong> y
+          copia el número del cliente. Se guarda en el pedido para las próximas veces.
+        </p>
+        <label className="mt-4 block text-[13px] font-extrabold text-ink">Celular / WhatsApp *</label>
+        <input
+          autoFocus
+          type="tel"
+          inputMode="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Ej: 0991234567 o +593 99 123 4567"
+          className="input-pro mt-1.5"
+        />
+        <label className="mt-3 block text-[13px] font-extrabold text-ink">Nombre (opcional)</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: María Pérez" className="input-pro mt-1.5" />
+        <div className="mt-4 flex gap-2">
+          <button type="button" onClick={onCancel} className="flex-1 rounded-xl bg-cream-alt py-3 text-sm font-bold text-ink">
+            Cancelar
+          </button>
+          <button type="submit" disabled={!valid} className="flex-[2] rounded-xl bg-whatsapp py-3 text-sm font-extrabold text-white disabled:opacity-50">
+            Guardar y abrir WhatsApp
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

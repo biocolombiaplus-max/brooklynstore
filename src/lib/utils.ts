@@ -217,7 +217,7 @@ ${WA_LINE}
 ${how}
 
 ${
-      c.name
+      c.city
         ? `*DATOS DE ENTREGA*\n${delivery}\n\n¿Me confirman la disponibilidad y los pasos para el pago? ¡Gracias!`
         : '¿Me confirman la disponibilidad? Les paso mis datos de envío por aquí. ¡Gracias!'
     }`;

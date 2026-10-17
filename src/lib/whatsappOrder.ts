@@ -1,7 +1,7 @@
 'use client';
 
 import { trackPixel, adTracking } from './pixel';
-import { trackVisitorCheckoutItems } from './visitor';
+import { trackVisitorCheckoutItems, visitorContact } from './visitor';
 import { codUnitPrice, computeOrderTotals } from './shipping';
 import { couponPercentFor, getActiveCoupon } from './coupon';
 import { buildOrderWhatsAppMessage, generateOrderNumber, whatsappLinkTo } from './utils';
@@ -26,7 +26,9 @@ export function sendOrderToWhatsApp(items: CartItem[], method: PaymentMethod, se
     total: totals.total,
     payNow: totals.payNow,
     payOnDelivery: totals.payOnDelivery,
-    customer: { name: '', phone: '', province: '', city: '', address: '' },
+    // Si el cliente ya dejó su nombre y celular antes en este celular, el
+    // pedido queda con ellos (así se le puede escribir desde el panel).
+    customer: { ...visitorContact(), province: '', city: '', address: '' },
     paymentMethod: method,
     status: 'pendiente' as const,
     couponCode: percent > 0 ? coupon?.code : undefined,
